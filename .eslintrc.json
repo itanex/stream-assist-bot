@@ -1,0 +1,39 @@
+{
+  "env": {
+    "es2021": true,
+    "node": true,
+    "mocha": true
+  },
+  "extends": ["airbnb-base"],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "plugins": ["@typescript-eslint"],
+  "rules": {
+    "arrow-parens": ["error", "as-needed"],
+    "class-methods-use-this": "off",
+    "indent": ["error", 4, { "SwitchCase": 1 }],
+    "import/prefer-default-export": "off",
+    "linebreak-style": "off",
+    "lines-between-class-members": [
+      "error",
+      "always",
+      { "exceptAfterSingleLine": true }
+    ],
+    "max-classes-per-file": "off",
+    "max-len": "off",
+    "no-continue": "off",
+    "no-empty-function": ["error", { "allow": ["constructors"] }],
+    "no-plusplus": "off",
+    "no-restricted-syntax": "off",
+    "no-useless-constructor": "off",
+    "no-unused-vars": "off",
+    "import/extensions": "off",
+    "import/no-unresolved": "off",
+    "object-curly-newline": "off",
+    "quotes": ["warn", "single", { "allowTemplateLiterals": true }],
+    "radix": ["error", "as-needed"]
+  }
+}
