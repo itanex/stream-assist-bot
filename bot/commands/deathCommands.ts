@@ -38,9 +38,11 @@ export class DeathCommand implements ICommandHandler {
         `Gonna need an abacus for this many deaths`,
     ];
 
+    private repository: IRepository<DeathCountRecord>;
+
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(TYPES.Repository) @named('DeathRepository') private repository: IRepository<DeathCountRecord>,
+        // @inject(TYPES.Repository) @named('DeathRepository') private repository: IRepository<DeathCountRecord>,
         @inject(Broadcaster) private broadcaster: Broadcaster,
         @inject(TYPES.Logger) private logger: winston.Logger,
     ) {
@@ -111,10 +113,11 @@ export class DeathCountCommand implements ICommandHandler {
     follower: boolean = false;
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
+    private repository: IRepository<DeathCountRecord>;
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(TYPES.Repository) @named('DeathRepository') private repository: IRepository<DeathCountRecord>,
+        // @inject(TYPES.Repository) @named('DeathRepository') private repository: IRepository<DeathCountRecord>,
         @inject(Broadcaster) private broadcaster: Broadcaster,
         @inject(TYPES.Logger) private logger: winston.Logger,
     ) {
@@ -149,10 +152,11 @@ export class LastDeathCountCommmand implements ICommandHandler {
     follower: boolean = false;
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
+    private repository: IRepository<DeathCountRecord>;
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(TYPES.Repository) @named('DeathRepository') private repository: IRepository<DeathCountRecord>,
+        // @inject(TYPES.Repository) @named('DeathRepository') private repository: IRepository<DeathCountRecord>,
         @inject(TYPES.Logger) private logger: winston.Logger,
     ) {
     }

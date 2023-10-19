@@ -48,18 +48,18 @@ export class UpTimeCommand implements ICommandHandler {
     }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        const broadcaster = await Broadcaster();
+        // const broadcaster = await Broadcaster();
 
-        const streamInfo = await broadcaster.getStream();
+        // const streamInfo = await broadcaster.getStream();
 
-        if (streamInfo.type === 'live') {
-            const startDate = dayjs(streamInfo.startDate);
-            this.chatClient.say(channel, `@${userstate.displayName}, ${(broadcaster.displayName)} has been online for ${startDate.fromNow(true)}`);
-        } else {
-            const startDate = dayjs(streamInfo.startDate);
-            this.chatClient.say(channel, `@${userstate.displayName}, ${(broadcaster.displayName)} has been offline for ${startDate.fromNow(true)}`);
-        }
+        // if (streamInfo.type === 'live') {
+        //     const startDate = dayjs(streamInfo.startDate);
+        //     this.chatClient.say(channel, `@${userstate.displayName}, ${(broadcaster.displayName)} has been online for ${startDate.fromNow(true)}`);
+        // } else {
+        //     const startDate = dayjs(streamInfo.startDate);
+        //     this.chatClient.say(channel, `@${userstate.displayName}, ${(broadcaster.displayName)} has been offline for ${startDate.fromNow(true)}`);
+        // }
 
-        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
+        // this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }

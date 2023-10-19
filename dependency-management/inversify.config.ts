@@ -52,16 +52,19 @@ import {
 } from '../bot/handlers';
 import { Broadcaster } from '../utilities/broadcaster';
 import { TYPES } from './types';
-import { IRepository, DeathRepository } from '../repositories/Repositories';
+// import { IRepository, DeathRepository } from '../repositories/Repositories';
 import { DeathCountRecord } from '../repositories/types/DeathCountRecord';
+import Database from '../database/database';
 
 const SAContainer = new Container();
+
+SAContainer.bind<Database>(Database).toSelf().inSingletonScope();
 
 SAContainer.bind<Broadcaster>(Broadcaster).toSelf().inSingletonScope();
 
 SAContainer.bind<ChatBot>(ChatBot).toSelf().inSingletonScope();
 
-SAContainer.bind<IRepository<DeathCountRecord>>(TYPES.Repository).to(DeathRepository).whenTargetNamed('DeathRepository');
+// SAContainer.bind<IRepository<DeathCountRecord>>(TYPES.Repository).to(DeathRepository).whenTargetNamed('DeathRepository');
 
 // Bot Stream Event Handler bindings
 // SAContainer.bind<IFollowStreamEvent>(FollowHandler).toSelf();
@@ -78,8 +81,8 @@ SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(CharityCommand);
 // SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(collabdisable);
 SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(CountExhaustCommand);
 SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(CuddleCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(DeathCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(DeathCountCommand);
+// SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(DeathCommand);
+// SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(DeathCountCommand);
 SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(DiceCommand);
 SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(DivideByZeroCommand);
 SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(DrinkCommand);

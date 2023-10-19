@@ -5,6 +5,7 @@
   "main": "app.ts",
   "module": "module",
   "dependencies": {
+    "@sequelize/core": "^7.0.0-alpha.27",
     "@twurple/api": "^5.2.7",
     "@twurple/auth": "^5.2.7",
     "@twurple/chat": "^5.2.7",
@@ -18,7 +19,10 @@
     "md5": "^2.3.0",
     "node-cron": "^3.0.2",
     "reflect-metadata": "^0.1.13",
+    "sequelize": "^6.32.1",
+    "sequelize-msnodesqlv8": "^0.2.6-beta.8",
     "sound-play": "^1.1.0",
+    "tedious": "^16.4.0",
     "ts-node": "^10.9.0",
     "uuid": "^9.0.0",
     "winston": "^3.8.2",

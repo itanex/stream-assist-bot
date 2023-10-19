@@ -30,18 +30,18 @@ export class LastRaidCommand implements ICommandHandler {
     }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        const record = Repository.read<RaiderRecord>(DataKeys.Raiders);
+        // const record = Repository.read<RaiderRecord>(DataKeys.Raiders);
 
-        if (record) {
-            const lastDate = dayjs(record.time).fromNow();
+        // if (record) {
+        //     const lastDate = dayjs(record.time).fromNow();
 
-            if (record.viewerCount > 1) {
-                this.chatClient.say(channel, `${record.raider}, raided the colony ${lastDate} with ${record.viewerCount} viewers!!!`);
-            } else {
-                this.chatClient.say(channel, `${record.raider}, raided the colony ${lastDate}!!!`);
-            }
-        }
+        //     if (record.viewerCount > 1) {
+        //         this.chatClient.say(channel, `${record.raider}, raided the colony ${lastDate} with ${record.viewerCount} viewers!!!`);
+        //     } else {
+        //         this.chatClient.say(channel, `${record.raider}, raided the colony ${lastDate}!!!`);
+        //     }
+        // }
 
-        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName}`);
+        // this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName}`);
     }
 }
