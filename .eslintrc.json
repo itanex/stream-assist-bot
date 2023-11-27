@@ -14,7 +14,14 @@
   "rules": {
     "arrow-parens": ["error", "as-needed"],
     "class-methods-use-this": "off",
-    "indent": ["error", 4, { "SwitchCase": 1 }],
+    "indent": [
+      "error",
+      4,
+      {
+        "SwitchCase": 1,
+        "ignoredNodes": ["PropertyDefinition"]
+      }
+    ],
     "import/prefer-default-export": "off",
     "linebreak-style": "off",
     "lines-between-class-members": [
@@ -31,6 +38,7 @@
     "no-useless-constructor": "off",
     "no-unused-vars": "off",
     "import/extensions": "off",
+    "import/no-extraneous-dependencies": "off",
     "import/no-unresolved": "off",
     "object-curly-newline": "off",
     "quotes": ["warn", "single", { "allowTemplateLiterals": true }],
