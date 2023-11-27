@@ -89,9 +89,9 @@ export class EightBallCommand implements ICommandHandler {
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         if (responses.length) {
-            let answer = responses[Math.floor(Math.random() * responses.length)];
-            let rootPath = `local-cache/audio/8ball`;
-            let filePath = `${rootPath}/${md5(answer)}.en.mp3`;
+            const answer = responses[Math.floor(Math.random() * responses.length)];
+            const rootPath = `local-cache/audio/8ball`;
+            const filePath = `${rootPath}/${md5(answer)}.en.mp3`;
 
             if (!fs.existsSync(filePath)) {
                 getAudioBase64(answer, {
@@ -126,8 +126,8 @@ export class EightBallCommand implements ICommandHandler {
     }
 
     private playAudioFile(filePath: string) {
-        let dirname = path.resolve();
-        let audioFile = path.join(dirname, filePath);
+        const dirname = path.resolve();
+        const audioFile = path.join(dirname, filePath);
 
         sound.play(audioFile, 100);
     }

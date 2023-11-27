@@ -6,6 +6,8 @@ import winston from 'winston';
 import environment from '../../configurations/environment';
 import { ICommandHandler, ShoutOutCommand } from '../commands';
 import { TYPES } from '../../dependency-management/types';
+import Database from '../../database/database';
+import Raiders from '../../database/raiders.dto';
 
 export interface IRaidStreamEvent {
     onRaid(channel: string, user: string, raidInfo: ChatRaidInfo, message: UserNotice): Promise<void>;
@@ -21,6 +23,7 @@ export class RaidHandler implements IRaidStreamEvent {
     constructor(
         @inject(ApiClient) private apiClient: ApiClient,
         @multiInject(TYPES.CommandHandlers) commandHandlers: ICommandHandler[],
+        @inject(Database) private database: Database,
         @inject(TYPES.Logger) private logger: winston.Logger,
     ) {
         // clear
@@ -36,6 +39,16 @@ export class RaidHandler implements IRaidStreamEvent {
         setTimeout(() => {
             this.shoutOutCommand.handle(channel, this.command, new ChatUser(user, null), this.command, [raidInfo.displayName], true);
         }, 3000);
+
+        const raider = Raiders.build({
+            raider: raidInfo.displayName,
+            time: dayjs().toISOString(),
+            viewerCount: raidInfo.viewerCount,
+        }, {
+            isNewRecord: true,
+        });
+
+        await raider.save();
 
         // Repository.create<RaiderRecord>(DataKeys.Raiders, {
         //     raider: raidInfo.displayName,

@@ -3,6 +3,7 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import { TYPES } from '../../dependency-management/types';
 import ICommandHandler from './iCommandHandler';
+import LurkingUsers from '../../database/lurkingUser.dto';
 
 @injectable()
 export class LurkCommand implements ICommandHandler {
@@ -22,26 +23,27 @@ export class LurkCommand implements ICommandHandler {
     }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        // const record = Repository
-        //     .readCollection<LurkingUser>(DataKeys.LurkingUser)
-        //     .map(mapToLurkingUser)
-        //     // TODO: Enhance filter to account for todays stream
-        //     .filter((x: LurkingUser) => x.isLurking() && x.userId === userstate.userId)[0];
+        await LurkingUsers
+            .findOrCreate({
+                where: {
+                    userId: userstate.userId,
+                    endTime: null,
+                },
+                order: [['createdAt', 'DESC']],
+                defaults: {
+                    displayName: userstate.displayName,
+                    userId: userstate.userId,
+                    startTime: new Date(),
+                },
+            })
+            .then(([instance, created]) => {
+                if (created) {
+                    this.chatClient.say(channel, `OK, ${instance.displayName} see you when you get back`);
+                }
+            });
 
-        // // If no user exists create record
-        // if (!record) {
-        //     Repository.create<LurkingUser>(DataKeys.LurkingUser, new LurkingUser(
-        //         userstate.displayName,
-        //         userstate.userId,
-        //         new Date(),
-        //     ));
-
-        //     // Report the command result
-        //     this.chatClient.say(channel, `OK, ${userstate.displayName} see you when you get back`);
-        // }
-
-        // // Don't say anything if the user is already lurking
-        // this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
+        // Don't say anything if the user is already lurking
+        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }
 
@@ -63,25 +65,25 @@ export class UnLurkCommand implements ICommandHandler {
     }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        // const records = Repository
-        //     .readCollection<LurkingUser>(DataKeys.LurkingUser)
-        //     .map(mapToLurkingUser);
+        await LurkingUsers
+            .findOne({
+                where: {
+                    userId: userstate.userId,
+                    endTime: null,
+                },
+                order: [['createdAt', 'DESC']],
+            })
+            .then(async record => {
+                // eslint-disable-next-line no-param-reassign
+                record.endTime = new Date();
 
-        // const record = records
-        //     // TODO: Enhance filter to account for todays stream
-        //     .filter((x: LurkingUser) => x.isLurking() && x.userId === userstate.userId)[0];
+                const x = await record.save();
+                // Report the command result
+                this.chatClient.say(channel, `Welcome back, ${x.displayName}. You were gone for ${x.duration().humanize()}`);
+                return x;
+            });
 
-        // const index = records.findIndex((item: LurkingUser) => item === record);
-
-        // if (record) {
-        //     record.endTime = new Date();
-        //     Repository.update<LurkingUser>(DataKeys.LurkingUser, index, record);
-
-        //     // Report the command result
-        //     this.chatClient.say(channel, `Welcome back, ${record.displayName}. You were gone for ${record.duration().humanize()}`);
-        // }
-
-        // this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
+        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }
 
@@ -98,67 +100,59 @@ export class WhoIsLurkingCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(TYPES.Logger) private logger: winston.Logger
+        @inject(TYPES.Logger) private logger: winston.Logger,
     ) {
     }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        // const records = Repository
-        //     .readCollection<LurkingUser>(DataKeys.LurkingUser)
-        //     .map(mapToLurkingUser)
-        //     .filter(user => user.isLurking());
+        await LurkingUsers
+            .findAll({
+                where: { endTime: null },
+                order: [['createdAt', 'DESC']],
+            })
+            .then(records => {
+                const users = records.map(x => x.displayName);
+                const lastUser = users.pop();
 
-        // const users = records.map(x => x.displayName);
-        // const lastUser = users.pop();
+                switch (records.length) {
+                    case 0:
+                        this.chatClient.say(channel, 'There are no users currenlty lurking in the channel');
+                        break;
+                    case 1:
+                        this.chatClient.say(channel, `There is ${records.length} user lurking: ${lastUser}`);
+                        break;
+                    case 2:
+                        this.chatClient.say(channel, `There are ${records.length} users lurking: ${users[0]} and ${lastUser}`);
+                        break;
+                    case 3:
+                    case 4:
+                    case 5:
+                        this.chatClient.say(channel, `There are ${records.length} users lurking: ${users.join(', ')}, and ${lastUser}`);
+                        break;
+                    default:
+                        this.chatClient.say(channel, `There are ${records.length} users lurking.`);
+                }
 
-        // switch (records.length) {
-        //     case 0:
-        //         this.chatClient.say(channel, 'There are no users currenlty lurking in the channel');
-        //         break;
-        //     case 1:
-        //         this.chatClient.say(channel, `There is ${records.length} user lurking: ${lastUser}`);
-        //         break;
-        //     case 2:
-        //         this.chatClient.say(channel, `There are ${records.length} users lurking: ${users[0]} and ${lastUser}`);
-        //         break;
-        //     case 3:
-        //     case 4:
-        //     case 5:
-        //         this.chatClient.say(channel, `There are ${records.length} users lurking: ${users.join(', ')}, and ${lastUser}`);
-        //         break;
-        //     default:
-        //         this.chatClient.say(channel, `There are ${records.length} users lurking.`);
-        // }
-
-        // this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
+                this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
+            });
     }
 }
 
-// function mapToLurkingUser(record: LurkingUser): LurkingUser {
-//     const item = new LurkingUser(record.displayName, record.userId, record.startTime);
-//     // eslint-disable-next-line dot-notation
-//     item.endTime = record['_endTime'];
-
-//     return item;
-// }
-
-export async function clearLurkingUsers(): Promise<void> {
-    // const records = Repository
-    //     .readCollection<LurkingUser>(DataKeys.LurkingUser)
-    //     .map(mapToLurkingUser);
-
-    // const still: LurkingUser[] = [];
-
-    // for (let index = 0; index < records.length; index++) {
-    //     if (!records[index].isLurking()) {
-    //         continue;
-    //     }
-
-    //     records[index].endTime = new Date();
-    //     still.push(records[index]);
-
-    //     Repository.update<LurkingUser>(DataKeys.LurkingUser, index, records[index]);
-    // }
-
-    // logger.info(`DataStore:: Cleaned up Lurking Users from stream: ${still.map(x => x.displayName).join(', ')}`);
+// @injectable()
+export async function clearLurkingUsers(
+    logger: winston.Logger,
+): Promise<void> {
+    await LurkingUsers
+        .update(
+            { endTime: new Date() },
+            {
+                where: { endTime: null },
+                returning: true,
+            },
+        )
+        .then(([count, users]) => {
+            if (count > 0) {
+                logger.info(`DataStore:: Cleaned up Lurking Users from stream: ${users.map(x => x.displayName).join(', ')}`);
+            }
+        });
 }

@@ -28,7 +28,7 @@ export default class ChatBot {
         this.logger.info(`** Chat Bot initialized **`);
     }
 
-    start() {
+    async start(): Promise<void> {
         this.chatClient.onMessage(async (channel: string, user: string, message: string, msg: TwitchPrivateMessage) => {
             await this.messageHandler.handle(channel, user, message, msg);
         });
@@ -46,5 +46,9 @@ export default class ChatBot {
         this.chatClient.connect()
             .then(() => this.logger.info('--Start up -- Chat Client Connected'))
             .catch(err => this.logger.error(`-- Start up --`, err));
+    }
+
+    async shutdown() {
+        return this.chatClient.quit();
     }
 }
