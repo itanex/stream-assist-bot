@@ -24,7 +24,7 @@ const timeout: number = 5 /* minutes */ * 60; /* seconds */
 
 @injectable()
 export class DeathCommand implements ICommandHandler {
-    exp: RegExp = /!(death|died)/i;
+    exp: RegExp = /^!(death|died)$ /i;
     timeout: number = 5;
     mod: boolean = true;
     vip: boolean = true;
@@ -49,7 +49,6 @@ export class DeathCommand implements ICommandHandler {
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         const broadcaster = await this.broadcaster.getBroadcaster();
         const stream = await broadcaster.getStream();
-        const date = dayjs().format('YYYY-MM-DD');
 
         await DeathCounts
             .findOrCreate({
@@ -100,7 +99,6 @@ export class DeathCountCommand implements ICommandHandler {
     follower: boolean = false;
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
-    private repository: IRepository<DeathCountRecord>;
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
@@ -112,19 +110,23 @@ export class DeathCountCommand implements ICommandHandler {
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         const broadcaster = await this.broadcaster.getBroadcaster();
         const stream = await broadcaster.getStream();
-        const date = dayjs().format('YYYY-MM-DD');
 
-        if (deathCount === -1) {
-            deathCount = this.repository.read()
-                .find((value: DeathCountRecord) => value.date === date)
-                ?.counts
-                ?.find((value: GameCountRecord) => value.game === stream.gameName)
-                ?.deathCount || 0;
-        }
+        await DeathCounts
+            .findOne({
+                where: {
+                    streamId: stream.id,
+                    gameId: stream.gameId,
+                },
+            })
+            .then(async ({ deathCount }) => {
+                if (deathCount > 1) {
+                    this.chatClient.say(channel, `We have used ${deathCount} Timy today`);
+                } else {
+                    this.chatClient.say(channel, `We have used ${deathCount} Timys today`);
+                }
 
-        this.chatClient.say(channel, `We have used ${deathCount} Timy(s) today`);
-
-        this.logger.info(`* Executed ${commandName} in ${channel} :: ${deathCount} || ${userstate.displayName}`);
+                this.logger.info(`* Executed ${commandName} in ${channel} :: ${deathCount} || ${userstate.displayName}`);
+            });
     }
 }
 
