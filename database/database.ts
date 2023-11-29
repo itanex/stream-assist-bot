@@ -5,6 +5,7 @@ import { Dialect } from '@sequelize/core';
 import { TYPES } from '../dependency-management/types';
 import Raiders from './raiders.dbo';
 import LurkingUsers from './lurkingUser.dbo';
+import DeathCounts from './deathCountRecord.dbo';
 
 // Option 1: Passing a connection URI
 // const sequelize = new Sequelize('sqlite::memory:') // Example for sqlite
@@ -50,6 +51,7 @@ const pgConfig: SequelizeOptions = {
     models: [
         Raiders,
         LurkingUsers,
+        DeathCounts,
     ],
 };
 
