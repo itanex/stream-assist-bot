@@ -11,12 +11,13 @@ import { GameCountRecord } from '../../repositories/types/GameCountRecord';
 import { DeathCountRecord } from '../../repositories/types/DeathCountRecord';
 import { CommandTimeout } from '../types/CommandTimeout';
 import { Broadcaster } from '../../utilities/broadcaster';
+import DeathCounts from '../../database/deathCountRecord.dbo';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(isToday);
 
 let commandTimeout: CommandTimeout = { name: 'DeathCommand', timeout: 0 };
-let deathCount = -1;
+// let deathCount = -1;
 
 // time in seconds
 const timeout: number = 5 /* minutes */ * 60; /* seconds */
@@ -38,11 +39,8 @@ export class DeathCommand implements ICommandHandler {
         `Gonna need an abacus for this many deaths`,
     ];
 
-    private repository: IRepository<DeathCountRecord>;
-
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        // @inject(TYPES.Repository) @named('DeathRepository') private repository: IRepository<DeathCountRecord>,
         @inject(Broadcaster) private broadcaster: Broadcaster,
         @inject(TYPES.Logger) private logger: winston.Logger,
     ) {
@@ -53,53 +51,42 @@ export class DeathCommand implements ICommandHandler {
         const stream = await broadcaster.getStream();
         const date = dayjs().format('YYYY-MM-DD');
 
-        // get record for today from database
-        const records = this.repository.read();
+        await DeathCounts
+            .findOrCreate({
+                where: {
+                    streamId: stream.id,
+                    gameId: stream.gameId,
+                },
+                defaults: {
+                    deathCount: 1,
+                    gameId: stream.gameId,
+                    game: stream.gameName,
+                    streamId: stream.id,
+                },
+            })
+            .then(async ([instance, created]) => {
+                let { deathCount } = instance;
 
-        // did we get ANY records
-        if (records.length > 0) {
-            const index = records.findIndex((value: DeathCountRecord) => value.date === date);
+                if (!created) {
+                    // eslint-disable-next-line no-param-reassign
+                    instance.deathCount++;
+                    deathCount = instance.deathCount;
+                    await instance.save();
+                }
 
-            // There is NO record for today
-            if (index === -1) {
-                // Record new Deathcount for today
-                this.createDeathRecord(stream.gameName);
-                deathCount = 1;
-            } else {
-                // There is a record for today
-                const record = records[index].counts.find((value: GameCountRecord) => value.game === stream.gameName);
-                deathCount = ++record.deathCount;
+                const ttl = Math.ceil(Math.abs(commandTimeout.timeout - new Date().getTime()) / 1000);
 
-                this.repository.update(index, record[index]);
-            }
-        } else {
-            // Record new Deathcount for today
-            this.createDeathRecord(stream.gameName);
-            deathCount = 1;
-        }
+                if (ttl > timeout) {
+                    commandTimeout = { name: 'DeathCommand', timeout: new Date().getTime() };
+                    this.chatClient.say(channel, `We're gonna need another Timy!`);
+                }
 
-        const ttl = Math.ceil(Math.abs(commandTimeout.timeout - new Date().getTime()) / 1000);
+                if (this.responses.length && deathCount % 10 === 0) {
+                    this.chatClient.say(channel, this.responses[Math.floor(Math.random() * this.responses.length)]);
+                }
 
-        if (ttl > timeout) {
-            commandTimeout = { name: 'DeathCommand', timeout: new Date().getTime() };
-            this.chatClient.say(channel, `We're gonna need another Timy!`);
-        }
-
-        if (this.responses.length && deathCount % 10 === 0) {
-            this.chatClient.say(channel, this.responses[Math.floor(Math.random() * this.responses.length)]);
-        }
-
-        this.logger.info(`* Executed ${commandName} in ${channel} :: ${deathCount} || ${userstate.displayName}`);
-    }
-
-    private createDeathRecord(gameName: string) {
-        this.repository.create({
-            date: dayjs().format('YYYY-MM-DD'),
-            counts: [{
-                deathCount: 1,
-                game: gameName,
-            }],
-        });
+                this.logger.info(`* Executed ${commandName} in ${channel} :: ${deathCount} || ${userstate.displayName}`);
+            });
     }
 }
 
@@ -117,7 +104,6 @@ export class DeathCountCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        // @inject(TYPES.Repository) @named('DeathRepository') private repository: IRepository<DeathCountRecord>,
         @inject(Broadcaster) private broadcaster: Broadcaster,
         @inject(TYPES.Logger) private logger: winston.Logger,
     ) {
