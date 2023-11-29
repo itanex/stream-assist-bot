@@ -7,7 +7,7 @@ import environment from '../../configurations/environment';
 import { ICommandHandler, ShoutOutCommand } from '../commands';
 import { TYPES } from '../../dependency-management/types';
 import Database from '../../database/database';
-import Raiders from '../../database/raiders.dto';
+import Raiders from '../../database/raiders.dbo';
 
 export interface IRaidStreamEvent {
     onRaid(channel: string, user: string, raidInfo: ChatRaidInfo, message: UserNotice): Promise<void>;

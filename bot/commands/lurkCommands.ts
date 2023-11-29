@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import { TYPES } from '../../dependency-management/types';
 import ICommandHandler from './iCommandHandler';
-import LurkingUsers from '../../database/lurkingUser.dto';
+import LurkingUsers from '../../database/lurkingUser.dbo';
 
 @injectable()
 export class LurkCommand implements ICommandHandler {

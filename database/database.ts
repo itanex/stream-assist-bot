@@ -3,8 +3,8 @@ import winston from 'winston';
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
 import { Dialect } from '@sequelize/core';
 import { TYPES } from '../dependency-management/types';
-import Raiders from './raiders.dto';
-import LurkingUsers from './lurkingUser.dto';
+import Raiders from './raiders.dbo';
+import LurkingUsers from './lurkingUser.dbo';
 
 // Option 1: Passing a connection URI
 // const sequelize = new Sequelize('sqlite::memory:') // Example for sqlite
