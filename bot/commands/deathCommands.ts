@@ -154,12 +154,12 @@ export class LastDeathCountCommmand implements ICommandHandler {
             FROM public."DeathCounts"
             WHERE "streamId" in (
                 SELECT DISTINCT "streamId"
+                FROM public."DeathCounts"
+                WHERE "createdAt" = (
+                    SELECT max("createdAt")
                     FROM public."DeathCounts"
-                    WHERE "createdAt" = (
-                        SELECT max("createdAt")
-                        FROM public."DeathCounts"
-                        WHERE "streamId" <> $streamId
-                    )
+                    WHERE "streamId" <> $streamId
+                )
             )
             order by "createdAt" Asc
         `;
