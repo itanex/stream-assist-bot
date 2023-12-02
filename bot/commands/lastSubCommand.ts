@@ -7,7 +7,9 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import ICommandHandler from './iCommandHandler';
 import { TYPES } from '../../dependency-management/types';
-import { SubType } from '../handlers/subscription.handler';
+import Subscribers from '../../database/subscribers.dbo';
+import SubsciptionGiftUsers from '../../database/subsciptionGiftUsers.dbo';
+import { SubscriptionType } from '../../database/subcriptionType';
 
 dayjs.extend(isToday);
 dayjs.extend(relativeTime);
@@ -31,31 +33,31 @@ export class LastSubCommand implements ICommandHandler {
     }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        // const record = Repository.read<SubscriberRecord>(DataKeys.Subscribers);
+        await Subscribers
+            .findOne({ order: [['createdAt', 'DESC']], include: [SubsciptionGiftUsers] })
+            .then(record => {
+                const lastDate = dayjs(record.createdAt).fromNow();
 
-        // if (record) {
-        //     const lastDate = dayjs(record.time).fromNow();
+                // eslint-disable-next-line default-case
+                switch (record.type) {
+                    case SubscriptionType.NewSub:
+                        this.chatClient.say(channel, `${record.subscriber}, subscribed as a new member of the colony ${lastDate}`);
+                        break;
+                    case SubscriptionType.PrimeSub:
+                        this.chatClient.say(channel, `${record.subscriber}, subscibed using their Prime Sub ${lastDate}`);
+                        break;
+                    case SubscriptionType.ReSub:
+                        this.chatClient.say(channel, `${record.subscriber} continued their colony membership ${lastDate}`);
+                        break;
+                    case SubscriptionType.GiftSub:
+                        this.chatClient.say(channel, `${record.gift.gifter} gifted, ${record.subscriber}, recruiting them into the colony ${lastDate}`);
+                        break;
+                    case SubscriptionType.CommunitySub:
+                        this.chatClient.say(channel, `${record.gift.gifter} gifted ${record.gift.giftCount} memberships into the colony ${lastDate}`);
+                        break;
+                }
+            });
 
-        //     // eslint-disable-next-line default-case
-        //     switch (record.type) {
-        //         case SubType.NewSub:
-        //             this.chatClient.say(channel, `${record.subscriber}, subscribed as a new member of the colony ${lastDate}`);
-        //             break;
-        //         case SubType.PrimeSub:
-        //             this.chatClient.say(channel, `${record.subscriber}, subscibed using their Prime Sub ${lastDate}`);
-        //             break;
-        //         case SubType.ReSub:
-        //             this.chatClient.say(channel, `${record.subscriber} continued their colony membership ${lastDate}`);
-        //             break;
-        //         case SubType.GiftSub:
-        //             this.chatClient.say(channel, `${record.gift.gifter} gifted, ${record.subscriber}, recruiting them into the colony ${lastDate}`);
-        //             break;
-        //         case SubType.CommunitySub:
-        //             this.chatClient.say(channel, `${record.gift.gifter} gifted ${record.gift.giftCount} memberships into the colony ${lastDate}`);
-        //             break;
-        //     }
-        // }
-
-        // this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName}`);
+        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName}`);
     }
 }
