@@ -6,6 +6,8 @@ import { TYPES } from '../dependency-management/types';
 import Raiders from './raiders.dbo';
 import LurkingUsers from './lurkingUser.dbo';
 import DeathCounts from './deathCountRecord.dbo';
+import Subscribers from './subscribers.dbo';
+import SubsciptionGiftUsers from './subsciptionGiftUsers.dbo';
 
 // Option 1: Passing a connection URI
 // const sequelize = new Sequelize('sqlite::memory:') // Example for sqlite
@@ -52,6 +54,8 @@ const pgConfig: SequelizeOptions = {
         Raiders,
         LurkingUsers,
         DeathCounts,
+        Subscribers,
+        SubsciptionGiftUsers,
     ],
 };
 
