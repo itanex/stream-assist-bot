@@ -21,5 +21,5 @@ export default class Raiders extends Model {
         type: DataType.INTEGER,
         field: 'viewerCount',
     })
-    viewerCount?: Number;
+    viewerCount?: number;
 }

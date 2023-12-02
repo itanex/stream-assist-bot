@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import ICommandHandler from './iCommandHandler';
 import { TYPES } from '../../dependency-management/types';
+import Raiders from '../../database/raiders.dbo';
 
 dayjs.extend(isToday);
 dayjs.extend(relativeTime);
@@ -14,7 +15,7 @@ dayjs.extend(calendar);
 
 @injectable()
 export class LastRaidCommand implements ICommandHandler {
-    exp: RegExp = /^\!(lastraid)$/i;
+    exp: RegExp = /^!(lastraid)$/i;
     timeout: number = 5;
     mod: boolean = true;
     vip: boolean = true;
@@ -30,18 +31,20 @@ export class LastRaidCommand implements ICommandHandler {
     }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        // const record = Repository.read<RaiderRecord>(DataKeys.Raiders);
+        await Raiders
+            .findOne({
+                order: [['time', 'DESC']],
+            })
+            .then(record => {
+                const lastDate = dayjs(record.time).fromNow();
 
-        // if (record) {
-        //     const lastDate = dayjs(record.time).fromNow();
+                if (record.viewerCount > 1) {
+                    this.chatClient.say(channel, `${record.raider}, raided the colony ${lastDate} with ${record.viewerCount} viewers!!!`);
+                } else {
+                    this.chatClient.say(channel, `${record.raider}, raided the colony ${lastDate}!!!`);
+                }
 
-        //     if (record.viewerCount > 1) {
-        //         this.chatClient.say(channel, `${record.raider}, raided the colony ${lastDate} with ${record.viewerCount} viewers!!!`);
-        //     } else {
-        //         this.chatClient.say(channel, `${record.raider}, raided the colony ${lastDate}!!!`);
-        //     }
-        // }
-
-        // this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName}`);
+                this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName}`);
+            });
     }
 }
