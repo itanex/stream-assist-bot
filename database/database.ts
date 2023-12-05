@@ -50,6 +50,7 @@ const pgConfig: SequelizeOptions = {
         acquire: 30000,
         idle: 10000,
     },
+    logging: false,
     models: [
         Raiders,
         LurkingUsers,
@@ -75,14 +76,14 @@ export default class Database {
 
     async connect(): Promise<void> {
         await this.validate()
-            .then(() => this.logger.info('Connection has been established successfully.'))
+            .then(() => this.logger.info('DB Connection has been established successfully.'))
             .catch((error: any) => this.logger.error('**Unable to connect to the database**:', error));
     }
 
     async sync(): Promise<void> {
-        await this.sequelize.sync()
-            .then(obj => this.logger.info('Sync completed successfully', obj))
-            .catch((error: any) => this.logger.error('**Sync Failed**:', error));
+        await this.sequelize.sync({ logging: false })
+            .then(obj => this.logger.info('DB Sync completed successfully'))
+            .catch((error: any) => this.logger.error('**DB Sync Failed**:', error));
     }
 
     async validate(): Promise<void> {
@@ -93,7 +94,7 @@ export default class Database {
         await this.sequelize
             .close()
             .then(() => {
-                this.logger.info('All connections have been successfully closed.');
+                this.logger.info('All DB connections have been successfully closed.');
             })
             .catch((err: any) => {
                 this.logger.error('There were issues disconnecting from the database:', err);
