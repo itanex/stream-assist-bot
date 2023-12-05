@@ -1,13 +1,11 @@
 import { ChatClient, ChatUser } from '@twurple/chat';
 import dayjs from 'dayjs';
-import isToday from 'dayjs/plugin/isToday';
-import relativeTime from 'dayjs/plugin/relativeTime';
-import calendar from 'dayjs/plugin/calendar';
 import updateLocale from 'dayjs/plugin/updateLocale';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import ICommandHandler from './iCommandHandler';
 import { TYPES } from '../../dependency-management/types';
+import { Broadcaster } from '../../utilities/broadcaster';
 
 dayjs.extend(updateLocale);
 dayjs.updateLocale('en', {
@@ -43,23 +41,22 @@ export class UpTimeCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
+        @inject(Broadcaster) private broadcaster: Broadcaster,
         @inject(TYPES.Logger) private logger: winston.Logger,
     ) {
     }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        // const broadcaster = await Broadcaster();
+        const broadcaster = await this.broadcaster.getBroadcaster();
+        const stream = await broadcaster.getStream();
+        const startDate = dayjs(stream.startDate);
 
-        // const streamInfo = await broadcaster.getStream();
+        if (stream.type === 'live') {
+            this.chatClient.say(channel, `${(broadcaster.displayName)} has been online for ${startDate.fromNow(true)}`);
+        } else {
+            this.chatClient.say(channel, `${(broadcaster.displayName)} has been offline for ${startDate.fromNow(true)}`);
+        }
 
-        // if (streamInfo.type === 'live') {
-        //     const startDate = dayjs(streamInfo.startDate);
-        //     this.chatClient.say(channel, `@${userstate.displayName}, ${(broadcaster.displayName)} has been online for ${startDate.fromNow(true)}`);
-        // } else {
-        //     const startDate = dayjs(streamInfo.startDate);
-        //     this.chatClient.say(channel, `@${userstate.displayName}, ${(broadcaster.displayName)} has been offline for ${startDate.fromNow(true)}`);
-        // }
-
-        // this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
+        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }
