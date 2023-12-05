@@ -8,10 +8,10 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import {
     IRaidStreamEvent,
-    // ISubscriptionStreamEvent,
+    ISubscriptionStreamEvent,
     MessageHandler,
     RaidHandler,
-    // SubscriptionHandlers
+    SubscriptionHandlers,
 } from './handlers';
 import { TYPES } from '../dependency-management/types';
 
@@ -21,7 +21,7 @@ export default class ChatBot {
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(MessageHandler) private messageHandler: MessageHandler,
         @inject(RaidHandler) private raidHandler: IRaidStreamEvent,
-        // @inject(SubscriptionHandlers) private subscriptionHandlers: ISubscriptionStreamEvent,
+        @inject(SubscriptionHandlers) private subscriptionHandlers: ISubscriptionStreamEvent,
         @inject(TYPES.Logger) private logger: winston.Logger,
     ) {
         this.logger.info(`** Chat Bot initialized **`);
@@ -36,17 +36,28 @@ export default class ChatBot {
             await this.raidHandler.onRaid(channel, user, raidInfo, msg);
         });
 
-        // this.chatClient.onSubExtend(this.subscriptionHandlers.onSubExtend);
-        // this.chatClient.onResub(this.subscriptionHandlers.onResubHandler);
-        // this.chatClient.onSub(this.subscriptionHandlers.onSubscribe);
-        // this.chatClient.onCommunitySub(this.subscriptionHandlers.onCommunitySub);
-        // this.chatClient.onSubGift(this.subscriptionHandlers.onSubGift);
+        // Subscription Event Registration
+        this.chatClient.onSubExtend(this.subscriptionHandlers.onSubExtend);
+        this.chatClient.onResub(this.subscriptionHandlers.onResubHandler);
+        this.chatClient.onSub(this.subscriptionHandlers.onSubscribe);
+        this.chatClient.onCommunitySub(this.subscriptionHandlers.onCommunitySub);
+        this.chatClient.onSubGift(this.subscriptionHandlers.onSubGift);
+
+        // Authenticaiton Event Registration
+        this.chatClient.onAuthenticationSuccess(() => this.logger.info('Chat Client authenticated successfully'));
+        this.chatClient.onAuthenticationFailure((text: string, retryCount: number) => this.logger.error('Chat Client unable to authenticate'));
+
+        // Chat Client specific Event Registration
+        this.chatClient.onConnect(() => this.logger.info('Chat Client connected'));
+        this.chatClient.onDisconnect((manual, reason) => {
+            if (reason) {
+                this.logger.error('Chat Client disonnected', reason);
+            } else {
+                this.logger.info('Chat Client disonnected');
+            }
+        });
 
         this.chatClient.connect();
-
-        this.chatClient.onConnect(() => this.logger.info('--Start up -- Chat Client Connected'));
-        this.chatClient.onAuthenticationSuccess(() => this.logger.info('--Start up -- Chat Client Authenticated'));
-        this.chatClient.onAuthenticationFailure((text: string, retryCount: number) => this.logger.error('--Start up -- Chat Client unable to authenticate'));
     }
 
     async shutdown() {
