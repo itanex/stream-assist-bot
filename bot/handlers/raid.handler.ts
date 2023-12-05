@@ -31,13 +31,18 @@ export class RaidHandler implements IRaidStreamEvent {
     }
 
     async onRaid(channel: string, user: string, raidInfo: ChatRaidInfo, message: UserNotice): Promise<void> {
-        this.apiClient.chat.sendAnnouncement(environment.broadcasterId, environment.broadcasterId, {
+        this.apiClient.chat.sendAnnouncement(environment.broadcasterId, {
             message: `RAID: Thank you, ${raidInfo.displayName}, for bringing the ${raidInfo.viewerCount} viewer(s) with you!`,
             color: 'primary',
         });
 
+        // TODO: Deal with this hack, may be an issue in the messaging interface
+        const chatUser = {
+            displayName: user,
+        } as ChatUser;
+
         setTimeout(() => {
-            this.shoutOutCommand.handle(channel, this.command, new ChatUser(user, null), this.command, [raidInfo.displayName], true);
+            this.shoutOutCommand.handle(channel, this.command, chatUser, this.command, [raidInfo.displayName], true);
         }, 3000);
 
         const raider = Raiders.build({

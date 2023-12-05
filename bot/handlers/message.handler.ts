@@ -19,7 +19,7 @@ export class MessageHandler {
     ) {
     }
 
-    async handle(channel: string, user: string, message: string, msg: TwitchPrivateMessage): Promise<void> {
+    async handle(channel: string, user: string, message: string, chatUser: ChatUser): Promise<void> {
         // Remove whitespace from chat message
         const inputCommand = message.trim();
 
@@ -27,7 +27,7 @@ export class MessageHandler {
         for (const command of this.commandHandlers) {
             const commandFrags = inputCommand.match(command.exp);
 
-            if (!this.isAuthorized(msg.userInfo, command)) {
+            if (!this.isAuthorized(chatUser, command)) {
                 continue;
             }
 
@@ -43,7 +43,7 @@ export class MessageHandler {
 
                 if (index > -1) {
                     const ttl = Math.ceil(Math.abs(this.globalTimeouts[index].timeout - new Date().getTime()) / 1000);
-                    const period = this.timeoutPeriod(msg.userInfo, command);
+                    const period = this.timeoutPeriod(chatUser, command);
 
                     if (ttl < period) {
                         this.onCommandCooldown(cmd, channel, period - ttl);
@@ -74,7 +74,7 @@ export class MessageHandler {
                 //     userTimeouts[msg.userInfo.userId].push({ name: instruction, timeout: new Date().getTime() });
                 // }
 
-                command.handle(channel, raw, msg.userInfo, message, args);
+                command.handle(channel, raw, chatUser, message, args);
                 return;
             }
         }

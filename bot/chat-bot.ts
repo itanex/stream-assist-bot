@@ -3,9 +3,8 @@
 // also it should be imported only once
 // so that a singleton is created.
 import 'reflect-metadata';
-import { ChatClient, ChatRaidInfo, ChatUser, UserNotice } from '@twurple/chat';
-import { TwitchPrivateMessage } from '@twurple/chat/lib/commands/TwitchPrivateMessage';
-import { inject, injectable, multiInject } from 'inversify';
+import { ChatClient, ChatMessage, ChatRaidInfo, UserNotice } from '@twurple/chat';
+import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import {
     IRaidStreamEvent,
@@ -29,8 +28,8 @@ export default class ChatBot {
     }
 
     async start(): Promise<void> {
-        this.chatClient.onMessage(async (channel: string, user: string, message: string, msg: TwitchPrivateMessage) => {
-            await this.messageHandler.handle(channel, user, message, msg);
+        this.chatClient.onMessage((channel: string, user: string, text: string, msg: ChatMessage) => {
+            this.messageHandler.handle(channel, user, text, msg.userInfo);
         });
 
         this.chatClient.onRaid(async (channel: string, user: string, raidInfo: ChatRaidInfo, msg: UserNotice) => {
@@ -43,9 +42,11 @@ export default class ChatBot {
         // this.chatClient.onCommunitySub(this.subscriptionHandlers.onCommunitySub);
         // this.chatClient.onSubGift(this.subscriptionHandlers.onSubGift);
 
-        this.chatClient.connect()
-            .then(() => this.logger.info('--Start up -- Chat Client Connected'))
-            .catch(err => this.logger.error(`-- Start up --`, err));
+        this.chatClient.connect();
+
+        this.chatClient.onConnect(() => this.logger.info('--Start up -- Chat Client Connected'));
+        this.chatClient.onAuthenticationSuccess(() => this.logger.info('--Start up -- Chat Client Authenticated'));
+        this.chatClient.onAuthenticationFailure((text: string, retryCount: number) => this.logger.error('--Start up -- Chat Client unable to authenticate'));
     }
 
     async shutdown() {

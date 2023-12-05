@@ -21,7 +21,7 @@ const timeout: number = 5 /* minutes */ * 60; /* seconds */
 
 @injectable()
 export class DeathCommand implements ICommandHandler {
-    exp: RegExp = /^!(death|died)$ /i;
+    exp: RegExp = /^!(death|died)$/i;
     timeout: number = 5;
     mod: boolean = true;
     vip: boolean = true;

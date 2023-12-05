@@ -1,5 +1,4 @@
 import { ApiClient, HelixPaginatedScheduleFilter, HelixPaginatedVideoFilter, HelixUser } from '@twurple/api';
-import { HelixPaginatedScheduleResult } from '@twurple/api/lib/interfaces/helix/schedule.input';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import dayjs from 'dayjs';
 import isToday from 'dayjs/plugin/isToday';
@@ -7,6 +6,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import calendar from 'dayjs/plugin/calendar';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
+import { HelixPaginatedScheduleResult } from '@twurple/api/lib/interfaces/endpoints/schedule.input';
 import ICommandHandler from './iCommandHandler';
 import { TYPES } from '../../dependency-management/types';
 

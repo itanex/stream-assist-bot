@@ -4,9 +4,7 @@
 // so that a singleton is created.
 import 'reflect-metadata';
 import { ApiClient, ApiConfig } from '@twurple/api';
-import { RefreshingAuthProvider } from '@twurple/auth';
 import { ChatClient } from '@twurple/chat';
-import fs, { promises as afs } from 'fs';
 import { Container } from 'inversify';
 import winston from 'winston';
 import {
@@ -52,9 +50,8 @@ import {
 } from '../bot/handlers';
 import { Broadcaster } from '../utilities/broadcaster';
 import { TYPES } from './types';
-// import { IRepository, DeathRepository } from '../repositories/Repositories';
-import { DeathCountRecord } from '../repositories/types/DeathCountRecord';
 import Database from '../database/database';
+import authProvider from './auth/authProvider';
 
 const SAContainer = new Container();
 
@@ -63,8 +60,6 @@ SAContainer.bind<Database>(Database).toSelf().inSingletonScope();
 SAContainer.bind<Broadcaster>(Broadcaster).toSelf().inSingletonScope();
 
 SAContainer.bind<ChatBot>(ChatBot).toSelf().inSingletonScope();
-
-// SAContainer.bind<IRepository<DeathCountRecord>>(TYPES.Repository).to(DeathRepository).whenTargetNamed('DeathRepository');
 
 // Bot Stream Event Handler bindings
 // SAContainer.bind<IFollowStreamEvent>(FollowHandler).toSelf();
@@ -102,19 +97,6 @@ SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(ShoutOutCommand);
 SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(SocialsCommand);
 SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(UpTimeCommand);
 SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(WishListCommand);
-
-const tokenFilePath = './local-cache/auth-tokens.json';
-
-const tokenData = JSON.parse(fs.readFileSync(tokenFilePath, 'utf-8'));
-
-const authProvider = new RefreshingAuthProvider(
-    {
-        clientId: environment.clientId,
-        clientSecret: environment.clientSecret,
-        onRefresh: async newTokenData => afs.writeFile(tokenFilePath, JSON.stringify(newTokenData, null, 4), 'utf-8'),
-    },
-    tokenData,
-);
 
 // Bind dependencies to container
 SAContainer
