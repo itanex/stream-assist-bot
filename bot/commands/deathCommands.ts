@@ -109,20 +109,25 @@ export class DeathCountCommand implements ICommandHandler {
         const stream = await broadcaster.getStream();
 
         await DeathCounts
-            .findOne({
+            .findOrCreate({
                 where: {
                     streamId: stream.id,
                     gameId: stream.gameId,
                 },
+                defaults: {
+                    deathCount: 0,
+                    gameId: stream.gameId,
+                    game: stream.gameName,
+                    streamId: stream.id,
+                },
             })
-            .then(({ deathCount }) => {
-                if (deathCount > 1) {
-                    this.chatClient.say(channel, `We have used ${deathCount} Timy today`);
+            .then(async ([instance]) => {
+                if (instance.deathCount > 1) {
+                    this.chatClient.say(channel, `We have used ${instance.deathCount} Timy today`);
                 } else {
-                    this.chatClient.say(channel, `We have used ${deathCount} Timys today`);
+                    this.chatClient.say(channel, `We have used ${instance.deathCount} Timys today`);
                 }
-
-                this.logger.info(`* Executed ${commandName} in ${channel} :: ${deathCount} || ${userstate.displayName}`);
+                this.logger.info(`* Executed ${commandName} in ${channel} :: ${instance.deathCount} || ${userstate.displayName}`);
             });
     }
 }
