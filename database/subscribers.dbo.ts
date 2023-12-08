@@ -1,6 +1,6 @@
 import { Model, Table, Column, DataType, ForeignKey, BelongsTo } from 'sequelize-typescript';
-import SubsciptionGiftUsers from './subsciptionGiftUsers.dbo';
-import { SubscriptionType } from './subcriptionType';
+import SubscriptionGiftUsers from './subscriptionGiftUsers.dbo';
+import SubscriptionType from './subscriptionType';
 
 @Table({
     tableName: 'subscribers',
@@ -55,10 +55,10 @@ export default class Subscribers extends Model {
     })
     time?: string;
 
-    @ForeignKey(() => SubsciptionGiftUsers)
+    @ForeignKey(() => SubscriptionGiftUsers)
     @Column({ allowNull: true })
     giftUserId: number;
 
-    @BelongsTo(() => SubsciptionGiftUsers)
-    gift: SubsciptionGiftUsers;
+    @BelongsTo(() => SubscriptionGiftUsers)
+    gift: SubscriptionGiftUsers;
 }

@@ -7,9 +7,11 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import ICommandHandler from './iCommandHandler';
 import { TYPES } from '../../dependency-management/types';
-import Subscribers from '../../database/subscribers.dbo';
-import SubsciptionGiftUsers from '../../database/subsciptionGiftUsers.dbo';
-import { SubscriptionType } from '../../database/subcriptionType';
+import {
+    Subscribers,
+    SubscriptionGiftUsers,
+    SubscriptionType,
+} from '../../database';
 
 dayjs.extend(isToday);
 dayjs.extend(relativeTime);
@@ -34,7 +36,7 @@ export class LastSubCommand implements ICommandHandler {
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         await Subscribers
-            .findOne({ order: [['createdAt', 'DESC']], include: [SubsciptionGiftUsers] })
+            .findOne({ order: [['createdAt', 'DESC']], include: [SubscriptionGiftUsers] })
             .then(record => {
                 const lastDate = dayjs(record.createdAt).fromNow();
 

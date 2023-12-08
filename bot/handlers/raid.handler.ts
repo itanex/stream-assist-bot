@@ -7,7 +7,7 @@ import environment from '../../configurations/environment';
 import { ICommandHandler, ShoutOutCommand } from '../commands';
 import { TYPES } from '../../dependency-management/types';
 import Database from '../../database/database';
-import Raiders from '../../database/raiders.dbo';
+import { Raiders } from '../../database';
 
 export interface IRaidStreamEvent {
     onRaid(channel: string, user: string, raidInfo: ChatRaidInfo, message: UserNotice): Promise<void>;
@@ -17,6 +17,7 @@ export interface IRaidStreamEvent {
 export class RaidHandler implements IRaidStreamEvent {
     private readonly command = 'raid triggered shout out';
     private readonly shoutOutCommand: ShoutOutCommand;
+
     /**
      *
      */
@@ -54,12 +55,6 @@ export class RaidHandler implements IRaidStreamEvent {
         });
 
         await raider.save();
-
-        // Repository.create<RaiderRecord>(DataKeys.Raiders, {
-        //     raider: raidInfo.displayName,
-        //     time: dayjs().toISOString(),
-        //     viewerCount: raidInfo.viewerCount,
-        // });
 
         this.logger.info(`* Executed Raid Handler :: ${user}|${raidInfo.displayName} > Viewers: ${raidInfo.viewerCount}`);
     }

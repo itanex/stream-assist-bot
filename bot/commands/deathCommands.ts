@@ -9,7 +9,7 @@ import ICommandHandler from './iCommandHandler';
 import { TYPES } from '../../dependency-management/types';
 import { CommandTimeout } from '../types/CommandTimeout';
 import { Broadcaster } from '../../utilities/broadcaster';
-import DeathCounts from '../../database/deathCountRecord.dbo';
+import { DeathCounts } from '../../database';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(isToday);

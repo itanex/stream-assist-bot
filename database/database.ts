@@ -3,27 +3,13 @@ import winston from 'winston';
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
 import { Dialect } from '@sequelize/core';
 import { TYPES } from '../dependency-management/types';
-import Raiders from './raiders.dbo';
-import LurkingUsers from './lurkingUser.dbo';
-import DeathCounts from './deathCountRecord.dbo';
-import Subscribers from './subscribers.dbo';
-import SubsciptionGiftUsers from './subsciptionGiftUsers.dbo';
-
-// Option 1: Passing a connection URI
-// const sequelize = new Sequelize('sqlite::memory:') // Example for sqlite
-// const sequelize = new Sequelize('postgres://user:pass@example.com:5432/dbname') // Example for postgres
-
-// Option 2: Passing parameters separately (sqlite)
-// const sequelize = new Sequelize({
-//   dialect: 'sqlite',
-//   storage: 'path/to/database.sqlite'
-// });
-
-// Option 3: Passing parameters separately (other dialects)
-// const sequelize = new Sequelize('database', 'username', 'password', {
-//   host: 'localhost',
-//   dialect: /* one of 'mysql' | 'postgres' | 'sqlite' | 'mariadb' | 'mssql' | 'db2' | 'snowflake' | 'oracle' */
-// });
+import {
+    DeathCounts,
+    LurkingUsers,
+    Raiders,
+    SubscriptionGiftUsers,
+    Subscribers,
+} from '.';
 
 const databaseName = 'StreamAssistBot';
 const dbUsername = 'stream-assist-bot';
@@ -56,7 +42,7 @@ const pgConfig: SequelizeOptions = {
         LurkingUsers,
         DeathCounts,
         Subscribers,
-        SubsciptionGiftUsers,
+        SubscriptionGiftUsers,
     ],
 };
 

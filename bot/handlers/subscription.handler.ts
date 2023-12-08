@@ -1,12 +1,20 @@
-/* eslint-disable no-unused-vars */
-import { ChatClient, ChatCommunitySubInfo, ChatSubExtendInfo, ChatSubGiftInfo, ChatSubInfo, UserNotice } from '@twurple/chat';
+import {
+    ChatClient,
+    ChatCommunitySubInfo,
+    ChatSubExtendInfo,
+    ChatSubGiftInfo,
+    ChatSubInfo,
+    UserNotice,
+} from '@twurple/chat';
 import dayjs from 'dayjs';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import { TYPES } from '../../dependency-management/types';
-import Subscribers from '../../database/subscribers.dbo';
-import { SubscriptionType } from '../../database/subcriptionType';
-import SubsciptionGiftUsers from '../../database/subsciptionGiftUsers.dbo';
+import {
+    Subscribers,
+    SubscriptionGiftUsers,
+    SubscriptionType,
+} from '../../database';
 
 export interface ISubscriptionStreamEvent {
     onSubscribe(channel: string, user: string, subInfo: ChatSubInfo, message: UserNotice): Promise<void>;
@@ -111,7 +119,7 @@ export class SubscriptionHandlers implements ISubscriptionStreamEvent {
                     giftCount: subInfo.gifterGiftCount,
                 },
             }, {
-                include: [SubsciptionGiftUsers],
+                include: [SubscriptionGiftUsers],
             });
 
         this.logger.info(`* Executed Community Gift Sub Handler :: "${user}", ${JSON.stringify(subInfo)}`);
@@ -141,7 +149,7 @@ export class SubscriptionHandlers implements ISubscriptionStreamEvent {
                     giftCount: subInfo.gifterGiftCount,
                 },
             }, {
-                include: [SubsciptionGiftUsers],
+                include: [SubscriptionGiftUsers],
             });
 
         this.logger.info(`* Executed Gift Sub Handler :: "${user}", ${JSON.stringify(subInfo)}`);

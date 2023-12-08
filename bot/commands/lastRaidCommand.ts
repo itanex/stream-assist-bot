@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import ICommandHandler from './iCommandHandler';
 import { TYPES } from '../../dependency-management/types';
-import Raiders from '../../database/raiders.dbo';
+import { Raiders } from '../../database';
 
 dayjs.extend(isToday);
 dayjs.extend(relativeTime);

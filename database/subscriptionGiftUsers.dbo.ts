@@ -2,10 +2,10 @@ import { Model, Column, DataType, HasMany, Table } from 'sequelize-typescript';
 import Subscribers from './subscribers.dbo';
 
 @Table({
-    tableName: 'subsciptionGiftUsers',
+    tableName: 'subscriptionGiftUsers',
     paranoid: true,
 })
-export default class SubsciptionGiftUsers extends Model {
+export default class SubscriptionGiftUsers extends Model {
     @Column({
         type: DataType.STRING(40),
         field: 'gifter',

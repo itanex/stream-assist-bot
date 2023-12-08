@@ -1,5 +1,4 @@
 import { ChatClient, ChatUser } from '@twurple/chat';
-import { TwitchPrivateMessage } from '@twurple/chat/lib/commands/TwitchPrivateMessage';
 import { inject, injectable, multiInject } from 'inversify';
 import winston from 'winston';
 import { TYPES } from '../../dependency-management/types';
