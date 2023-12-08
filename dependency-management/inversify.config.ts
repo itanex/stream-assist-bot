@@ -4,7 +4,7 @@
 // so that a singleton is created.
 import 'reflect-metadata';
 import { ApiClient, ApiConfig } from '@twurple/api';
-import { ChatClient } from '@twurple/chat';
+import { ChatClient, LogLevel } from '@twurple/chat';
 import { Container } from 'inversify';
 import winston from 'winston';
 import {
@@ -112,6 +112,27 @@ SAContainer
             botLevel: 'none',
             isAlwaysMod: true,
             requestMembershipEvents: true,
+            logger: {
+                custom: {
+                    log: (level: LogLevel, message) => {
+                        logger.info(`Level (${level}): ${message}`);
+                    },
+                    // crit: logger.crit,
+                    debug: message => {
+                        logger.debug(message);
+                    },
+                    error: message => {
+                        logger.error(message);
+                    },
+                    info: message => {
+                        logger.info(message);
+                    },
+                    trace: message => {
+                        logger.debug(`TRACE: ${message}`);
+                    },
+                    // warn: logger.warn,
+                },
+            },
         }),
     );
 
@@ -120,6 +141,27 @@ SAContainer
     .toConstantValue(
         new ApiClient(<ApiConfig>{
             authProvider,
+            logger: {
+                custom: {
+                    log: (level: LogLevel, message) => {
+                        logger.info(`Level (${level}): ${message}`);
+                    },
+                    // crit: logger.crit,
+                    debug: message => {
+                        logger.debug(message);
+                    },
+                    error: message => {
+                        logger.error(message);
+                    },
+                    info: message => {
+                        logger.info(message);
+                    },
+                    trace: message => {
+                        logger.debug(`TRACE: ${message}`);
+                    },
+                    // warn: logger.warn,
+                },
+            },
         }),
     );
 
