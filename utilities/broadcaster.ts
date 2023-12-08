@@ -1,17 +1,17 @@
-import { ApiClient, HelixPrivilegedUser } from '@twurple/api';
+import { ApiClient, HelixPrivilegedUser, HelixStream } from '@twurple/api';
 import { inject, injectable } from 'inversify';
 import environment from '../configurations/environment';
-// import winston from 'winston';
 
 @injectable()
 export class Broadcaster {
     constructor(
         @inject(ApiClient) private apiClient: ApiClient,
-        // @inject(TYPES.Logger) private logger: winston.Logger
     ) {
-
     }
 
+    /**
+     * Get the broadcaster info for the configured broadcaster
+     */
     async getBroadcaster(): Promise<HelixPrivilegedUser> {
         return this.apiClient.users.getAuthenticatedUser(environment.broadcasterId);
     }
