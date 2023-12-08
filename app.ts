@@ -47,8 +47,8 @@ SAContainer.bind<App>(App).to(App).inSingletonScope();
 const application = SAContainer.get<App>(App);
 
 application.main()
-    .catch(() => {
-        application.logger.error('Process Terminated (-1)');
+    .catch(reason => {
+        application.logger.error(`Process Terminated (-1): ${reason}`);
         process.exit(1);
     });
 
