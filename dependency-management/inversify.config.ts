@@ -83,7 +83,7 @@ SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(DivideByZeroCommand)
 SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(DrinkCommand);
 SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(EightBallCommand);
 SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(FallCommand);
-// SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(FollowAgeCommand);
+SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(FollowAgeCommand);
 // SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(GiveAwayCommand);
 SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(HelpCommand);
 SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(HugCommand);

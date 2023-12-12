@@ -1,17 +1,11 @@
 import { ApiClient } from '@twurple/api';
 import { ChatClient, ChatUser } from '@twurple/chat';
-import dayjs from 'dayjs';
-import isToday from 'dayjs/plugin/isToday';
-import relativeTime from 'dayjs/plugin/relativeTime';
-import calendar from 'dayjs/plugin/calendar';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import ICommandHandler from './iCommandHandler';
 import { TYPES } from '../../dependency-management/types';
-
-dayjs.extend(isToday);
-dayjs.extend(relativeTime);
-dayjs.extend(calendar);
+import environment from '../../configurations/environment';
+import Timespan, { getAgeReport } from '../../utilities/timeSpan';
 
 @injectable()
 export class FollowAgeCommand implements ICommandHandler {
@@ -32,20 +26,32 @@ export class FollowAgeCommand implements ICommandHandler {
     }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        // if (args[1]) {
-        //     const user = await this.apiClient.users.getUserByName(args[1]);
-        //     const follow = await this.apiClient.users.getFollowFromUserToBroadcaster(user.id, (await Broadcaster()).id);
-        //     const created = dayjs(follow.followDate);
+        let followingUser: { displayName: string, id: string } = null;
 
-        //     this.chatClient.say(channel, `@${user.displayName} has been following ${(await Broadcaster()).displayName} for ${created.fromNow(true)}`);
-        // } else {
-        //     if (userstate.isBroadcaster) {
-        //         return;
-        //     }
+        if (args[1]) { // if args1 results in a username as part of the command being executed
+            const user = await this.apiClient.users.getUserByName(args[1]);
+            followingUser = {
+                displayName: user.displayName,
+                id: user.id,
+            };
+        } else if (!userstate.isBroadcaster) {
+            followingUser = {
+                displayName: userstate.displayName,
+                id: userstate.userId,
+            };
+        }
 
-        //     return;
-        // }
+        if (followingUser) {
+            const follower = await this.apiClient.channels
+                .getChannelFollowers(environment.broadcasterId, followingUser.id);
 
-        // this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
+            const ageTimeSpan = (new Timespan())
+                .FromNow(follower.data[0].followDate)
+                .getTimeSpan;
+
+            this.chatClient.say(channel, `@${followingUser.displayName} has been following ${channel} for ${getAgeReport(ageTimeSpan)}`);
+        }
+
+        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }
