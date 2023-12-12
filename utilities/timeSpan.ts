@@ -1,17 +1,47 @@
 export type TimespanReport = {
-    Years: number,
-    Months: number,
-    Days: number,
-    Hours: number,
-    Minutes: number,
-    Seconds: number,
-    Milliseconds: number,
-    TotalDays: number,
-    TotalHours: number,
-    TotalMinutes: number,
-    TotalSeconds: number,
-    TotalMilliseconds: number,
+    years: number,
+    months: number,
+    days: number,
+    hours: number,
+    minutes: number,
+    seconds: number,
+    milliseconds: number,
+}
 
+export function getAgeReport(timespan: TimespanReport) {
+    const result: string[] = [];
+
+    if (timespan.years) {
+        result.push(timespan.years === 1
+            ? `${timespan.years} year`
+            : `${timespan.years} years`);
+    }
+
+    if (timespan.months) {
+        result.push(timespan.months === 1
+            ? `${timespan.months} month`
+            : `${timespan.months} months`);
+    }
+
+    if (timespan.days) {
+        result.push(timespan.days === 1
+            ? `${timespan.days} day`
+            : `${timespan.days} days`);
+    }
+
+    if (timespan.hours) {
+        result.push(timespan.hours === 1
+            ? `${timespan.hours} hour`
+            : `${timespan.hours} hours`);
+    }
+
+    if (timespan.minutes && !timespan.years && !timespan.months) {
+        result.push(timespan.minutes === 1
+            ? `${timespan.minutes} minute`
+            : `${timespan.minutes} minutes`);
+    }
+
+    return result.join(' ');
 }
 
 export default class Timespan {
@@ -76,18 +106,13 @@ export default class Timespan {
 
     public get getTimeSpan(): TimespanReport {
         return {
-            Years: this.Years,
-            Months: this.Months,
-            Days: this.Days,
-            Hours: this.Hours,
-            Minutes: this.Minutes,
-            Seconds: this.Seconds,
-            Milliseconds: this.Milliseconds,
-            TotalDays: this.TotalDays,
-            TotalHours: this.TotalHours,
-            TotalMinutes: this.TotalMinutes,
-            TotalSeconds: this.TotalSeconds,
-            TotalMilliseconds: this.TotalMilliseconds,
+            years: this.Years,
+            months: this.Months,
+            days: this.Days,
+            hours: this.Hours,
+            minutes: this.Minutes,
+            seconds: this.Seconds,
+            milliseconds: this.Milliseconds,
         };
     }
 }

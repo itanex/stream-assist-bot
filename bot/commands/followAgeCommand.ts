@@ -4,9 +4,8 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import ICommandHandler from './iCommandHandler';
 import { TYPES } from '../../dependency-management/types';
-import { Broadcaster } from '../../utilities/broadcaster';
 import environment from '../../configurations/environment';
-import Timespan, { TimespanReport } from '../../utilities/timeSpan';
+import Timespan, { getAgeReport } from '../../utilities/timeSpan';
 
 @injectable()
 export class FollowAgeCommand implements ICommandHandler {
@@ -22,7 +21,6 @@ export class FollowAgeCommand implements ICommandHandler {
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(ApiClient) private apiClient: ApiClient,
-        @inject(Broadcaster) private broadcaster: Broadcaster,
         @inject(TYPES.Logger) private logger: winston.Logger,
     ) {
     }
@@ -51,47 +49,9 @@ export class FollowAgeCommand implements ICommandHandler {
                 .FromNow(follower.data[0].followDate)
                 .getTimeSpan;
 
-            const ageReport = this.getAgeReport(ageTimeSpan);
-
-            this.chatClient.say(channel, `@${followingUser.displayName} has been following ${channel} for ${ageReport}`);
+            this.chatClient.say(channel, `@${followingUser.displayName} has been following ${channel} for ${getAgeReport(ageTimeSpan)}`);
         }
 
         this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
-    }
-
-    getAgeReport(timespan: TimespanReport) {
-        const result: string[] = [];
-
-        if (timespan.Years) {
-            result.push(timespan.Years === 1
-                ? `${timespan.Years} year`
-                : `${timespan.Years} years`);
-        }
-
-        if (timespan.Months) {
-            result.push(timespan.Months === 1
-                ? `${timespan.Months} month`
-                : `${timespan.Months} months`);
-        }
-
-        if (timespan.Days) {
-            result.push(timespan.Days === 1
-                ? `${timespan.Days} day`
-                : `${timespan.Days} days`);
-        }
-
-        if (timespan.Hours) {
-            result.push(timespan.Hours === 1
-                ? `${timespan.Hours} hour`
-                : `${timespan.Hours} hours`);
-        }
-
-        // if (timespan.Minutes) {
-        //     result.push(timespan.Minutes === 1
-        //         ? `${timespan.Minutes} minute`
-        //         : `${timespan.Minutes} minutes`);
-        // }
-
-        return result.join(' ');
     }
 }
