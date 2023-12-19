@@ -10,10 +10,7 @@ import {
     SubscriptionGiftUsers,
     Subscribers,
 } from '.';
-
-const databaseName = 'StreamAssistBot';
-const dbUsername = 'stream-assist-bot';
-const dbPassword = 'stream-assist-bot';
+import environment from '../configurations/environment';
 
 /**
  * which sequelize dialect to use
@@ -25,10 +22,11 @@ const dbDialect: Dialect = 'postgres';
  * sequelize syntax
  */
 const pgConfig: SequelizeOptions = {
-    database: 'pg-prototype',
-    username: 'postgres',
-    password: 'Vsnyi&FN^oLXUVqdjm9v4',
-    host: 'localhost',
+    database: environment.postgresDB.database,
+    username: environment.postgresDB.username,
+    password: environment.postgresDB.password,
+    host: environment.postgresDB.host,
+    port: environment.postgresDB.port,
     dialect: dbDialect,
     pool: {
         max: 5,

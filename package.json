@@ -27,7 +27,8 @@
     "ts-node": "^10.9.0",
     "uuid": "^9.0.0",
     "winston": "^3.8.2",
-    "winston-daily-rotate-file": "^4.7.1"
+    "winston-daily-rotate-file": "^4.7.1",
+    "typescript": "^4.9.3"
   },
   "devDependencies": {
     "@types/md5": "^2.3.2",
@@ -38,11 +39,10 @@
     "@typescript-eslint/parser": "^5.43.0",
     "eslint": "^8.28.0",
     "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.26.0",
-    "typescript": "^4.9.3"
+    "eslint-plugin-import": "^2.26.0"
   },
   "scripts": {
-    "start": "ts-node app.ts",
+    "start": "docker compose up -d && ts-node app.ts",
     "test": "mocha -r ts-node/register **/*.spec.ts"
   },
   "keywords": [

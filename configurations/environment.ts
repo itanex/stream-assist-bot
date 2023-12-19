@@ -8,6 +8,13 @@ const environment = {
     broadcasterId: process.env.BROADCASTER_ID,
     clientId: process.env.APP_CLIENT_ID,
     clientSecret: process.env.APP_CLIENT_SECRET,
+    postgresDB: {
+        database: process.env.POSTGRES_DB,
+        username: process.env.POSTGRES_USER,
+        password: process.env.POSTGRES_PASSWORD,
+        host: process.env.POSTGRES_HOST,
+        port: Number(process.env.POSTGRES_PORT),
+    },
     twitchBot: {
         username: process.env.TWITCH_BOT_USERNAME,
         oauthToken: process.env.TWITCH_OAUTH_TOKEN,
