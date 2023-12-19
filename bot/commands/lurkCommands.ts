@@ -1,7 +1,7 @@
 import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import { TYPES } from '../../dependency-management/types';
+import InjectionTypes from '../../dependency-management/types';
 import ICommandHandler from './iCommandHandler';
 import { LurkingUsers } from '../../database';
 
@@ -18,7 +18,7 @@ export class LurkCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(TYPES.Logger) private logger: winston.Logger,
+        @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
@@ -60,7 +60,7 @@ export class UnLurkCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(TYPES.Logger) private logger: winston.Logger,
+        @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
@@ -100,7 +100,7 @@ export class WhoIsLurkingCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(TYPES.Logger) private logger: winston.Logger,
+        @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 

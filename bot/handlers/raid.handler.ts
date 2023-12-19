@@ -5,7 +5,7 @@ import { inject, injectable, multiInject, named } from 'inversify';
 import winston from 'winston';
 import environment from '../../configurations/environment';
 import { ICommandHandler, ShoutOutCommand } from '../commands';
-import { TYPES } from '../../dependency-management/types';
+import InjectionTypes from '../../dependency-management/types';
 import Database from '../../database/database';
 import { Raiders } from '../../database';
 
@@ -23,9 +23,9 @@ export class RaidHandler implements IRaidStreamEvent {
      */
     constructor(
         @inject(ApiClient) private apiClient: ApiClient,
-        @multiInject(TYPES.CommandHandlers) commandHandlers: ICommandHandler[],
+        @multiInject(InjectionTypes.CommandHandlers) commandHandlers: ICommandHandler[],
         @inject(Database) private database: Database,
-        @inject(TYPES.Logger) private logger: winston.Logger,
+        @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
         // clear
         this.shoutOutCommand = commandHandlers.find(x => x.constructor.name === `${ShoutOutCommand.name}`) as ShoutOutCommand;

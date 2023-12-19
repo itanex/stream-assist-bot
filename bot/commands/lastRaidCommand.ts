@@ -6,7 +6,7 @@ import calendar from 'dayjs/plugin/calendar';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import ICommandHandler from './iCommandHandler';
-import { TYPES } from '../../dependency-management/types';
+import InjectionTypes from '../../dependency-management/types';
 import { Raiders } from '../../database';
 
 dayjs.extend(isToday);
@@ -26,7 +26,7 @@ export class LastRaidCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(TYPES.Logger) private logger: winston.Logger,
+        @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 

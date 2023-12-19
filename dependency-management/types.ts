@@ -1,7 +1,7 @@
-const TYPES = {
+const InjectionTypes = {
     CommandHandlers: 'CommandHandlers',
     Logger: 'Logger',
     Repository: 'Repository',
 };
 
-export { TYPES };
+export default InjectionTypes;

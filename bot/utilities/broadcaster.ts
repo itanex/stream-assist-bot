@@ -1,9 +1,9 @@
 import { ApiClient, HelixPrivilegedUser, HelixStream } from '@twurple/api';
 import { inject, injectable } from 'inversify';
-import environment from '../configurations/environment';
+import environment from '../../configurations/environment';
 
 @injectable()
-export class Broadcaster {
+export default class Broadcaster {
     constructor(
         @inject(ApiClient) private apiClient: ApiClient,
     ) {

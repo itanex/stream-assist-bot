@@ -3,7 +3,7 @@ import { ChatUser } from '@twurple/chat';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import environment from '../../configurations/environment';
-import { TYPES } from '../../dependency-management/types';
+import InjectionTypes from '../../dependency-management/types';
 import ICommandHandler from './iCommandHandler';
 
 @injectable()
@@ -28,7 +28,7 @@ export class GiveAwayCommand implements ICommandHandler {
 
     constructor(
         @inject(ApiClient) private apiClient: ApiClient,
-        @inject(TYPES.Logger) private logger: winston.Logger,
+        @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 

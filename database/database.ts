@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
 import { Dialect } from '@sequelize/core';
-import { TYPES } from '../dependency-management/types';
+import InjectionTypes from '../dependency-management/types';
 import {
     DeathCounts,
     LurkingUsers,
@@ -53,7 +53,7 @@ export default class Database {
     }
 
     constructor(
-        @inject(TYPES.Logger) private logger: winston.Logger,
+        @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
         this.sequelize = new Sequelize(pgConfig);
     }

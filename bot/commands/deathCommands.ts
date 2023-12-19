@@ -6,9 +6,9 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import { QueryTypes } from 'sequelize';
 import ICommandHandler from './iCommandHandler';
-import { TYPES } from '../../dependency-management/types';
+import InjectionTypes from '../../dependency-management/types';
 import { CommandTimeout } from '../types/CommandTimeout';
-import { Broadcaster } from '../../utilities/broadcaster';
+import Broadcaster from '../utilities/broadcaster';
 import { DeathCounts } from '../../database';
 
 dayjs.extend(localizedFormat);
@@ -39,7 +39,7 @@ export class DeathCommand implements ICommandHandler {
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(Broadcaster) private broadcaster: Broadcaster,
-        @inject(TYPES.Logger) private logger: winston.Logger,
+        @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
@@ -100,7 +100,7 @@ export class DeathCountCommand implements ICommandHandler {
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(Broadcaster) private broadcaster: Broadcaster,
-        @inject(TYPES.Logger) private logger: winston.Logger,
+        @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
@@ -146,7 +146,7 @@ export class LastDeathCountCommmand implements ICommandHandler {
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(Broadcaster) private broadcaster: Broadcaster,
-        @inject(TYPES.Logger) private logger: winston.Logger,
+        @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 

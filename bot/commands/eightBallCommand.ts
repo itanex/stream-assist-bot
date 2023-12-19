@@ -7,7 +7,7 @@ import path from 'path';
 import md5 from 'md5';
 import sound from 'sound-play';
 import ICommandHandler from './iCommandHandler';
-import { TYPES } from '../../dependency-management/types';
+import InjectionTypes from '../../dependency-management/types';
 
 const responses = [
     `It is certain.`,
@@ -83,7 +83,7 @@ export class EightBallCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(TYPES.Logger) private logger: winston.Logger,
+        @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 

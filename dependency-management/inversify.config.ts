@@ -48,10 +48,10 @@ import {
     RaidHandler,
     SubscriptionHandlers,
 } from '../bot/handlers';
-import { Broadcaster } from '../utilities/broadcaster';
-import { TYPES } from './types';
+import Broadcaster from '../bot/utilities/broadcaster';
+import InjectionTypes from './types';
 import Database from '../database/database';
-import authProvider from './auth/authProvider';
+import authProvider from '../bot/auth/authProvider';
 
 const SAContainer = new Container();
 
@@ -68,39 +68,39 @@ SAContainer.bind<IRaidStreamEvent>(RaidHandler).toSelf();
 SAContainer.bind<ISubscriptionStreamEvent>(SubscriptionHandlers).toSelf();
 
 // Bot Command Handler bindings
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(AboutCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(AccountAgeCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(CharityCommand);
-// SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(collabadd);
-// SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(collab);
-// SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(collabdisable);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(CountExhaustCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(CuddleCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(DeathCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(DeathCountCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(DiceCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(DivideByZeroCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(DrinkCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(EightBallCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(FallCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(FollowAgeCommand);
-// SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(GiveAwayCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(HelpCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(HugCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(LastDeathCountCommmand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(LastRaidCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(LastSubCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(LurkCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(UnLurkCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(WhoIsLurkingCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(ShoutOutCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(SocialsCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(UpTimeCommand);
-SAContainer.bind<ICommandHandler>(TYPES.CommandHandlers).to(WishListCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(AboutCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(AccountAgeCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(CharityCommand);
+// SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(collabadd);
+// SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(collab);
+// SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(collabdisable);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(CountExhaustCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(CuddleCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(DeathCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(DeathCountCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(DiceCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(DivideByZeroCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(DrinkCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(EightBallCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(FallCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(FollowAgeCommand);
+// SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(GiveAwayCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(HelpCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(HugCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(LastDeathCountCommmand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(LastRaidCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(LastSubCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(LurkCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(UnLurkCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(WhoIsLurkingCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(ShoutOutCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(SocialsCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(UpTimeCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(WishListCommand);
 
 // Bind dependencies to container
 SAContainer
-    .bind<winston.Logger>(TYPES.Logger)
+    .bind<winston.Logger>(InjectionTypes.Logger)
     .toConstantValue(logger);
 
 SAContainer
@@ -165,4 +165,4 @@ SAContainer
         }),
     );
 
-export { SAContainer };
+export default SAContainer;

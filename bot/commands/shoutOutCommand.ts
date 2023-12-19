@@ -8,7 +8,7 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import { HelixPaginatedScheduleResult } from '@twurple/api/lib/interfaces/endpoints/schedule.input';
 import ICommandHandler from './iCommandHandler';
-import { TYPES } from '../../dependency-management/types';
+import InjectionTypes from '../../dependency-management/types';
 
 dayjs.extend(isToday);
 dayjs.extend(relativeTime);
@@ -28,7 +28,7 @@ export class ShoutOutCommand implements ICommandHandler {
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(ApiClient) private apiClient: ApiClient,
-        @inject(TYPES.Logger) private logger: winston.Logger,
+        @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
         // call
     }

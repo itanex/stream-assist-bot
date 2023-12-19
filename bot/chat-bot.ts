@@ -13,7 +13,7 @@ import {
     RaidHandler,
     SubscriptionHandlers,
 } from './handlers';
-import { TYPES } from '../dependency-management/types';
+import InjectionTypes from '../dependency-management/types';
 
 @injectable()
 export default class ChatBot {
@@ -22,7 +22,7 @@ export default class ChatBot {
         @inject(MessageHandler) private messageHandler: MessageHandler,
         @inject(RaidHandler) private raidHandler: IRaidStreamEvent,
         @inject(SubscriptionHandlers) private subscriptionHandlers: ISubscriptionStreamEvent,
-        @inject(TYPES.Logger) private logger: winston.Logger,
+        @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
         this.logger.info(`** Chat Bot initialized **`);
     }

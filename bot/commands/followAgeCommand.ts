@@ -3,9 +3,9 @@ import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import ICommandHandler from './iCommandHandler';
-import { TYPES } from '../../dependency-management/types';
+import InjectionTypes from '../../dependency-management/types';
 import environment from '../../configurations/environment';
-import Timespan, { getAgeReport } from '../../utilities/timeSpan';
+import Timespan, { getAgeReport } from '../utilities/timeSpan';
 
 @injectable()
 export class FollowAgeCommand implements ICommandHandler {
@@ -21,7 +21,7 @@ export class FollowAgeCommand implements ICommandHandler {
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(ApiClient) private apiClient: ApiClient,
-        @inject(TYPES.Logger) private logger: winston.Logger,
+        @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
@@ -45,9 +45,7 @@ export class FollowAgeCommand implements ICommandHandler {
             const follower = await this.apiClient.channels
                 .getChannelFollowers(environment.broadcasterId, followingUser.id);
 
-            const ageTimeSpan = (new Timespan())
-                .FromNow(follower.data[0].followDate)
-                .getTimeSpan;
+            const ageTimeSpan = Timespan.fromNow(follower.data[0].followDate);
 
             this.chatClient.say(channel, `@${followingUser.displayName} has been following ${channel} for ${getAgeReport(ageTimeSpan)}`);
         }

@@ -4,8 +4,8 @@ import updateLocale from 'dayjs/plugin/updateLocale';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import ICommandHandler from './iCommandHandler';
-import { TYPES } from '../../dependency-management/types';
-import { Broadcaster } from '../../utilities/broadcaster';
+import InjectionTypes from '../../dependency-management/types';
+import Broadcaster from '../utilities/broadcaster';
 
 dayjs.extend(updateLocale);
 dayjs.updateLocale('en', {
@@ -42,7 +42,7 @@ export class UpTimeCommand implements ICommandHandler {
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(Broadcaster) private broadcaster: Broadcaster,
-        @inject(TYPES.Logger) private logger: winston.Logger,
+        @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 

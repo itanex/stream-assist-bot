@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import { TYPES } from '../../dependency-management/types';
+import InjectionTypes from '../../dependency-management/types';
 
 export interface IFollowStreamEvent {
     handle(channel: string, username: string): Promise<void>;
@@ -12,7 +12,7 @@ export class FollowHandler implements IFollowStreamEvent {
      *
      */
     constructor(
-        @inject(TYPES.Logger) private logger: winston.Logger
+        @inject(InjectionTypes.Logger) private logger: winston.Logger
     ) {
     }
 

@@ -1,8 +1,8 @@
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import ChatBot from './bot/chat-bot';
-import { SAContainer } from './dependency-management/inversify.config';
-import { TYPES } from './dependency-management/types';
+import SAContainer from './dependency-management/inversify.config';
+import InjectionTypes from './dependency-management/types';
 import Database from './database/database';
 import { clearLurkingUsers } from './bot/commands/lurkCommands';
 
@@ -11,7 +11,7 @@ class App {
     constructor(
         @inject(ChatBot) private chatBot: ChatBot,
         @inject(Database) private database: Database,
-        @inject(TYPES.Logger) public logger: winston.Logger,
+        @inject(InjectionTypes.Logger) public logger: winston.Logger,
     ) {
         this.logger.info(`** Application initialized **`);
     }

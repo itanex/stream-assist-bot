@@ -1,7 +1,7 @@
 import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable, multiInject } from 'inversify';
 import winston from 'winston';
-import { TYPES } from '../../dependency-management/types';
+import InjectionTypes from '../../dependency-management/types';
 import { ICommandHandler } from '../commands';
 import { CommandTimeout } from '../types/CommandTimeout';
 
@@ -13,8 +13,8 @@ export class MessageHandler {
      */
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @multiInject(TYPES.CommandHandlers) private commandHandlers: ICommandHandler[],
-        @inject(TYPES.Logger) private logger: winston.Logger,
+        @multiInject(InjectionTypes.CommandHandlers) private commandHandlers: ICommandHandler[],
+        @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 

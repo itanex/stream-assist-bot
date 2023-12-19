@@ -3,8 +3,8 @@ import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import ICommandHandler from './iCommandHandler';
-import { TYPES } from '../../dependency-management/types';
-import Timespan, { getAgeReport } from '../../utilities/timeSpan';
+import InjectionTypes from '../../dependency-management/types';
+import Timespan, { getAgeReport } from '../utilities/timeSpan';
 
 @injectable()
 export class AccountAgeCommand implements ICommandHandler {
@@ -20,7 +20,7 @@ export class AccountAgeCommand implements ICommandHandler {
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(ApiClient) private apiClient: ApiClient,
-        @inject(TYPES.Logger) private logger: winston.Logger,
+        @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
@@ -31,9 +31,7 @@ export class AccountAgeCommand implements ICommandHandler {
                 ? args[1].toLocaleLowerCase().trim()
                 : userstate.userName);
 
-        const ageTimeSpan = (new Timespan())
-            .FromNow(user.creationDate)
-            .getTimeSpan;
+        const ageTimeSpan = Timespan.fromNow(user.creationDate);
 
         this.chatClient.say(channel, `@${userstate.userName} was created ${getAgeReport(ageTimeSpan)}`);
 
