@@ -8,8 +8,15 @@ const consoleTransport = new winston.transports.Console({
     ),
 });
 
-const infoTransport: DailyRotateFile = new DailyRotateFile({
+const debugTransport: DailyRotateFile = new DailyRotateFile({
     level: 'debug',
+    filename: './logs/%DATE%-debug.log',
+    datePattern: 'YYYY-MM-DD',
+    zippedArchive: false,
+});
+
+const infoTransport: DailyRotateFile = new DailyRotateFile({
+    level: 'info',
     filename: './logs/%DATE%-info.log',
     datePattern: 'YYYY-MM-DD',
     zippedArchive: false,
@@ -35,6 +42,7 @@ const logger = winston.createLogger({
     transports: [
         errorTransport,
         infoTransport,
+        debugTransport,
     ],
 });
 
