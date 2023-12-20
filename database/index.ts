@@ -1,9 +1,9 @@
-import DeathCounts from './deathCountRecord.dbo';
-import LurkingUsers from './lurkingUser.dbo';
-import Raiders from './raiders.dbo';
-import Subscribers from './subscribers.dbo';
-import SubscriptionType from './subscriptionType';
-import SubscriptionGiftUsers from './subscriptionGiftUsers.dbo';
+import DeathCounts from './models/deathCountRecord.dbo';
+import LurkingUsers from './models/lurkingUser.dbo';
+import Raiders from './models/raiders.dbo';
+import Subscribers from './models/subscribers.dbo';
+import SubscriptionType from './models/subscriptionType';
+import SubscriptionGiftUsers from './models/subscriptionGiftUsers.dbo';
 
 export {
     DeathCounts,
