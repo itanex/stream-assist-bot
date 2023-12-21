@@ -4,6 +4,7 @@ import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types';
 import { ICommandHandler } from '../commands';
 import { CommandTimeout } from '../types/CommandTimeout';
+import Broadcaster from '../utilities/broadcaster';
 
 @injectable()
 export class MessageHandler {
@@ -14,6 +15,7 @@ export class MessageHandler {
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @multiInject(InjectionTypes.CommandHandlers) private commandHandlers: ICommandHandler[],
+        @inject(Broadcaster) private broadcaster: Broadcaster,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
@@ -22,11 +24,15 @@ export class MessageHandler {
         // Remove whitespace from chat message
         const inputCommand = message.trim();
 
+        // Get follower validation
+        const broadcaster = await this.broadcaster.getBroadcaster();
+        const isFollower = await broadcaster.isFollowedBy(chatUser.userId);
+
         // find command in list
         for (const command of this.commandHandlers) {
             const commandFrags = inputCommand.match(command.exp);
 
-            if (!this.isAuthorized(chatUser, command)) {
+            if (!this.isAuthorized(chatUser, isFollower, command)) {
                 continue;
             }
 
@@ -79,7 +85,7 @@ export class MessageHandler {
         }
     }
 
-    private isAuthorized(user: ChatUser, command: ICommandHandler): boolean {
+    private async isAuthorized(user: ChatUser, isFollower: boolean, command: ICommandHandler): Promise<boolean> {
         if (command.viewer) {
             return true;
         }
@@ -100,12 +106,7 @@ export class MessageHandler {
             return true;
         }
 
-        // ChatUser does not have a follower property
-        // if (user.follower && command.follower) {
-        //     return true;
-        // }
-
-        return false;
+        return isFollower;
     }
 
     private timeoutPeriod(user: ChatUser, command: ICommandHandler): number {
