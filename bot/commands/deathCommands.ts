@@ -26,7 +26,7 @@ export class DeathCommand implements ICommandHandler {
     mod: boolean = true;
     vip: boolean = true;
     subscriber: boolean = true;
-    follower: boolean = false;
+    follower: boolean = true;
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
 
@@ -93,7 +93,7 @@ export class DeathCountCommand implements ICommandHandler {
     mod: boolean = true;
     vip: boolean = true;
     subscriber: boolean = true;
-    follower: boolean = false;
+    follower: boolean = true;
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
 
@@ -139,7 +139,7 @@ export class LastDeathCountCommmand implements ICommandHandler {
     mod: boolean = true;
     vip: boolean = true;
     subscriber: boolean = true;
-    follower: boolean = false;
+    follower: boolean = true;
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
 
