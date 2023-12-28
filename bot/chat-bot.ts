@@ -4,6 +4,7 @@
 // so that a singleton is created.
 import 'reflect-metadata';
 import { ChatClient, ChatMessage, ChatRaidInfo, UserNotice } from '@twurple/chat';
+import { EventSubWsListener } from '@twurple/eventsub-ws';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import {
@@ -19,6 +20,7 @@ import InjectionTypes from '../dependency-management/types';
 export default class ChatBot {
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
+        @inject(EventSubWsListener) private eventSubWsListener: EventSubWsListener,
         @inject(MessageHandler) private messageHandler: MessageHandler,
         @inject(RaidHandler) private raidHandler: IRaidStreamEvent,
         @inject(SubscriptionHandlers) private subscriptionHandlers: ISubscriptionStreamEvent,
@@ -58,9 +60,12 @@ export default class ChatBot {
         });
 
         this.chatClient.connect();
+
+        this.eventSubWsListener.start();
     }
 
     async shutdown() {
+        this.eventSubWsListener.stop();
         return this.chatClient.quit();
     }
 }
