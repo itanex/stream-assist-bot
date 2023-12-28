@@ -5,6 +5,7 @@
 import 'reflect-metadata';
 import { ApiClient, ApiConfig } from '@twurple/api';
 import { ChatClient, LogLevel } from '@twurple/chat';
+import { EventSubWsListener } from '@twurple/eventsub-ws';
 import { Container } from 'inversify';
 import winston from 'winston';
 import {
@@ -162,6 +163,14 @@ SAContainer
                     // warn: logger.warn,
                 },
             },
+        }),
+    );
+
+SAContainer
+    .bind(EventSubWsListener)
+    .toConstantValue(
+        new EventSubWsListener({
+            apiClient: SAContainer.get<ApiClient>(ApiClient),
         }),
     );
 
