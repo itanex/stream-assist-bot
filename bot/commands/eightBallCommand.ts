@@ -6,6 +6,7 @@ import { getAudioBase64 } from 'google-tts-api';
 import path from 'path';
 import md5 from 'md5';
 import sound from 'sound-play';
+import * as VlcClient from 'vlc-client';
 import ICommandHandler from './iCommandHandler';
 import InjectionTypes from '../../dependency-management/types';
 
@@ -107,7 +108,7 @@ export class EightBallCommand implements ICommandHandler {
                     });
             }
 
-            this.playAudioFile(filePath);
+            await this.playAudioFile(filePath);
 
             this.chatClient.say(channel, answer);
 
@@ -125,10 +126,17 @@ export class EightBallCommand implements ICommandHandler {
         }
     }
 
-    private playAudioFile(filePath: string) {
-        const dirname = path.resolve();
-        const audioFile = path.join(dirname, filePath);
+    private async playAudioFile(filePath: string): Promise<void> {
+        const vlc = new VlcClient.Client({
+            ip: 'localhost',
+            port: 8080,
+            username: '', // username is optional
+            password: 'password',
+        });
 
-        sound.play(audioFile, 100);
+        const fullPath = path.resolve(filePath);
+
+        await vlc.emptyPlaylist();
+        await vlc.playFile(fullPath);
     }
 }
