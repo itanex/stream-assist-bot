@@ -1,6 +1,7 @@
 import { ChatUser } from '@twurple/chat';
+import winston from 'winston';
 import cron from 'node-cron';
-import { injectable, multiInject } from 'inversify';
+import { inject, injectable, multiInject } from 'inversify';
 import environment from '../configurations/environment';
 import { ICommandHandler, SocialsCommand } from './commands';
 import InjectionTypes from '../dependency-management/types';
@@ -21,25 +22,13 @@ export default class Scheduler {
      */
     constructor(
         @multiInject(InjectionTypes.CommandHandlers) commandHandlers: ICommandHandler[],
+        @inject(InjectionTypes.Logger) public logger: winston.Logger,
     ) {
         this.socialsCommand = commandHandlers.find(x => x.constructor.name === `${SocialsCommand.name}`) as SocialsCommand;
 
         this.chatUser = <ChatUser>{
             displayName: environment.username,
         };
-    }
-
-    report() {
-        console.log('Scheduler Report: Chat User', this.chatUser);
-    }
-
-    trigger() {
-        this.socialsCommand.handle(
-            environment.channel,
-            `${command} - Socials`,
-            this.chatUser,
-            '',
-        );
     }
 
     scheduleChatEvents() {
@@ -55,15 +44,6 @@ export default class Scheduler {
 
         socials.start();
 
-        // const wishlist = cron.schedule(
-        //     '8 */1 * * *',
-        //     () => onWishListCommand(
-        //         environment.channel,
-        //         `${command} - WishList/Throne`,
-        //         chatUser,
-        //         '',
-        //     ),
-        // );
-        // wishlist.start();
+        this.logger.info(`** ${command} - Socials has been scheduled **`);
     }
 }
