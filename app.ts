@@ -5,12 +5,14 @@ import SAContainer from './dependency-management/inversify.config';
 import InjectionTypes from './dependency-management/types';
 import Database from './database/database';
 import { clearLurkingUsers } from './bot/commands/lurkCommands';
+import Scheduler from './bot/scheduler';
 
 @injectable()
 class App {
     constructor(
         @inject(ChatBot) private chatBot: ChatBot,
         @inject(Database) private database: Database,
+        @inject(Scheduler) private scheduler: Scheduler,
         @inject(InjectionTypes.Logger) public logger: winston.Logger,
     ) {
         this.logger.info(`** Application initialized **`);
@@ -23,6 +25,7 @@ class App {
             this.chatBot.start(),
             this.database.connect(),
             this.database.sync(),
+            this.scheduler.scheduleChatEvents(),
         ]);
     }
 

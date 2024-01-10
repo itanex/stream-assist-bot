@@ -53,6 +53,7 @@ import Broadcaster from '../bot/utilities/broadcaster';
 import InjectionTypes from './types';
 import Database from '../database/database';
 import authProvider from '../bot/auth/authProvider';
+import Scheduler from '../bot/scheduler';
 
 const SAContainer = new Container();
 
@@ -61,6 +62,8 @@ SAContainer.bind<Database>(Database).toSelf().inSingletonScope();
 SAContainer.bind<Broadcaster>(Broadcaster).toSelf().inSingletonScope();
 
 SAContainer.bind<ChatBot>(ChatBot).toSelf().inSingletonScope();
+
+SAContainer.bind<Scheduler>(Scheduler).toSelf().inSingletonScope();
 
 // Bot Stream Event Handler bindings
 // SAContainer.bind<IFollowStreamEvent>(FollowHandler).toSelf();
