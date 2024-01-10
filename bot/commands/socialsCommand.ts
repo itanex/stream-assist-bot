@@ -23,7 +23,14 @@ export class SocialsCommand implements ICommandHandler {
     }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        this.chatClient.say(channel, `Join the conversation exclusively at ${environment.discordInvite}`);
+        const msg = `
+            Discord ${environment.discordInvite},
+            The social media site formerly known as Twitter ${environment.twitter.link},
+            and 
+            YouTube ${environment.youtube.link}.
+            `;
+
+        this.chatClient.say(channel, msg);
 
         this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
     }

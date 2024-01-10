@@ -34,6 +34,12 @@ const environment = {
         handle: process.env.TWITTER_HANDLE,
         link: process.env.TWITTER_LINK,
     },
+    weatherApi: {
+        apiKey: process.env.WEATHER_API_KEY,
+    },
+    youtube: {
+        link: process.env.YOUTUBE_LINK,
+    },
 };
 
 export default environment;
