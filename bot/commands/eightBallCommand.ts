@@ -3,9 +3,8 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import fs from 'fs';
 import { getAudioBase64 } from 'google-tts-api';
-import path from 'path';
 import md5 from 'md5';
-import sound from 'sound-play';
+import { WebSocket } from 'ws';
 import ICommandHandler from './iCommandHandler';
 import InjectionTypes from '../../dependency-management/types';
 
@@ -91,23 +90,30 @@ export class EightBallCommand implements ICommandHandler {
         if (responses.length) {
             const answer = responses[Math.floor(Math.random() * responses.length)];
             const rootPath = `local-cache/audio/8ball`;
-            const filePath = `${rootPath}/${md5(answer)}.en.mp3`;
+            const fileHash = md5(answer);
+            const langCode = 'en';
+            const filePath = `${rootPath}/${fileHash}.${langCode}.mp3`;
 
-            if (!fs.existsSync(filePath)) {
-                getAudioBase64(answer, {
-                    lang: 'en',
-                    slow: false,
-                    host: 'https://translate.google.com',
-                })
-                    .then(base64 => {
-                        const buffer = Buffer.from(base64, 'base64');
-                        this.generateFile(buffer, rootPath, filePath);
+            try {
+                if (!fs.existsSync(filePath)) {
+                    getAudioBase64(answer, {
+                        lang: 'en',
+                        slow: false,
+                        host: 'https://translate.google.com',
+                        timeout: 20000,
+                    })
+                        .then(base64 => {
+                            const buffer = Buffer.from(base64, 'base64');
+                            this.generateFile(buffer, rootPath, filePath);
 
-                        this.logger.info(`* Generated file: ${filePath} :: ${EightBallCommand}`);
-                    });
+                            this.logger.info(`* Generated file: ${filePath} :: ${EightBallCommand}`);
+                        });
+                }
+            } catch (e) {
+                this.logger.error(`Failed to access or generate file.`, e);
             }
 
-            this.playAudioFile(filePath);
+            this.broadcastAudio(commandName, fileHash, langCode);
 
             this.chatClient.say(channel, answer);
 
@@ -125,10 +131,17 @@ export class EightBallCommand implements ICommandHandler {
         }
     }
 
-    private playAudioFile(filePath: string) {
-        const dirname = path.resolve();
-        const audioFile = path.join(dirname, filePath);
+    private broadcastAudio(commandName: string, hash: string, lang: string) {
+        const ws = new WebSocket('ws://127.0.0.1:8080/');
 
-        sound.play(audioFile, 100);
+        const messageToSend = {
+            sender: commandName,
+            body: `!play ${hash} ${lang}`,
+            sentAt: Date.now(),
+        };
+
+        ws.onopen = () => {
+            ws.send(JSON.stringify(messageToSend));
+        };
     }
 }
