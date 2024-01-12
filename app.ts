@@ -6,6 +6,7 @@ import InjectionTypes from './dependency-management/types';
 import Database from './database/database';
 import { clearLurkingUsers } from './bot/commands/lurkCommands';
 import Scheduler from './bot/scheduler';
+import SocketServer, { ISocketServer } from './bot/overlay/socket.server';
 
 @injectable()
 class App {
@@ -13,6 +14,7 @@ class App {
         @inject(ChatBot) private chatBot: ChatBot,
         @inject(Database) private database: Database,
         @inject(Scheduler) private scheduler: Scheduler,
+        @inject(SocketServer) private socketServer: ISocketServer,
         @inject(InjectionTypes.Logger) public logger: winston.Logger,
     ) {
         this.logger.info(`** Application initialized **`);
@@ -25,6 +27,7 @@ class App {
             this.chatBot.start(),
             this.database.connect(),
             this.database.sync(),
+            this.socketServer.startServer(),
             this.scheduler.scheduleChatEvents(),
         ]);
     }
