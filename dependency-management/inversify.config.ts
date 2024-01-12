@@ -55,6 +55,7 @@ import Database from '../database/database';
 import authProvider from '../bot/auth/authProvider';
 import Scheduler from '../bot/scheduler';
 import SocketServer, { ISocketServer } from '../bot/overlay/socket.server';
+import OverlayServer, { IOverlayServer } from '../bot/overlay/overlay.server';
 
 const SAContainer = new Container();
 
@@ -66,6 +67,7 @@ SAContainer.bind<ChatBot>(ChatBot).toSelf().inSingletonScope();
 
 SAContainer.bind<Scheduler>(Scheduler).toSelf().inSingletonScope();
 SAContainer.bind<ISocketServer>(SocketServer).toSelf().inSingletonScope();
+SAContainer.bind<IOverlayServer>(OverlayServer).toSelf().inSingletonScope();
 
 // Bot Stream Event Handler bindings
 // SAContainer.bind<IFollowStreamEvent>(FollowHandler).toSelf();

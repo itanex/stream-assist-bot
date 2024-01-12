@@ -7,6 +7,7 @@ import Database from './database/database';
 import { clearLurkingUsers } from './bot/commands/lurkCommands';
 import Scheduler from './bot/scheduler';
 import SocketServer, { ISocketServer } from './bot/overlay/socket.server';
+import OverlayServer, { IOverlayServer } from './bot/overlay/overlay.server';
 
 @injectable()
 class App {
@@ -15,6 +16,7 @@ class App {
         @inject(Database) private database: Database,
         @inject(Scheduler) private scheduler: Scheduler,
         @inject(SocketServer) private socketServer: ISocketServer,
+        @inject(OverlayServer) private overlayServer: IOverlayServer,
         @inject(InjectionTypes.Logger) public logger: winston.Logger,
     ) {
         this.logger.info(`** Application initialized **`);
@@ -28,6 +30,7 @@ class App {
             this.database.connect(),
             this.database.sync(),
             this.socketServer.startServer(),
+            this.overlayServer.configure().listen(),
             this.scheduler.scheduleChatEvents(),
         ]);
     }
