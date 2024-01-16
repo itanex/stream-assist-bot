@@ -1,0 +1,63 @@
+body {
+    margin: 5%;
+}
+
+#notification {
+    display: none;
+    border: 1px solid black;
+    border-radius: 50rem;
+    padding: 4px 8px;
+}
+
+#notification.reader {
+    border-radius: .75rem;
+    background-color: rgb(25,135,84);
+}
+
+#notification.connected {
+    background-color: rgb(25,135,84);
+    color: black;
+}
+
+svg {
+    width: 10rem;
+    height: 10rem;
+}
+
+.status {
+    width: 1rem;
+    height: 1rem;
+    justify-content: center;
+}
+
+.connected .status .line {
+    fill: green;
+}
+
+.connected .status .power {
+    fill: yellow;
+}
+
+.disconnected .status .line {
+    fill: red;
+}
+
+.disconnected .status .power {
+    fill: black;
+}
+
+#socket-status {
+    position: fixed;
+    bottom: 5px;
+    left: 5px;
+    border: 1px solid black;
+    height: auto;
+    border-radius: .5rem;
+    padding: .2rem .2rem;
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    background-color: silver;
+    color: #000;
+    font-size: .75rem;
+}
