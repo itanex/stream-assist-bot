@@ -43,7 +43,7 @@ export class FollowAgeCommand implements ICommandHandler {
 
         if (followingUser) {
             const follower = await this.apiClient.channels
-                .getChannelFollowers(environment.broadcasterId, followingUser.id);
+                .getChannelFollowers(environment.twitchBot.broadcaster.id, followingUser.id);
 
             const ageTimeSpan = Timespan.fromNow(follower.data[0].followDate);
 

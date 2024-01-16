@@ -13,6 +13,6 @@ export default class Broadcaster {
      * Get the broadcaster info for the configured broadcaster
      */
     async getBroadcaster(): Promise<HelixPrivilegedUser> {
-        return this.apiClient.users.getAuthenticatedUser(environment.broadcasterId);
+        return this.apiClient.users.getAuthenticatedUser(environment.twitchBot.broadcaster.id);
     }
 }

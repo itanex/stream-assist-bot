@@ -27,7 +27,7 @@ export default class Scheduler {
         this.socialsCommand = commandHandlers.find(x => x.constructor.name === `${SocialsCommand.name}`) as SocialsCommand;
 
         this.chatUser = <ChatUser>{
-            displayName: environment.username,
+            displayName: environment.twitchBot.broadcaster.username,
         };
     }
 
@@ -35,7 +35,7 @@ export default class Scheduler {
         const socials = cron.schedule(
             '*/30 */1 * * *',
             () => this.socialsCommand.handle(
-                environment.channel,
+                environment.twitchBot.channel,
                 `${command} - Socials`,
                 this.chatUser,
                 '',
