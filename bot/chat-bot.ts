@@ -3,16 +3,16 @@
 // also it should be imported only once
 // so that a singleton is created.
 import 'reflect-metadata';
-import { ChatClient, ChatMessage, ChatRaidInfo, UserNotice } from '@twurple/chat';
+import { ChatClient, ChatCommunitySubInfo, ChatMessage, ChatRaidInfo, ChatSubExtendInfo, ChatSubGiftInfo, ChatSubInfo, UserNotice } from '@twurple/chat';
 import { EventSubWsListener } from '@twurple/eventsub-ws';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import {
     IRaidStreamEvent,
-    ISubscriptionStreamEvent,
+    ISubscriptionHandler,
     MessageHandler,
     RaidHandler,
-    SubscriptionHandlers,
+    SubscriptionHandler,
 } from './handlers';
 import InjectionTypes from '../dependency-management/types';
 
@@ -23,7 +23,7 @@ export default class ChatBot {
         @inject(EventSubWsListener) private eventSubWsListener: EventSubWsListener,
         @inject(MessageHandler) private messageHandler: MessageHandler,
         @inject(RaidHandler) private raidHandler: IRaidStreamEvent,
-        @inject(SubscriptionHandlers) private subscriptionHandlers: ISubscriptionStreamEvent,
+        @inject(SubscriptionHandler) private subscriptionHandler: ISubscriptionHandler,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
         this.logger.info(`** Chat Bot initialized **`);
@@ -39,11 +39,21 @@ export default class ChatBot {
         });
 
         // Subscription Event Registration
-        this.chatClient.onSubExtend(this.subscriptionHandlers.onSubExtend);
-        this.chatClient.onResub(this.subscriptionHandlers.onResubHandler);
-        this.chatClient.onSub(this.subscriptionHandlers.onSubscribe);
-        this.chatClient.onCommunitySub(this.subscriptionHandlers.onCommunitySub);
-        this.chatClient.onSubGift(this.subscriptionHandlers.onSubGift);
+        this.chatClient.onSubExtend(async (channel: string, user: string, subInfo: ChatSubExtendInfo, msg: UserNotice) => {
+            await this.subscriptionHandler.onSubExtend(channel, user, subInfo, msg);
+        });
+        this.chatClient.onResub(async (channel: string, user: string, subInfo: ChatSubInfo, msg: UserNotice) => {
+            await this.subscriptionHandler.onResubHandler(channel, user, subInfo, msg);
+        });
+        this.chatClient.onSub(async (channel: string, user: string, subInfo: ChatSubInfo, msg: UserNotice) => {
+            await this.subscriptionHandler.onSubscribe(channel, user, subInfo, msg);
+        });
+        this.chatClient.onCommunitySub(async (channel: string, user: string, subInfo: ChatCommunitySubInfo, msg: UserNotice) => {
+            await this.subscriptionHandler.onCommunitySub(channel, user, subInfo, msg);
+        });
+        this.chatClient.onSubGift(async (channel: string, user: string, subInfo: ChatSubGiftInfo, msg: UserNotice) => {
+            await this.subscriptionHandler.onSubGift(channel, user, subInfo, msg);
+        });
 
         // Authenticaiton Event Registration
         this.chatClient.onAuthenticationSuccess(() => this.logger.info('Chat Client authenticated successfully'));

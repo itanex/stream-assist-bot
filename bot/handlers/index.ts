@@ -1,7 +1,7 @@
 import { IFollowStreamEvent, FollowHandler } from './follow.handler';
 import { MessageHandler } from './message.handler';
 import { IRaidStreamEvent, RaidHandler } from './raid.handler';
-import { ISubscriptionStreamEvent, SubscriptionHandlers } from './subscription.handler';
+import { ISubscriptionHandler, SubscriptionHandler } from './subscription.handler';
 
 export {
     IFollowStreamEvent,
@@ -9,6 +9,6 @@ export {
     MessageHandler,
     IRaidStreamEvent,
     RaidHandler,
-    ISubscriptionStreamEvent,
-    SubscriptionHandlers,
+    ISubscriptionHandler,
+    SubscriptionHandler,
 };
