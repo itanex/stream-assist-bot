@@ -44,10 +44,10 @@ import {
     FollowHandler,
     IFollowStreamEvent,
     IRaidStreamEvent,
-    ISubscriptionStreamEvent,
+    ISubscriptionHandler,
     MessageHandler,
     RaidHandler,
-    SubscriptionHandlers,
+    SubscriptionHandler,
 } from '../bot/handlers';
 import Broadcaster from '../bot/utilities/broadcaster';
 import InjectionTypes from './types';
@@ -73,7 +73,7 @@ SAContainer.bind<IOverlayServer>(OverlayServer).toSelf().inSingletonScope();
 // SAContainer.bind<IFollowStreamEvent>(FollowHandler).toSelf();
 SAContainer.bind(MessageHandler).toSelf();
 SAContainer.bind<IRaidStreamEvent>(RaidHandler).toSelf();
-SAContainer.bind<ISubscriptionStreamEvent>(SubscriptionHandlers).toSelf();
+SAContainer.bind<ISubscriptionHandler>(SubscriptionHandler).toSelf();
 
 // Bot Command Handler bindings
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(AboutCommand);

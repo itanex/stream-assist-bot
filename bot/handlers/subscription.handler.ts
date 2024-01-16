@@ -16,7 +16,7 @@ import {
     SubscriptionType,
 } from '../../database';
 
-export interface ISubscriptionStreamEvent {
+export interface ISubscriptionHandler {
     onSubscribe(channel: string, user: string, subInfo: ChatSubInfo, message: UserNotice): Promise<void>;
     onSubExtend(channel: string, user: string, subInfo: ChatSubExtendInfo, message: UserNotice): Promise<void>;
     onResubHandler(channel: string, user: string, subInfo: ChatSubInfo, message: UserNotice): Promise<void>
@@ -25,7 +25,7 @@ export interface ISubscriptionStreamEvent {
 }
 
 @injectable()
-export class SubscriptionHandlers implements ISubscriptionStreamEvent {
+export class SubscriptionHandler implements ISubscriptionHandler {
     private giftCounts = new Map<string | undefined, number>();
 
     constructor(
