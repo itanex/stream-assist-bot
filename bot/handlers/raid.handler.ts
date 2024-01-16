@@ -32,7 +32,7 @@ export class RaidHandler implements IRaidStreamEvent {
     }
 
     async onRaid(channel: string, user: string, raidInfo: ChatRaidInfo, message: UserNotice): Promise<void> {
-        this.apiClient.chat.sendAnnouncement(environment.broadcasterId, {
+        this.apiClient.chat.sendAnnouncement(environment.twitchBot.broadcaster.id, {
             message: `RAID: Thank you, ${raidInfo.displayName}, for bringing the ${raidInfo.viewerCount} viewer(s) with you!`,
             color: 'primary',
         });

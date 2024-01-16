@@ -3,21 +3,34 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const environment = {
-    username: process.env.USERNAME,
-    channel: process.env.CHANNEL,
-    broadcasterId: process.env.BROADCASTER_ID,
-    clientId: process.env.APP_CLIENT_ID,
-    clientSecret: process.env.APP_CLIENT_SECRET,
+    /** Setting for postgres database */
     postgresDB: {
+        /** Database name to connect to */
         database: process.env.POSTGRES_DB,
+        /** Database username */
         username: process.env.POSTGRES_USER,
+        /** Database password */
         password: process.env.POSTGRES_PASSWORD,
+        /** Host url for database */
         host: process.env.POSTGRES_HOST,
+        /** Port number of database on host */
         port: Number(process.env.POSTGRES_PORT),
     },
     twitchBot: {
+        /** broadcaster information */
+        broadcaster: {
+            /** User Name - SplitPersonality */
+            username: process.env.TWITCH_USERNAME,
+            /** Twitch user id / broadcasterId */
+            id: process.env.TWITCH_BROADCASTER_ID,
+        },
+        /** User Name - TimyTheTermite */
         username: process.env.TWITCH_BOT_USERNAME,
-        oauthToken: process.env.TWITCH_OAUTH_TOKEN,
+        /** Channel(s) to join - TimyTheTermite */
+        channel: process.env.TWITCH_CHANNEL,
+        oauthToken: process.env.TWITCH_APP_OAUTH_TOKEN,
+        clientId: process.env.TWITCH_APP_CLIENT_ID,
+        clientSecret: process.env.TWITCH_APP_CLIENT_SECRET,
     },
     waypoint: {
         dev: {

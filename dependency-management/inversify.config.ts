@@ -116,7 +116,7 @@ SAContainer
     .toConstantValue(
         new ChatClient({
             authProvider,
-            channels: [environment.channel],
+            channels: [environment.twitchBot.channel],
             botLevel: 'none',
             isAlwaysMod: true,
             requestMembershipEvents: true,
