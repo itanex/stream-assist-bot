@@ -45,6 +45,7 @@
   },
   "scripts": {
     "start": "docker compose up -d && ts-node app.ts",
+    "dev": "ts-node app.ts",
     "test": "mocha -r ts-node/register **/*.spec.ts"
   },
   "keywords": [
