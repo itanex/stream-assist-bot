@@ -1,18 +1,24 @@
 version: '3.8'
 services:
-  # app:
-    # build:
-    #   context: . # Context should only operate on a File System context based on the root directory
-    #   target: dev
-    # # image: node:18-alpine
-    # # working_dir: /app
-    # depends_on:
-    #   postgres:
-    #     condition: service_healthy
-    # volumes:
-    #   - ./:/app
-    #   - D:/DataWorkspaces/stream-assist-bot/logs:/app/logs
-    #   - D:/DataWorkspaces/stream-assist-bot/cache/:/app/local-cache/
+  app:
+    build:
+      context: . # Context should only operate on a File System context based on the root directory
+      target: dev
+    # image: node:18-alpine
+    working_dir: /app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - 8080:8080 # WebSocker Server Port
+      - 8070:8070 # Overlay Server Port
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+    volumes:
+      - ./:/app
+      - D:/DataWorkspaces/stream-assist-bot/logs:/app/logs
+      - D:/DataWorkspaces/stream-assist-bot/cache/:/app/local-cache/
   postgres:
     image: postgres
     restart: always
@@ -24,7 +30,7 @@ services:
       POSTGRES_DB: stream-assist-bot
       POSTGRES_PASSWORD: Vsnyi&FN^oLXUVqdjm9v4
     ports:
-      - '6432:5432' # Expose the default postgres port
+      - 6432:5432 # Expose the default postgres port
     healthcheck:
       test: [ "CMD", "pg_isready" ]
       interval: 10s
