@@ -4,11 +4,10 @@ ARG NODE_VERSION=18.0.0
 
 FROM node:${NODE_VERSION}-alpine as base
 WORKDIR /usr/src/app
-# EXPOSE 3000
-USER root
 
 FROM base as dev
-RUN apk --update add postgresql-client
+# install postgress client to debug db connection
+# RUN apk --update add postgresql-client
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=package-lock.json,target=package-lock.json \
     --mount=type=cache,target=/root/.npm \

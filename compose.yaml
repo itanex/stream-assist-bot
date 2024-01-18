@@ -4,7 +4,6 @@ services:
     build:
       context: . # Context should only operate on a File System context based on the root directory
       target: dev
-    # image: node:18-alpine
     working_dir: /app
     depends_on:
       postgres:
