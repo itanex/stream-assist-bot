@@ -44,7 +44,7 @@
     "sequelize-cli": "^6.6.2"
   },
   "scripts": {
-    "start": "docker compose up -d && ts-node app.ts",
+    "start": "ts-node app.ts",
     "dev": "ts-node app.ts",
     "test": "mocha -r ts-node/register **/*.spec.ts"
   },
