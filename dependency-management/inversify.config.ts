@@ -11,6 +11,7 @@ import winston from 'winston';
 import {
     AboutCommand,
     AccountAgeCommand,
+    BrainCommand,
     CharityCommand,
     CountExhaustCommand,
     CuddleCommand,
@@ -78,6 +79,7 @@ SAContainer.bind<ISubscriptionHandler>(SubscriptionHandler).toSelf();
 // Bot Command Handler bindings
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(AboutCommand);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(AccountAgeCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(BrainCommand);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(CharityCommand);
 // SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(collabadd);
 // SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(collab);

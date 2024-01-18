@@ -1,14 +1,13 @@
-import { ApiClient } from '@twurple/api';
-import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable } from 'inversify';
+import { ChatClient, ChatUser } from '@twurple/chat';
+import { ApiClient } from '@twurple/api';
 import winston from 'winston';
 import ICommandHandler from './iCommandHandler';
 import InjectionTypes from '../../dependency-management/types';
-import Timespan, { getAgeReport } from '../utilities/timeSpan';
 
 @injectable()
-export class AccountAgeCommand implements ICommandHandler {
-    exp: RegExp = /^!(accountage)( [#@]?([a-zA-Z0-9][\w]{2,24}))?$/i;
+export default class BrainCommand implements ICommandHandler {
+    exp: RegExp = /^!(brain)( [#@]?([a-zA-Z0-9][\w]{2,24}))?$/i;
     timeout: number = 5;
     mod: boolean = true;
     vip: boolean = true;
@@ -25,15 +24,13 @@ export class AccountAgeCommand implements ICommandHandler {
     }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        // get user by name based on either provided or command user name
-        const user = await this.apiClient.users
-            .getUserByName(args[1]
-                ? args[1].toLocaleLowerCase().trim()
-                : userstate.userName);
+        const user = args[0]
+            ? args[0].toLocaleLowerCase().trim()
+            : userstate.displayName;
 
-        const ageTimeSpan = Timespan.fromNow(user.creationDate);
+        const percent = Math.ceil(Math.random() * 100);
 
-        this.chatClient.say(channel, `@${user.displayName} was created ${getAgeReport(ageTimeSpan)}`);
+        this.chatClient.say(channel, `${user}'s brain is ${percent}% working.`);
 
         this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
     }
