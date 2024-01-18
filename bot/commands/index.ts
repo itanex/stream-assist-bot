@@ -1,5 +1,6 @@
 import { AboutCommand } from './aboutCommand';
 import { AccountAgeCommand } from './accountAgeCommand';
+import BrainCommand from './brainCommand';
 import { CharityCommand } from './charityCommand';
 import { CountExhaustCommand } from './countExhaustCommand';
 import { CuddleCommand } from './cuddleCommand';
@@ -25,6 +26,7 @@ import { WishListCommand } from './wishListCommand';
 export {
     AboutCommand,
     AccountAgeCommand,
+    BrainCommand,
     CharityCommand,
     CountExhaustCommand,
     CuddleCommand,
