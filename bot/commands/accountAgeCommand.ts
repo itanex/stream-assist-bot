@@ -33,7 +33,7 @@ export class AccountAgeCommand implements ICommandHandler {
 
         const ageTimeSpan = Timespan.fromNow(user.creationDate);
 
-        this.chatClient.say(channel, `@${userstate.userName} was created ${getAgeReport(ageTimeSpan)}`);
+        this.chatClient.say(channel, `@${user.displayName} was created ${getAgeReport(ageTimeSpan)}`);
 
         this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
     }
