@@ -13,7 +13,7 @@ export interface IOverlayServer {
 @injectable()
 export default class OverlayServer {
     private server: Server;
-    private host = 'localhost';
+    private host = '0.0.0.0';
     private port = 8070;
     private rootPath = `local-cache/audio/8ball`;
 
