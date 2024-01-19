@@ -20,6 +20,7 @@ import { LastSubCommand } from './lastSubCommand';
 import { LurkCommand, UnLurkCommand, WhoIsLurkingCommand } from './lurkCommands';
 import { ShoutOutCommand } from './shoutOutCommand';
 import { SocialsCommand } from './socialsCommand';
+import ThrowCommand from './throwCommand';
 import { UpTimeCommand } from './upTimeCommand';
 import { WishListCommand } from './wishListCommand';
 
@@ -49,6 +50,7 @@ export {
     WhoIsLurkingCommand,
     ShoutOutCommand,
     SocialsCommand,
+    ThrowCommand,
     UpTimeCommand,
     WishListCommand,
     ICommandHandler,
