@@ -37,6 +37,7 @@ import {
     UpTimeCommand,
     WishListCommand,
     ICommandHandler,
+    ThrowCommand,
 } from '../bot/commands';
 import logger from '../logger/logger';
 import ChatBot from '../bot/chat-bot';
@@ -105,6 +106,7 @@ SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(UnLurkComma
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(WhoIsLurkingCommand);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(ShoutOutCommand);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(SocialsCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(ThrowCommand);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(UpTimeCommand);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(WishListCommand);
 
