@@ -1,6 +1,6 @@
 {
   "name": "stream-assist-bot",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Twitch Bot for stream assistance, command interpretation, and additional processes.",
   "main": "app.ts",
   "module": "module",
