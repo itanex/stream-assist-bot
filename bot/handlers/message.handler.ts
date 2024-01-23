@@ -28,9 +28,16 @@ export class MessageHandler {
         const broadcaster = await this.broadcaster.getBroadcaster();
         const isFollower = await broadcaster.isFollowedBy(chatUser.userId);
 
+        // The returned stream will be `null|undefined` for offline broadcaster
+        const isLive = !!(await broadcaster.getStream());
+
         // find command in list
         for (const command of this.commandHandlers) {
             const commandFrags = inputCommand.match(command.exp);
+
+            if (!this.canExecute(command, isLive)) {
+                continue;
+            }
 
             if (!this.isAuthorized(chatUser, isFollower, command)) {
                 continue;
@@ -82,6 +89,17 @@ export class MessageHandler {
                 command.handle(channel, raw, chatUser, message, args);
                 return;
             }
+        }
+    }
+
+    private canExecute(command: ICommandHandler, isLive: boolean): boolean {
+        switch (command.restriction) {
+            case 'online':
+                return isLive;
+            case 'offline':
+                return !isLive;
+            default:
+                return true;
         }
     }
 
