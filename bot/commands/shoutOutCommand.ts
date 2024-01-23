@@ -7,7 +7,7 @@ import calendar from 'dayjs/plugin/calendar';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import { HelixPaginatedScheduleResult } from '@twurple/api/lib/interfaces/endpoints/schedule.input';
-import ICommandHandler from './iCommandHandler';
+import ICommandHandler, { OnlineState } from './iCommandHandler';
 import InjectionTypes from '../../dependency-management/types';
 
 dayjs.extend(isToday);
@@ -24,6 +24,7 @@ export class ShoutOutCommand implements ICommandHandler {
     follower: boolean = false;
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
+    restriction: OnlineState = 'online';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,

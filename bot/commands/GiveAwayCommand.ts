@@ -4,7 +4,7 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import environment from '../../configurations/environment';
 import InjectionTypes from '../../dependency-management/types';
-import ICommandHandler from './iCommandHandler';
+import ICommandHandler, { OnlineState } from './iCommandHandler';
 
 @injectable()
 export class GiveAwayCommand implements ICommandHandler {
@@ -16,6 +16,7 @@ export class GiveAwayCommand implements ICommandHandler {
     follower: boolean = true;
     viewer: boolean = true;
     isGlobalCommand: boolean = true;
+    restriction: OnlineState = 'online';
 
     rules: string = `
         GENERAL Giveaway Rules 

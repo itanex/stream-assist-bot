@@ -2,7 +2,7 @@ import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types';
-import ICommandHandler from './iCommandHandler';
+import ICommandHandler, { OnlineState } from './iCommandHandler';
 
 @injectable()
 export class CountExhaustCommand implements ICommandHandler {
@@ -14,6 +14,7 @@ export class CountExhaustCommand implements ICommandHandler {
     follower: boolean = false;
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
+    restriction: OnlineState = 'online';
 
     responses = [
         `I am about to run out of toes to count on ${process.env.TWITCH_BOT_USERNAME}`,

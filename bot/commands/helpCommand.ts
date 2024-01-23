@@ -2,7 +2,7 @@ import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types';
-import ICommandHandler from './iCommandHandler';
+import ICommandHandler, { OnlineState } from './iCommandHandler';
 
 @injectable()
 export class HelpCommand implements ICommandHandler {
@@ -14,6 +14,7 @@ export class HelpCommand implements ICommandHandler {
     follower: boolean = true;
     viewer: boolean = true;
     isGlobalCommand: boolean = true;
+    restriction: OnlineState = 'always';
 
     helpResponses = [
         `I am stuck in this corner and unable to assist you at this time?`,

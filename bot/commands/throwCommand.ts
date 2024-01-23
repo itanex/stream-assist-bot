@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import winston from 'winston';
-import ICommandHandler from './iCommandHandler';
+import ICommandHandler, { OnlineState } from './iCommandHandler';
 import InjectionTypes from '../../dependency-management/types';
 
 @injectable()
@@ -14,6 +14,7 @@ export default class ThrowCommand implements ICommandHandler {
     follower: boolean = true;
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
+    restriction: OnlineState = 'online';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,

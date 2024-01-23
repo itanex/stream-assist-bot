@@ -3,7 +3,7 @@ import dayjs from 'dayjs';
 import updateLocale from 'dayjs/plugin/updateLocale';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import ICommandHandler from './iCommandHandler';
+import ICommandHandler, { OnlineState } from './iCommandHandler';
 import InjectionTypes from '../../dependency-management/types';
 import Broadcaster from '../utilities/broadcaster';
 
@@ -38,6 +38,7 @@ export class UpTimeCommand implements ICommandHandler {
     follower: boolean = true;
     viewer: boolean = true;
     isGlobalCommand: boolean = true;
+    restriction: OnlineState = 'online';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,

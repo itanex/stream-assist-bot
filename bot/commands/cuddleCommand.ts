@@ -3,7 +3,7 @@ import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types';
-import ICommandHandler from './iCommandHandler';
+import ICommandHandler, { OnlineState } from './iCommandHandler';
 
 @injectable()
 export class CuddleCommand implements ICommandHandler {
@@ -15,6 +15,7 @@ export class CuddleCommand implements ICommandHandler {
     follower: boolean = true;
     viewer: boolean = true;
     isGlobalCommand: boolean = true;
+    restriction: OnlineState = 'online';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
