@@ -92,8 +92,8 @@ export class MessageHandler {
         }
     }
 
-    private canExecute(command: ICommandHandler, isLive: boolean): boolean {
-        switch (command.restriction) {
+    private canExecute(commandHandler: ICommandHandler, isLive: boolean): boolean {
+        switch (commandHandler.restriction) {
             case 'online':
                 return isLive;
             case 'offline':
