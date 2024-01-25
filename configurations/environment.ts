@@ -24,6 +24,16 @@ const environment = {
             /** Twitch user id / broadcasterId */
             id: process.env.TWITCH_BROADCASTER_ID,
         },
+        /** OBS Overlay Web server */
+        overlay: {
+            host: process.env.TWITCH_OVERLAY_HOST,
+            port: Number(process.env.TWITCH_OVERLAY_PORT),
+        },
+        /** Web Socket server */
+        websocket: {
+            host: process.env.TWITCH_WEBSOCKET_HOST,
+            port: Number(process.env.TWITCH_WEBSOCKET_PORT),
+        },
         /** User Name - TimyTheTermite */
         username: process.env.TWITCH_BOT_USERNAME,
         /** Channel(s) to join - TimyTheTermite */
