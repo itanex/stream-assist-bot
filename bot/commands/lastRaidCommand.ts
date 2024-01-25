@@ -5,7 +5,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import calendar from 'dayjs/plugin/calendar';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import ICommandHandler from './iCommandHandler';
+import { ICommandHandler, OnlineState } from './iCommandHandler';
 import InjectionTypes from '../../dependency-management/types';
 import { Raiders } from '../../database';
 
@@ -23,6 +23,7 @@ export class LastRaidCommand implements ICommandHandler {
     follower: boolean = false;
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
+    restriction: OnlineState = 'online';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,

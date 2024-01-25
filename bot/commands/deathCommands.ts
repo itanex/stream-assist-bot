@@ -5,7 +5,7 @@ import isToday from 'dayjs/plugin/isToday';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import { QueryTypes } from 'sequelize';
-import ICommandHandler from './iCommandHandler';
+import { ICommandHandler, OnlineState } from './iCommandHandler';
 import InjectionTypes from '../../dependency-management/types';
 import { CommandTimeout } from '../types/CommandTimeout';
 import Broadcaster from '../utilities/broadcaster';
@@ -29,6 +29,7 @@ export class DeathCommand implements ICommandHandler {
     follower: boolean = true;
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
+    restriction: OnlineState = 'online';
 
     responses = [
         `Timy is finding the quickest way to spawn new Timys`,
@@ -96,6 +97,7 @@ export class DeathCountCommand implements ICommandHandler {
     follower: boolean = true;
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
+    restriction: OnlineState = 'online';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
@@ -142,6 +144,7 @@ export class LastDeathCountCommmand implements ICommandHandler {
     follower: boolean = true;
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
+    restriction: OnlineState = 'online';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,

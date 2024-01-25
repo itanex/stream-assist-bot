@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import environment from '../../configurations/environment';
 import InjectionTypes from '../../dependency-management/types';
-import ICommandHandler from './iCommandHandler';
+import { ICommandHandler, OnlineState } from './iCommandHandler';
 
 @injectable()
 export class SocialsCommand implements ICommandHandler {
@@ -15,6 +15,7 @@ export class SocialsCommand implements ICommandHandler {
     follower: boolean = false;
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
+    restriction: OnlineState = 'always';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,

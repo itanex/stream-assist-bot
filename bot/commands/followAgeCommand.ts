@@ -2,7 +2,7 @@ import { ApiClient } from '@twurple/api';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import ICommandHandler from './iCommandHandler';
+import { ICommandHandler, OnlineState } from './iCommandHandler';
 import InjectionTypes from '../../dependency-management/types';
 import environment from '../../configurations/environment';
 import Timespan, { getAgeReport } from '../utilities/timeSpan';
@@ -17,6 +17,7 @@ export class FollowAgeCommand implements ICommandHandler {
     follower: boolean = true;
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
+    restriction: OnlineState = 'online';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
