@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 import { RawData, Server, WebSocket } from 'ws';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types';
+import environment from '../../configurations/environment';
 
 /**
  * Used to track connected Web Socket users
@@ -19,6 +20,8 @@ export interface ISocketServer {
 export default class SocketServer implements ISocketServer {
     /** Instance of the Web Socket server */
     private server: Server;
+    /** Configured Web Socket Host */
+    private host: string;
     /** Configured Web Socket Port */
     private port: number;
     /** Connected Web Socket Users */
@@ -27,12 +30,14 @@ export default class SocketServer implements ISocketServer {
     constructor(
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
-        this.port = 8080;
+        this.host = environment.twitchBot.websocket.host;
+        this.port = environment.twitchBot.websocket.port;
     }
 
     /** Initializes and starts the server */
     startServer(): void {
         this.server = new Server({
+            host: this.host,
             port: this.port,
         }, () => {
             this.logger.info(`** Web Socket Server listening on ${this.port}`);

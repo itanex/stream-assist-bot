@@ -4,6 +4,7 @@ import { inject, injectable } from 'inversify';
 import path from 'path';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types';
+import environment from '../../configurations/environment';
 
 export interface IOverlayServer {
     configure(): IOverlayServer;
@@ -13,13 +14,17 @@ export interface IOverlayServer {
 @injectable()
 export default class OverlayServer {
     private server: Server;
-    private host = '0.0.0.0';
-    private port = 8070;
+    /** Configured Web Host */
+    private host: string;
+    /** Configured Web Port */
+    private port: number;
     private rootPath = `local-cache/audio/8ball`;
 
     constructor(
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
+        this.host = environment.twitchBot.overlay.host;
+        this.port = environment.twitchBot.overlay.port;
     }
 
     configure(): IOverlayServer {
