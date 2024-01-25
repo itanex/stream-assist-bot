@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import winston from 'winston';
-import ICommandHandler, { OnlineState } from './iCommandHandler';
+import { ICommandHandler, OnlineState } from './iCommandHandler';
 import InjectionTypes from '../../dependency-management/types';
 
 @injectable()

@@ -14,7 +14,7 @@ import { FollowAgeCommand } from './followAgeCommand';
 import { GiveAwayCommand } from './GiveAwayCommand';
 import { HelpCommand } from './helpCommand';
 import { HugCommand } from './hugCommand';
-import ICommandHandler, { OnlineState } from './iCommandHandler';
+import { ICommandHandler, OnlineState } from './iCommandHandler';
 import { LastRaidCommand } from './lastRaidCommand';
 import { LastSubCommand } from './lastSubCommand';
 import { LurkCommand, UnLurkCommand, WhoIsLurkingCommand } from './lurkCommands';
@@ -54,5 +54,5 @@ export {
     UpTimeCommand,
     WishListCommand,
     ICommandHandler,
-    OnlineState as onlineState,
+    OnlineState,
 };

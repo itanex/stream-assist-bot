@@ -5,7 +5,7 @@ import isToday from 'dayjs/plugin/isToday';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import { QueryTypes } from 'sequelize';
-import ICommandHandler, { OnlineState } from './iCommandHandler';
+import { ICommandHandler, OnlineState } from './iCommandHandler';
 import InjectionTypes from '../../dependency-management/types';
 import { CommandTimeout } from '../types/CommandTimeout';
 import Broadcaster from '../utilities/broadcaster';

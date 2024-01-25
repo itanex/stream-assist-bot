@@ -5,7 +5,7 @@ import fs from 'fs';
 import { getAudioBase64 } from 'google-tts-api';
 import md5 from 'md5';
 import { WebSocket } from 'ws';
-import ICommandHandler, { OnlineState } from './iCommandHandler';
+import { ICommandHandler, OnlineState } from './iCommandHandler';
 import InjectionTypes from '../../dependency-management/types';
 
 const responses = [

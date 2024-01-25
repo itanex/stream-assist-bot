@@ -3,7 +3,7 @@ import dayjs from 'dayjs';
 import updateLocale from 'dayjs/plugin/updateLocale';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import ICommandHandler, { OnlineState } from './iCommandHandler';
+import { ICommandHandler, OnlineState } from './iCommandHandler';
 import InjectionTypes from '../../dependency-management/types';
 import Broadcaster from '../utilities/broadcaster';
 

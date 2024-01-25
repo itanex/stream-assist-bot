@@ -5,7 +5,7 @@ import { ChatUser } from '@twurple/chat';
 /** Represents the restriction state */
 export type OnlineState = 'always' | 'online' | 'offline';
 
-export default interface ICommandHandler {
+export interface ICommandHandler {
     /** Regular Expression to identify command */
     exp: RegExp;
     /** The timeout in seconds for this command */
