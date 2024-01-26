@@ -6,6 +6,11 @@ import { ICommandHandler } from '../commands';
 import { CommandTimeout } from '../types/CommandTimeout';
 import Broadcaster from '../utilities/broadcaster';
 
+type ParsedCommand = {
+    commandHandler: ICommandHandler,
+    commandArguments: string[]
+}
+
 @injectable()
 export class MessageHandler {
     private readonly globalTimeouts: CommandTimeout[] = [];
@@ -83,7 +88,7 @@ export class MessageHandler {
         commandHandler.handle(channel, instruction, chatUser, message, commandArguments);
     }
 
-    private parseCommand(message: string) {
+    private parseCommand(message: string): ParsedCommand {
         let commandArguments: string[];
 
         const commandHandler = this.commandHandlers.find(x => {
