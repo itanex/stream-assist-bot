@@ -6,6 +6,11 @@ import { ICommandHandler } from '../commands';
 import { CommandTimeout } from '../types/CommandTimeout';
 import Broadcaster from '../utilities/broadcaster';
 
+type ParsedCommand = {
+    commandHandler: ICommandHandler,
+    commandArguments: string[]
+}
+
 @injectable()
 export class MessageHandler {
     private readonly globalTimeouts: CommandTimeout[] = [];
@@ -21,75 +26,84 @@ export class MessageHandler {
     }
 
     async handle(channel: string, user: string, message: string, chatUser: ChatUser): Promise<void> {
-        // Remove whitespace from chat message
-        const inputCommand = message.trim();
+        // Find command to execute
+        const { commandHandler, commandArguments } = this.parseCommand(message);
 
-        // Get follower validation
+        if (!commandHandler) { return; }
+
+        const instruction = commandHandler.constructor.name;
         const broadcaster = await this.broadcaster.getBroadcaster();
-        const isFollower = await broadcaster.isFollowedBy(chatUser.userId);
 
         // The returned stream will be `null|undefined` for offline broadcaster
         const isLive = !!(await broadcaster.getStream());
 
-        // find command in list
-        for (const command of this.commandHandlers) {
-            const commandFrags = inputCommand.match(command.exp);
+        if (!this.canExecute(commandHandler, isLive)) {
+            return;
+        }
 
-            if (!this.canExecute(command, isLive)) {
-                continue;
-            }
+        // Get follower validation
+        const isFollower = await broadcaster.isFollowedBy(chatUser.userId);
 
-            if (!this.isAuthorized(chatUser, isFollower, command)) {
-                continue;
-            }
+        if (!this.isAuthorized(chatUser, isFollower, commandHandler)) {
+            return;
+        }
 
-            // only address found commands
-            if (commandFrags) {
-                // destructure parsed command to provisional components
-                const [raw, ...[cmd, ...args]] = commandFrags;
-                const instruction = `${command.exp}`;
+        // if (commandHandler.isGlobalCommand) {
+        // manageCommandTimeout(command, globalTimeouts, instruction, msg.userInfo, cmd, channel);
+        const index = this.globalTimeouts.findIndex(value => value.name === instruction);
 
-                // if (command.isGlobalCommand) {
-                // manageCommandTimeout(command, globalTimeouts, instruction, msg.userInfo, cmd, channel);
-                const index = this.globalTimeouts.findIndex(value => value.name === instruction);
+        if (index > -1) {
+            const ttl = Math.ceil(Math.abs(this.globalTimeouts[index].timeout - new Date().getTime()) / 1000);
+            const period = this.timeoutPeriod(chatUser, commandHandler);
 
-                if (index > -1) {
-                    const ttl = Math.ceil(Math.abs(this.globalTimeouts[index].timeout - new Date().getTime()) / 1000);
-                    const period = this.timeoutPeriod(chatUser, command);
-
-                    if (ttl < period) {
-                        this.onCommandCooldown(cmd, channel, period - ttl);
-                        return;
-                    }
-
-                    this.globalTimeouts.splice(index, 1);
-                }
-
-                this.globalTimeouts.push({ name: instruction, timeout: new Date().getTime() });
-                // } else {
-                //     // manageCommandTimeout(command, userTimeouts[msg.userInfo.userId] ?? [], instruction, msg.userInfo, cmd, channel);
-                //     const userCommands = userTimeouts[msg.userInfo.userId];
-
-                //     const index = userCommands.findIndex(value => value.name === instruction);
-
-                //     if (index > -1) {
-                //         const ttl = Math.ceil(Math.abs(userCommands[index].timeout - new Date().getTime()) / 1000);
-                //         const period = timeoutPeriod(msg.userInfo, command);
-
-                //         if (ttl < period) {
-                //             return onCommandCooldown(cmd, channel, period - ttl);
-                //         }
-
-                //         userCommands.splice(index, 1);
-                //     }
-
-                //     userTimeouts[msg.userInfo.userId].push({ name: instruction, timeout: new Date().getTime() });
-                // }
-
-                command.handle(channel, raw, chatUser, message, args);
+            if (ttl < period) {
+                this.onCommandCooldown(instruction, channel, period - ttl);
                 return;
             }
+
+            this.globalTimeouts.splice(index, 1);
         }
+
+        this.globalTimeouts.push({ name: instruction, timeout: new Date().getTime() });
+        // } else {
+        //     // manageCommandTimeout(command, userTimeouts[msg.userInfo.userId] ?? [], instruction, msg.userInfo, cmd, channel);
+        //     const userCommands = userTimeouts[msg.userInfo.userId];
+
+        //     const index = userCommands.findIndex(value => value.name === instruction);
+
+        //     if (index > -1) {
+        //         const ttl = Math.ceil(Math.abs(userCommands[index].timeout - new Date().getTime()) / 1000);
+        //         const period = timeoutPeriod(msg.userInfo, command);
+
+        //         if (ttl < period) {
+        //             return onCommandCooldown(cmd, channel, period - ttl);
+        //         }
+
+        //         userCommands.splice(index, 1);
+        //     }
+
+        //     userTimeouts[msg.userInfo.userId].push({ name: instruction, timeout: new Date().getTime() });
+        // }
+
+        commandHandler.handle(channel, instruction, chatUser, message, commandArguments);
+    }
+
+    private parseCommand(message: string): ParsedCommand {
+        let commandArguments: string[];
+
+        const commandHandler = this.commandHandlers.find(x => {
+            const result = message.trim().match(x.exp);
+
+            if (result) {
+                // extract command arguments
+                const [raw, ...[cmd, ...args]] = result;
+                commandArguments = args;
+            }
+
+            return result;
+        });
+
+        return { commandHandler, commandArguments };
     }
 
     private canExecute(commandHandler: ICommandHandler, isLive: boolean): boolean {
