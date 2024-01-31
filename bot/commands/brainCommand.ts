@@ -19,7 +19,6 @@ export default class BrainCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(ApiClient) private apiClient: ApiClient,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
