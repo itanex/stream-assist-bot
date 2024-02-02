@@ -22,4 +22,15 @@ export default class Raiders extends Model {
         field: 'viewerCount',
     })
     viewerCount?: number;
+
+    /**
+     * Gets the last raid record from the database
+     * @returns the raider record of the last raid
+     */
+    static async getLastRaid(): Promise<Raiders> {
+        return this
+            .findOne({
+                order: [['time', 'DESC']],
+            });
+    }
 }
