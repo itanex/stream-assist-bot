@@ -26,12 +26,16 @@ export class HugCommand implements ICommandHandler {
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         if (args[1]) {
-            const user = await this.apiClient.users.getUserByName(args[1].toLocaleLowerCase().trim());
+            const user = await this.apiClient.users.getUserByName(args[1]);
 
-            if (userstate.displayName !== user.displayName) {
-                this.chatClient.say(channel, `${userstate.displayName} hugs ${user.displayName}`);
+            if (user) {
+                if (userstate.displayName !== user.displayName) {
+                    this.chatClient.say(channel, `${userstate.displayName} hugs ${user.displayName}`);
+                } else {
+                    this.chatClient.say(channel, `${userstate.displayName} hugs themself`);
+                }
             } else {
-                this.chatClient.say(channel, `${userstate.displayName} hugs themself`);
+                this.chatClient.say(channel, `${userstate.displayName} can't find ${args[1]} and decides to hug everyone`);
             }
         } else {
             this.chatClient.say(channel, `${userstate.displayName} hugs themself`);
