@@ -34,10 +34,9 @@ export class DiceCommand implements ICommandHandler {
 
         const results = this.rollDice(amount, parseInt(args[2]));
 
-        // player.play(sounds.alert);
         this.chatClient.say(channel, `You rolled a ${args[1]}d${args[2]} that resulted in [ ${results.rolls.join(', ')} ] in total ${results.total}`);
 
-        this.logger.info(`* Executed ${commandName} command :: ${JSON.stringify(results)} in ${channel} || ${userstate.displayName} > ${message}`);
+        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}> ${JSON.stringify(results)}`);
     }
 
     private rollDice(numberOfDice: number, sides: number): RollResult {
