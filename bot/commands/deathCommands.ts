@@ -4,7 +4,6 @@ import localizedFormat from 'dayjs/plugin/localizedFormat';
 import isToday from 'dayjs/plugin/isToday';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import { QueryTypes } from 'sequelize';
 import { ICommandHandler, OnlineState } from './iCommandHandler';
 import InjectionTypes from '../../dependency-management/types';
 import { CommandTimeout } from '../types/CommandTimeout';
@@ -13,8 +12,6 @@ import { DeathCounts } from '../../database';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(isToday);
-
-let commandTimeout: CommandTimeout = { name: 'DeathCommand', timeout: 0 };
 
 // time in seconds
 const timeout: number = 5 /* minutes */ * 60; /* seconds */
@@ -30,6 +27,8 @@ export class DeathCommand implements ICommandHandler {
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
+
+    private commandTimeout: CommandTimeout = { name: 'DeathCommand', timeout: 0 };
 
     responses = [
         `Timy is finding the quickest way to spawn new Timys`,
@@ -49,18 +48,7 @@ export class DeathCommand implements ICommandHandler {
         const stream = await broadcaster.getStream();
 
         await DeathCounts
-            .findOrCreate({
-                where: {
-                    streamId: stream.id,
-                    gameId: stream.gameId,
-                },
-                defaults: {
-                    deathCount: 1,
-                    gameId: stream.gameId,
-                    game: stream.gameName,
-                    streamId: stream.id,
-                },
-            })
+            .recordNewDeath(stream)
             .then(async ([instance, created]) => {
                 let { deathCount } = instance;
 
@@ -71,18 +59,22 @@ export class DeathCommand implements ICommandHandler {
                     await instance.save();
                 }
 
-                const ttl = Math.ceil(Math.abs(commandTimeout.timeout - new Date().getTime()) / 1000);
+                const ttl = Math.ceil(Math.abs(this.commandTimeout.timeout - new Date().getTime()) / 1000);
 
                 if (ttl > timeout) {
-                    commandTimeout = { name: 'DeathCommand', timeout: new Date().getTime() };
-                    this.chatClient.say(channel, `We're gonna need another Timy!`);
-                }
+                    this.commandTimeout = { name: 'DeathCommand', timeout: new Date().getTime() };
 
-                if (this.responses.length && deathCount % 10 === 0) {
+                    if (deathCount === 1) {
+                        this.chatClient.say(channel, `We're gonna need another Timy!`);
+                    } else if (this.responses.length) {
+                        this.chatClient.say(channel, this.responses[Math.floor(Math.random() * this.responses.length)]);
+                    }
+                } else if (this.responses.length && deathCount % 10 === 0) {
+                    this.commandTimeout = { name: 'DeathCommand', timeout: new Date().getTime() };
                     this.chatClient.say(channel, this.responses[Math.floor(Math.random() * this.responses.length)]);
                 }
 
-                this.logger.info(`* Executed ${commandName} in ${channel} :: ${deathCount} || ${userstate.displayName}`);
+                this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${deathCount}`);
             });
     }
 }
@@ -111,25 +103,14 @@ export class DeathCountCommand implements ICommandHandler {
         const stream = await broadcaster.getStream();
 
         await DeathCounts
-            .findOrCreate({
-                where: {
-                    streamId: stream.id,
-                    gameId: stream.gameId,
-                },
-                defaults: {
-                    deathCount: 0,
-                    gameId: stream.gameId,
-                    game: stream.gameName,
-                    streamId: stream.id,
-                },
-            })
+            .getCurrentStreamDeathCount(stream)
             .then(async ([instance]) => {
                 if (instance.deathCount > 1) {
                     this.chatClient.say(channel, `We have used ${instance.deathCount} Timy today`);
                 } else {
                     this.chatClient.say(channel, `We have used ${instance.deathCount} Timys today`);
                 }
-                this.logger.info(`* Executed ${commandName} in ${channel} :: ${instance.deathCount} || ${userstate.displayName}`);
+                this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${instance.deathCount}`);
             });
     }
 }
@@ -157,28 +138,8 @@ export class LastDeathCountCommmand implements ICommandHandler {
         const broadcaster = await this.broadcaster.getBroadcaster();
         const stream = await broadcaster.getStream();
 
-        const lastStreamDeaths: string = `
-            SELECT *
-            FROM public."DeathCounts"
-            WHERE "streamId" in (
-                SELECT DISTINCT "streamId"
-                FROM public."DeathCounts"
-                WHERE "createdAt" = (
-                    SELECT max("createdAt")
-                    FROM public."DeathCounts"
-                    WHERE "streamId" <> $streamId
-                )
-            )
-            order by "createdAt" Asc
-        `;
-
-        await DeathCounts.sequelize
-            .query<DeathCounts>(lastStreamDeaths, {
-                type: QueryTypes.SELECT,
-                bind: {
-                    streamId: stream.id,
-                },
-            })
+        await DeathCounts
+            .getLastStreamDeathCount(stream.id)
             .then(records => {
                 const games = records
                     .map(record => `${record.game} (${record.deathCount})`)
