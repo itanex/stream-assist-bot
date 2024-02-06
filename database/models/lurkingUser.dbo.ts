@@ -1,6 +1,7 @@
 import { Model, Table, Column, DataType } from 'sequelize-typescript';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
+import { ChatUser } from '@twurple/chat';
 
 dayjs.extend(duration);
 
@@ -44,5 +45,51 @@ export default class LurkingUsers extends Model {
         }
 
         return dayjs.duration(dayjs(this.startTime).diff(dayjs()));
+    }
+
+    static async setUserToLurk(user: ChatUser): Promise<[LurkingUsers, boolean]> {
+        return this
+            .findOrCreate({
+                where: {
+                    userId: user.userId,
+                    endTime: null,
+                },
+                order: [['createdAt', 'DESC']],
+                defaults: {
+                    displayName: user.displayName,
+                    userId: user.userId,
+                    startTime: new Date(),
+                },
+            });
+    }
+
+    static async setUserToUnlurk(user: ChatUser): Promise<LurkingUsers> {
+        return this
+            .findOne({
+                where: {
+                    userId: user.userId,
+                    endTime: null,
+                },
+                order: [['createdAt', 'DESC']],
+            });
+    }
+
+    static async getAllLurkingUsers(): Promise<LurkingUsers[]> {
+        return this
+            .findAll({
+                where: { endTime: null },
+                order: [['createdAt', 'DESC']],
+            });
+    }
+
+    static async setAllUsersToUnlurk(): Promise<[number, LurkingUsers[]]> {
+        return this
+            .update(
+                { endTime: new Date() },
+                {
+                    where: { endTime: null },
+                    returning: true,
+                },
+            );
     }
 }
