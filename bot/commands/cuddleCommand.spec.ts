@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 // reflect-metadata should be imported
 // before any interface or other imports
 // also it should be imported only once
@@ -14,6 +13,13 @@ import { ICommandHandler } from './iCommandHandler';
 import { CuddleCommand } from './cuddleCommand';
 
 describe('Cuddle Command Tests', () => {
+    const channel = 'TestChannel';
+    const command = 'TestCommand';
+    const message = 'TestMessage';
+    const args = ['@UserName'];
+    const user = <ChatUser>{ displayName: 'TestUser' };
+    const targetUser = 'TargetUser';
+
     const container: Container = new Container();
     let expectedChatClient: ChatClient;
     let expectedLogger: winston.Logger;
@@ -44,13 +50,6 @@ describe('Cuddle Command Tests', () => {
 
     it('should call chatClient.say with both user name and log', async () => {
         // arrange
-        const channel = 'TestChannel';
-        const command = 'TestAboutCommand';
-        const user = <ChatUser>{ displayName: 'TestUser' };
-        const message = 'TestMessage';
-        const args = ['@UserName'];
-        const targetUser = 'TargetUser';
-
         mockApiClient = <unknown>{
             users: {
                 getUserByName: jest.fn().mockResolvedValue({
@@ -86,11 +85,6 @@ describe('Cuddle Command Tests', () => {
             [<ChatUser>{ displayName: 'TestUser' }, <HelixUser>{ displayName: 'TestUser' }],
         ])(`input: '%s', '%s'`, async (chatUser: ChatUser, apiUser: HelixUser) => {
             // arrange
-            const channel = 'TestChannel';
-            const command = 'TestAboutCommand';
-            const message = 'TestMessage';
-            const args = ['@UserName'];
-
             mockApiClient = <unknown>{
                 users: {
                     getUserByName: jest.fn().mockResolvedValue(apiUser),

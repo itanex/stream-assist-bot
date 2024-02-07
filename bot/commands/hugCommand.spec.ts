@@ -67,7 +67,7 @@ describe('Hug Command Tests', () => {
                 ['', 'TargetUser'],
                 null,
             ],
-        ])(`input: '%s'`, async (chatUser: ChatUser, args: string[], apiUser: HelixUser) => {
+        ])(`user: '%s', commandargs: '%s', target user: '%s'`, async (chatUser: ChatUser, args: string[], apiUser: HelixUser) => {
             // Arrange
             mockApiClient = <unknown>{
                 users: {

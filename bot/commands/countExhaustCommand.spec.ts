@@ -12,6 +12,11 @@ import { ICommandHandler } from './iCommandHandler';
 import { CountExhaustCommand } from './countExhaustCommand';
 
 describe('Count Exhaust Command Tests', () => {
+    const channel = 'TestChannel';
+    const command = 'TestCommand';
+    const message = 'TestMessage';
+    const user = <ChatUser>{ displayName: 'TestUser' };
+
     const container: Container = new Container();
     let expectedChatClient: ChatClient;
     let expectedLogger: winston.Logger;
@@ -40,11 +45,6 @@ describe('Count Exhaust Command Tests', () => {
 
     it('should respond with a message to the channel', async () => {
         // Arrange
-        const channel = 'TestChannel';
-        const command = 'TestAboutCommand';
-        const message = 'TestMessage';
-        const user = <ChatUser>{ displayName: 'TestUser' };
-
         const subject = container
             .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
             .find(x => x.constructor.name === CountExhaustCommand.name);

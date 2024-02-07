@@ -94,11 +94,7 @@ describe('Death Commands Tests', () => {
                 .to(DeathCommand);
         });
 
-        describe('should execute with parameters', () => {
-            beforeEach(() => {
-                //
-            });
-
+        describe('should record the death record appropriate for scenario', () => {
             it.each([
                 [
                     createdRecord,
@@ -115,7 +111,7 @@ describe('Death Commands Tests', () => {
                     false,
                     true,
                 ],
-            ])(`input: '%s', '%s', '%s'`, async (record: DeathCounts, created: boolean, hasTimeout: boolean) => {
+            ])(`record: '%s', created: '%s', hasTimeout: '%s'`, async (record: DeathCounts, created: boolean, hasTimeout: boolean) => {
                 // Arrange
                 DeathCounts.recordNewDeath = jest.fn()
                     .mockResolvedValue([record, created]);
@@ -161,11 +157,11 @@ describe('Death Commands Tests', () => {
                 .to(DeathCountCommand);
         });
 
-        describe('should execute with parameters', () => {
+        describe('should report death count of record, creating 0 record if no record', () => {
             it.each([
                 [createdRecord],
                 [existingRecord1],
-            ])(`input: '%s'`, async (record: DeathCounts) => {
+            ])(`record: '%s'`, async (record: DeathCounts) => {
                 // Arrange
                 DeathCounts.getCurrentStreamDeathCount = jest.fn()
                     .mockResolvedValue([record]);
@@ -204,11 +200,11 @@ describe('Death Commands Tests', () => {
                 .to(LastDeathCountCommmand);
         });
 
-        describe('should execute with parameters', () => {
+        describe('should report all deaths for all returned records', () => {
             it.each([
                 [[createdRecord]],
                 [[createdRecord, anotherRecord]],
-            ])(`input: '%s'`, async (records: DeathCounts[]) => {
+            ])(`record collection: '%s'`, async (records: DeathCounts[]) => {
                 // Arrange
                 const games = records
                     .map(record => `${record.game} (${record.deathCount})`)

@@ -12,6 +12,11 @@ import { ICommandHandler } from './iCommandHandler';
 import { HelpCommand } from './helpCommand';
 
 describe('Help Command Tests', () => {
+    const channel = 'TestChannel';
+    const command = 'TestCommand';
+    const message = 'TestMessage';
+    const user = <ChatUser>{ displayName: 'TestUser' };
+
     const container: Container = new Container();
     let expectedChatClient: ChatClient;
     let expectedLogger: winston.Logger;
@@ -38,13 +43,8 @@ describe('Help Command Tests', () => {
             .get<winston.Logger>(InjectionTypes.Logger);
     });
 
-    it('should', async () => {
+    it('should say something helpful in chat', async () => {
         // Arrange
-        const channel = 'TestChannel';
-        const command = 'TestCommand';
-        const message = 'TestMessage';
-        const user = <ChatUser>{ displayName: 'TestUser' };
-
         const subject = container
             .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
             .find(x => x.constructor.name === `${HelpCommand.name}`);

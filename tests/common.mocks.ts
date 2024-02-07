@@ -7,6 +7,7 @@ const mockChatClient: ChatClient = <unknown>{
 
 const mockLogger: winston.Logger = <unknown>{
     info: jest.fn(),
+    error: jest.fn(),
 } as winston.Logger;
 
 export { mockChatClient, mockLogger };

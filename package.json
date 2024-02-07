@@ -50,9 +50,10 @@
   "scripts": {
     "start": "ts-node app.ts",
     "dev": "ts-node app.ts",
-    "test": "jest",
-    "test-coverage": "jest --coverage=true",
-    "test-dev": "jest --coverage=true --watch --no-cache"
+    "test": "jest --no-cache --detectOpenHandles",
+    "test-coverage": "jest  --no-cache --coverage=true --detectOpenHandles",
+    "test-specific": "jest --no-cache --detectOpenHandles --watch ./bot/commands/eightballcommand.spec.ts",
+    "test-dev": "jest  --no-cache --coverage=true --detectOpenHandles --watch"
   },
   "keywords": [
     "twitch",

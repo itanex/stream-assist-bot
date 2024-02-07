@@ -12,7 +12,6 @@ import {
     AboutCommand,
     AccountAgeCommand,
     BrainCommand,
-    CharityCommand,
     CountExhaustCommand,
     CuddleCommand,
     DeathCommand,
@@ -23,7 +22,6 @@ import {
     EightBallCommand,
     FallCommand,
     FollowAgeCommand,
-    GiveAwayCommand,
     HelpCommand,
     HugCommand,
     LastDeathCountCommmand,
@@ -81,10 +79,6 @@ SAContainer.bind<ISubscriptionHandler>(SubscriptionHandler).toSelf();
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(AboutCommand);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(AccountAgeCommand);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(BrainCommand);
-SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(CharityCommand);
-// SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(collabadd);
-// SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(collab);
-// SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(collabdisable);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(CountExhaustCommand);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(CuddleCommand);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(DeathCommand);
@@ -95,7 +89,6 @@ SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(DrinkComman
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(EightBallCommand);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(FallCommand);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(FollowAgeCommand);
-// SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(GiveAwayCommand);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(HelpCommand);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(HugCommand);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(LastDeathCountCommmand);

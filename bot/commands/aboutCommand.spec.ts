@@ -12,7 +12,14 @@ import { ICommandHandler } from './iCommandHandler';
 import { AboutCommand } from './aboutCommand';
 
 describe('About Command Tests', () => {
+    const channel = 'TestChannel';
+    const command = 'TestCommand';
+    const user = <ChatUser>{ displayName: 'TestUser' };
+    const message = 'TestMessage';
+
     const container: Container = new Container();
+    let expectedChatClient: ChatClient;
+    let expectedLogger: winston.Logger;
 
     beforeEach(() => {
         jest.resetAllMocks();
@@ -28,20 +35,16 @@ describe('About Command Tests', () => {
         container
             .bind<ICommandHandler>(InjectionTypes.CommandHandlers)
             .to(AboutCommand);
+
+        expectedChatClient = container
+            .get(ChatClient);
+
+        expectedLogger = container
+            .get<winston.Logger>(InjectionTypes.Logger);
     });
 
-    it('AboutCommand should call chatClient.say', () => {
+    it('should say something in chat about bot', () => {
         // arrange
-        const channel = 'TestChannel';
-        const command = 'TestAboutCommand';
-        const user = <ChatUser>{ displayName: 'TestUser' };
-        const message = 'TestMessage';
-
-        const expectedChatClient = container
-            .get(ChatClient);
-        const expectedLogger = container
-            .get<winston.Logger>(InjectionTypes.Logger);
-
         const subject = container
             .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
             .find(x => x.constructor.name === `${AboutCommand.name}`);

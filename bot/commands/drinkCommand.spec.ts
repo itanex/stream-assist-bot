@@ -12,6 +12,11 @@ import { ICommandHandler } from './iCommandHandler';
 import { DrinkCommand } from './drinkCommand';
 
 describe('Drink Command Tests', () => {
+    const channel = 'TestChannel';
+    const command = 'TestCommand';
+    const message = 'TestMessage';
+    const user = <ChatUser>{ displayName: 'TestUser' };
+
     const container: Container = new Container();
     let expectedChatClient: ChatClient;
     let expectedLogger: winston.Logger;
@@ -40,11 +45,6 @@ describe('Drink Command Tests', () => {
 
     it('should say something in chat', async () => {
         // Arrange
-        const channel = 'TestChannel';
-        const command = 'TestCommand';
-        const message = 'TestMessage';
-        const user = <ChatUser>{ displayName: 'TestUser' };
-
         const subject = container
             .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
             .find(x => x.constructor.name === `${DrinkCommand.name}`);
@@ -57,6 +57,7 @@ describe('Drink Command Tests', () => {
             .toHaveBeenCalledTimes(1);
         expect(expectedChatClient.say)
             .toHaveBeenCalledWith(channel, expect.anything());
+
         expect(expectedLogger.info)
             .toHaveBeenCalledWith(expect
                 .stringMatching(`(?=.*\\b${command}\\b)(?=.*\\b${channel}\\b)(?=.*\\b${user.displayName}\\b)(?=.*\\b${message}\\b)`));

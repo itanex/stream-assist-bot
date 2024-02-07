@@ -43,7 +43,7 @@ describe('Throw Command Tests', () => {
             .get<winston.Logger>(InjectionTypes.Logger);
     });
 
-    describe('should throw soemthing in chat', () => {
+    describe('should throw something in chat', () => {
         it.each([
             [['fish', '', '']],
             [['fish', '', 'TargetUser']],

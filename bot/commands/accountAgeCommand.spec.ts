@@ -14,6 +14,10 @@ import { AccountAgeCommand } from './accountAgeCommand';
 import Timespan, { getAgeReport } from '../utilities/timeSpan';
 
 describe('Account Age Command Tests', () => {
+    const channel = 'TestChannel';
+    const command = 'TestCommand';
+    const message = 'TestMessage';
+
     const container: Container = new Container();
     let expectedChatClient: ChatClient;
     let expectedLogger: winston.Logger;
@@ -41,7 +45,7 @@ describe('Account Age Command Tests', () => {
             .get<winston.Logger>(InjectionTypes.Logger);
     });
 
-    describe('Parameterized calls when', () => {
+    describe('should report account age of target account', () => {
         it.each([
             [
                 <ChatUser>{ displayName: 'TestUser', userName: 'TestUser' },
@@ -52,12 +56,8 @@ describe('Account Age Command Tests', () => {
                 ['', 'UserName'],
                 <HelixUser>{ displayName: 'UserName', creationDate: new Date(2000, 0, 1) },
             ],
-        ])(`input: '%s', '%s'`, async (chatUser: ChatUser, args: string[], apiUser: HelixUser) => {
+        ])(`user: '%s', arguments: '%s', reported user '%s'`, async (chatUser: ChatUser, args: string[], apiUser: HelixUser) => {
             // Arrange
-            const channel = 'TestChannel';
-            const command = 'TestAboutCommand';
-            const message = 'TestMessage';
-
             mockApiClient = <unknown>{
                 users: {
                     getUserByName: jest.fn().mockResolvedValue(apiUser),
@@ -70,10 +70,11 @@ describe('Account Age Command Tests', () => {
 
             const subject = container
                 .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
-                .find(x => x.constructor.name === `${AccountAgeCommand.name}`);
+                .find(x => x.constructor.name === AccountAgeCommand.name);
+
+            const age = getAgeReport(Timespan.fromNow(apiUser.creationDate));
 
             // Act
-            const age = getAgeReport(Timespan.fromNow(apiUser.creationDate));
             await subject.handle(channel, command, chatUser, message, args);
 
             // Assert

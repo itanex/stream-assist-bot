@@ -4,7 +4,6 @@
 // so that a singleton is created.
 import 'reflect-metadata';
 import { ChatClient, ChatUser } from '@twurple/chat';
-import fs from 'fs';
 import { Container } from 'inversify';
 import winston from 'winston';
 import { mockChatClient, mockLogger } from '../../tests/common.mocks';

@@ -12,6 +12,11 @@ import { ICommandHandler } from './iCommandHandler';
 import { WishListCommand } from './wishListCommand';
 
 describe('Wish List Command Tests', () => {
+    const channel = 'TestChannel';
+    const command = 'TestCommand';
+    const message = 'TestMessage';
+    const user = <ChatUser>{ displayName: 'TestUser' };
+
     const container: Container = new Container();
     let expectedChatClient: ChatClient;
     let expectedLogger: winston.Logger;
@@ -38,13 +43,8 @@ describe('Wish List Command Tests', () => {
             .get<winston.Logger>(InjectionTypes.Logger);
     });
 
-    it('should say something in chat', async () => {
+    it('should say something in chat about throne account', async () => {
         // Arrange
-        const channel = 'TestChannel';
-        const command = 'TestCommand';
-        const message = 'TestMessage';
-        const user = <ChatUser>{ displayName: 'TestUser' };
-
         const subject = container
             .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
             .find(x => x.constructor.name === `${WishListCommand.name}`);

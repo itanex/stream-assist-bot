@@ -12,6 +12,10 @@ import { ICommandHandler } from './iCommandHandler';
 import BrainCommand from './brainCommand';
 
 describe('Brain Command Tests', () => {
+    const channel = 'TestChannel';
+    const command = 'TestCommand';
+    const message = 'TestMessage';
+
     const container: Container = new Container();
     let expectedChatClient: ChatClient;
     let expectedLogger: winston.Logger;
@@ -38,9 +42,7 @@ describe('Brain Command Tests', () => {
             .get<winston.Logger>(InjectionTypes.Logger);
     });
 
-    // TODO: Write Tests
-
-    describe('Parameterized calls when', () => {
+    describe('should report brain about target', () => {
         it.each([
             [
                 <ChatUser>{ displayName: 'TestUser', userName: 'TestUser' },
@@ -49,12 +51,8 @@ describe('Brain Command Tests', () => {
                 <ChatUser>{ displayName: 'TestUser', userName: 'TestUser' },
                 ['UserName'],
             ],
-        ])(`input: '%s', '%s'`, async (chatUser: ChatUser, args: string[]) => {
+        ])(`user: '%s', target args: '%s'`, async (chatUser: ChatUser, args: string[]) => {
             // Arrange
-            const channel = 'TestChannel';
-            const command = 'TestAboutCommand';
-            const message = 'TestMessage';
-
             const subject = container
                 .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
                 .find(x => x.constructor.name === `${BrainCommand.name}`);

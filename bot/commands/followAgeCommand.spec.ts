@@ -60,7 +60,6 @@ describe('Follow Age Command Tests', () => {
                 <HelixUser>{ displayName: 'UserName', id: 'TestUserId', creationDate: new Date(2000, 0, 1) },
                 <HelixChannelFollower>{ followDate: new Date(2000, 1, 1) },
             ],
-
         ])(`input: '%s', '%s', '%s'`, async (chatUser: ChatUser, args: string[], apiUser: HelixUser, followUser: HelixChannelFollower) => {
             // Arrange
             mockApiClient = <unknown>{
