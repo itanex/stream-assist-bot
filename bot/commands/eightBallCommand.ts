@@ -7,6 +7,7 @@ import md5 from 'md5';
 import { WebSocket } from 'ws';
 import { ICommandHandler, OnlineState } from './iCommandHandler';
 import InjectionTypes from '../../dependency-management/types';
+import environment from '../../configurations/environment';
 
 const responses = [
     `It is certain.`,
@@ -81,37 +82,33 @@ export class EightBallCommand implements ICommandHandler {
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
 
+    private responses: string[] = responses;
+
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
-    ) {
-    }
+    ) { }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        if (responses.length) {
-            const answer = responses[Math.floor(Math.random() * responses.length)];
+        if (this.responses.length) {
+            const answer = this.responses[Math.floor(Math.random() * this.responses.length)];
             const rootPath = `local-cache/audio/8ball`;
             const fileHash = md5(answer);
             const langCode = 'en';
             const filePath = `${rootPath}/${fileHash}.${langCode}.mp3`;
 
             try {
-                if (!fs.existsSync(filePath)) {
-                    getAudioBase64(answer, {
-                        lang: 'en',
-                        slow: false,
-                        host: 'https://translate.google.com',
-                        timeout: 20000,
-                    })
-                        .then(base64 => {
-                            const buffer = Buffer.from(base64, 'base64');
-                            this.generateFile(buffer, rootPath, filePath);
+                if (!this.fileExists(filePath)) {
+                    const data = await this.getAudioFromGoogleTTS(answer);
+                    const buffer = Buffer.from(data, 'base64');
 
-                            this.logger.info(`* Generated file: ${filePath} :: ${EightBallCommand}`);
-                        });
+                    this.generateFile(buffer, rootPath, filePath);
+
+                    this.logger.info(`* Generated file: ${filePath} :: ${EightBallCommand}`);
                 }
             } catch (e) {
                 this.logger.error(`Failed to access or generate file.`, e);
+                return;
             }
 
             this.broadcastAudio(commandName, fileHash, langCode);
@@ -122,9 +119,22 @@ export class EightBallCommand implements ICommandHandler {
         }
     }
 
+    private fileExists(filePath: fs.PathLike): boolean {
+        return fs.existsSync(filePath);
+    }
+
+    private async getAudioFromGoogleTTS(content: string): Promise<string> {
+        return getAudioBase64(content, {
+            lang: 'en',
+            slow: false,
+            host: 'https://translate.google.com',
+            timeout: 20000,
+        });
+    }
+
     private generateFile(buffer: Buffer, rootPath: string, filePath: string) {
-        if (!fs.existsSync(filePath)) {
-            if (!fs.existsSync(rootPath)) {
+        if (!this.fileExists(filePath)) {
+            if (!this.fileExists(rootPath)) {
                 fs.mkdirSync(rootPath, { recursive: true });
             }
 
@@ -133,7 +143,7 @@ export class EightBallCommand implements ICommandHandler {
     }
 
     private broadcastAudio(commandName: string, hash: string, lang: string) {
-        const ws = new WebSocket('ws://127.0.0.1:8080/');
+        const ws = new WebSocket(`ws://${environment.twitchBot.websocket.host}:${environment.twitchBot.websocket.port}/`);
 
         const messageToSend = {
             sender: commandName,

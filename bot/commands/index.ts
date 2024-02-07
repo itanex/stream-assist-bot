@@ -1,7 +1,6 @@
 import { AboutCommand } from './aboutCommand';
 import { AccountAgeCommand } from './accountAgeCommand';
 import BrainCommand from './brainCommand';
-import { CharityCommand } from './charityCommand';
 import { CountExhaustCommand } from './countExhaustCommand';
 import { CuddleCommand } from './cuddleCommand';
 import { DeathCommand, DeathCountCommand, LastDeathCountCommmand } from './deathCommands';
@@ -11,7 +10,6 @@ import { DrinkCommand } from './drinkCommand';
 import { EightBallCommand } from './eightBallCommand';
 import { FallCommand } from './fallCommand';
 import { FollowAgeCommand } from './followAgeCommand';
-import { GiveAwayCommand } from './GiveAwayCommand';
 import { HelpCommand } from './helpCommand';
 import { HugCommand } from './hugCommand';
 import { ICommandHandler, OnlineState } from './iCommandHandler';
@@ -28,7 +26,6 @@ export {
     AboutCommand,
     AccountAgeCommand,
     BrainCommand,
-    CharityCommand,
     CountExhaustCommand,
     CuddleCommand,
     DeathCommand,
@@ -39,7 +36,6 @@ export {
     EightBallCommand,
     FallCommand,
     FollowAgeCommand,
-    GiveAwayCommand,
     HelpCommand,
     HugCommand,
     LastDeathCountCommmand,

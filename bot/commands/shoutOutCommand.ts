@@ -1,4 +1,4 @@
-import { ApiClient, HelixPaginatedScheduleFilter, HelixPaginatedVideoFilter, HelixUser } from '@twurple/api';
+import { ApiClient, HelixPaginatedResult, HelixPaginatedScheduleFilter, HelixPaginatedVideoFilter, HelixUser, HelixVideo } from '@twurple/api';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import dayjs from 'dayjs';
 import isToday from 'dayjs/plugin/isToday';
@@ -30,9 +30,7 @@ export class ShoutOutCommand implements ICommandHandler {
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(ApiClient) private apiClient: ApiClient,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
-    ) {
-        // call
-    }
+    ) { }
 
     async getLatestSchedule(user: HelixUser, channel: string, link: string) {
         // Get schedule for the user
@@ -62,7 +60,7 @@ export class ShoutOutCommand implements ICommandHandler {
                 this.chatClient.say(channel, `${entry} @${user.displayName} plans to stream ${topic} ${when} - ${link}`);
             }
         } else {
-            const videos = await this.apiClient.videos
+            const videos: HelixPaginatedResult<HelixVideo> = await this.apiClient.videos
                 .getVideosByUser(user.id, <HelixPaginatedVideoFilter>{ orderBy: `time` })
                 .catch(x => {
                     this.logger.info(`* API: Unable to retrieve the video data for ${user.id}`);
@@ -70,13 +68,14 @@ export class ShoutOutCommand implements ICommandHandler {
                 });
 
             if (videos != null && videos.data.length > 0) {
-                const clip = await this.apiClient.channels.getChannelInfoById(user.id);
+                const channelDetails = await this.apiClient.channels.getChannelInfoById(user.id);
                 const when = dayjs(videos.data[0].creationDate);
+                const diff = when.diff(dayjs(), `day`);
 
-                if (when.diff(dayjs(new Date()), `day`) < 10) {
-                    this.chatClient.say(channel, `@${user.displayName} was last streaming '${clip.gameName}' ${when.fromNow()} - ${link}`);
+                if (Math.abs(diff) < 10) {
+                    this.chatClient.say(channel, `@${user.displayName} was last streaming '${channelDetails.gameName}' ${when.fromNow()} - ${link}`);
                 } else {
-                    this.chatClient.say(channel, `@${user.displayName} was last streaming '${clip.gameName}' - ${link}`);
+                    this.chatClient.say(channel, `@${user.displayName} was last streaming '${channelDetails.gameName}' - ${link}`);
                 }
             } else {
                 this.chatClient.say(channel, `Check out @${user.displayName} at ${link}`);
@@ -96,7 +95,7 @@ export class ShoutOutCommand implements ICommandHandler {
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any, isRaid: boolean = false): Promise<void> {
         // Get User from the Twitch API
-        const user = await this.apiClient.users.getUserByName(args[0].toLocaleLowerCase().trim());
+        const user = await this.apiClient.users.getUserByName(args[0]);
 
         // If no API user is found, exit
         if (!user) {

@@ -1,6 +1,4 @@
 node_modules/
 logs/
-.env
 local-cache/
-data/
 coverage/

@@ -37,7 +37,7 @@ export class LastSubCommand implements ICommandHandler {
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         await Subscribers
-            .findOne({ order: [['createdAt', 'DESC']], include: [SubscriptionGiftUsers] })
+            .getLastSubscriber()
             .then(record => {
                 const lastDate = dayjs(record.createdAt).fromNow();
 

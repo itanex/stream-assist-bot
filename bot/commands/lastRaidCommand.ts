@@ -33,9 +33,7 @@ export class LastRaidCommand implements ICommandHandler {
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         await Raiders
-            .findOne({
-                order: [['time', 'DESC']],
-            })
+            .getLastRaid()
             .then(record => {
                 const lastDate = dayjs(record.time).fromNow();
 

@@ -3,7 +3,7 @@ enum SubscriptionType {
     NewSub = 'NewSub',
     ReSub = 'ReSub',
     GiftSub = 'GiftSub',
-    PrimeSub = 'NewSub',
+    PrimeSub = 'PrimeSub',
     CommunitySub = 'CommunitySub'
 }
 

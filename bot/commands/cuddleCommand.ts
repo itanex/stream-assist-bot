@@ -27,7 +27,7 @@ export class CuddleCommand implements ICommandHandler {
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         const user = await this.apiClient.users.getUserByName(args[0].toLocaleLowerCase().trim());
 
-        if (!user && userstate.displayName !== user.displayName) {
+        if (!user || userstate.displayName === user.displayName) {
             return;
         }
 

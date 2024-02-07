@@ -25,18 +25,7 @@ export class LurkCommand implements ICommandHandler {
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         await LurkingUsers
-            .findOrCreate({
-                where: {
-                    userId: userstate.userId,
-                    endTime: null,
-                },
-                order: [['createdAt', 'DESC']],
-                defaults: {
-                    displayName: userstate.displayName,
-                    userId: userstate.userId,
-                    startTime: new Date(),
-                },
-            })
+            .setUserToLurk(userstate)
             .then(([instance, created]) => {
                 if (created) {
                     this.chatClient.say(channel, `OK, ${instance.displayName} see you when you get back`);
@@ -68,21 +57,17 @@ export class UnLurkCommand implements ICommandHandler {
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         await LurkingUsers
-            .findOne({
-                where: {
-                    userId: userstate.userId,
-                    endTime: null,
-                },
-                order: [['createdAt', 'DESC']],
-            })
+            .setUserToUnlurk(userstate)
             .then(async record => {
-                // eslint-disable-next-line no-param-reassign
-                record.endTime = new Date();
+                if (record) {
+                    // eslint-disable-next-line no-param-reassign
+                    record.endTime = new Date();
 
-                const x = await record.save();
-                // Report the command result
-                this.chatClient.say(channel, `Welcome back, ${x.displayName}. You were gone for ${x.duration().humanize()}`);
-                return x;
+                    const x = await record.save();
+
+                    // Report the command result
+                    this.chatClient.say(channel, `Welcome back, ${x.displayName}. You were gone for ${x.duration().humanize()}`);
+                }
             });
 
         this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
@@ -109,10 +94,7 @@ export class WhoIsLurkingCommand implements ICommandHandler {
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         await LurkingUsers
-            .findAll({
-                where: { endTime: null },
-                order: [['createdAt', 'DESC']],
-            })
+            .getAllLurkingUsers()
             .then(records => {
                 const users = records.map(x => x.displayName);
                 const lastUser = users.pop();
@@ -146,13 +128,7 @@ export async function clearLurkingUsers(
     logger: winston.Logger,
 ): Promise<void> {
     await LurkingUsers
-        .update(
-            { endTime: new Date() },
-            {
-                where: { endTime: null },
-                returning: true,
-            },
-        )
+        .setAllUsersToUnlurk()
         .then(([count, users]) => {
             if (count > 0) {
                 logger.info(`DataStore:: Cleaned up Lurking Users from stream: ${users.map(x => x.displayName).join(', ')}`);

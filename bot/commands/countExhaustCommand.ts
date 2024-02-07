@@ -1,6 +1,7 @@
 import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
+import environment from '../../configurations/environment';
 import InjectionTypes from '../../dependency-management/types';
 import { ICommandHandler, OnlineState } from './iCommandHandler';
 
@@ -17,7 +18,7 @@ export class CountExhaustCommand implements ICommandHandler {
     restriction: OnlineState = 'online';
 
     responses = [
-        `I am about to run out of toes to count on ${process.env.TWITCH_BOT_USERNAME}`,
+        `I am about to run out of toes to count on ${environment.twitchBot.broadcaster}`,
         `I think I need to go back to school to learn more math to count that high`,
     ];
 
