@@ -4,6 +4,7 @@ import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
 import { Dialect } from '@sequelize/core';
 import InjectionTypes from '../dependency-management/types';
 import {
+    ChannelPointRedeem,
     DeathCounts,
     LurkingUsers,
     Raiders,
@@ -41,6 +42,7 @@ const pgConfig: SequelizeOptions = {
         DeathCounts,
         Subscribers,
         SubscriptionGiftUsers,
+        ChannelPointRedeem,
     ],
 };
 
