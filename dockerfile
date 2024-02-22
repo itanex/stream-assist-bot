@@ -3,7 +3,7 @@
 ARG NODE_VERSION=18.0.0
 
 FROM node:${NODE_VERSION}-alpine as base
-WORKDIR /usr/src/app
+WORKDIR /app
 
 FROM base as dev
 # install postgress client to debug db connection
