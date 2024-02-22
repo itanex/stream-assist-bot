@@ -2,7 +2,7 @@ import { EventSubChannelRedemptionAddEvent } from '@twurple/eventsub-base';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types';
-import ChannelPointRedeem from '../../database/models/channelPointRedeem.dbo';
+import { ChannelPointRedeem } from '../../database';
 
 @injectable()
 export default class ChannelPointEventHandler {
