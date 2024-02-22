@@ -1,4 +1,5 @@
 import ChannelPointRedeem from './models/channelPointRedeem.dbo';
+import CheerEvent from './models/cheerEvent.dbo';
 import DeathCounts from './models/deathCountRecord.dbo';
 import LurkingUsers from './models/lurkingUser.dbo';
 import Raiders from './models/raiders.dbo';
@@ -8,6 +9,7 @@ import SubscriptionGiftUsers from './models/subscriptionGiftUsers.dbo';
 
 export {
     ChannelPointRedeem,
+    CheerEvent,
     DeathCounts,
     LurkingUsers,
     Raiders,
