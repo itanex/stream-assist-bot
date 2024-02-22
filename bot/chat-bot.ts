@@ -5,7 +5,7 @@
 import 'reflect-metadata';
 import { ChatClient, ChatCommunitySubInfo, ChatMessage, ChatRaidInfo, ChatSubExtendInfo, ChatSubGiftInfo, ChatSubInfo, UserNotice } from '@twurple/chat';
 import { EventSubWsListener } from '@twurple/eventsub-ws';
-import { EventSubChannelRedemptionAddEvent } from '@twurple/eventsub-base';
+import { EventSubChannelCheerEvent, EventSubChannelRedemptionAddEvent } from '@twurple/eventsub-base';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import {
@@ -15,7 +15,10 @@ import {
     RaidHandler,
     SubscriptionHandler,
 } from './handlers';
-import { ChannelPointEventHandler } from './event-sub-handlers';
+import {
+    ChannelPointEventHandler,
+    CheerEventHandler,
+} from './event-sub-handlers';
 import InjectionTypes from '../dependency-management/types';
 import environment from '../configurations/environment';
 
@@ -28,6 +31,7 @@ export default class ChatBot {
         @inject(RaidHandler) private raidHandler: IRaidStreamEvent,
         @inject(SubscriptionHandler) private subscriptionHandler: ISubscriptionHandler,
         @inject(ChannelPointEventHandler) private channelPointEventHandler: ChannelPointEventHandler,
+        @inject(CheerEventHandler) private cheerEventHandler: CheerEventHandler,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
         this.logger.info(`** Chat Bot initialized **`);
@@ -78,6 +82,13 @@ export default class ChatBot {
             environment.twitchBot.broadcaster.id,
             (event: EventSubChannelRedemptionAddEvent): void => {
                 this.channelPointEventHandler.onChannelPointRedeem(event);
+            },
+        );
+
+        this.eventSubWsListener.onChannelCheer(
+            environment.twitchBot.broadcaster.id,
+            (event: EventSubChannelCheerEvent): void => {
+                this.cheerEventHandler.onCheer(event);
             },
         );
 
