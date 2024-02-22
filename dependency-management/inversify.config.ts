@@ -49,6 +49,7 @@ import {
     RaidHandler,
     SubscriptionHandler,
 } from '../bot/handlers';
+import { ChannelPointEventHandler } from '../bot/event-sub-handlers';
 import Broadcaster from '../bot/utilities/broadcaster';
 import InjectionTypes from './types';
 import Database from '../database/database';
@@ -102,6 +103,9 @@ SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(SocialsComm
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(ThrowCommand);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(UpTimeCommand);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(WishListCommand);
+
+// Event Sub Handlers
+SAContainer.bind(ChannelPointEventHandler).toSelf();
 
 // Bind dependencies to container
 SAContainer
