@@ -2,3 +2,5 @@ node_modules/
 logs/
 local-cache/
 coverage/
+Dockerfile
+.dockerignore

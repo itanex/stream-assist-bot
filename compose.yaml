@@ -1,6 +1,7 @@
 version: '3.8'
 services:
   app:
+    image: stream-assist-bot
     build:
       context: . # Context should only operate on a File System context based on the root directory
       target: dev
@@ -15,7 +16,6 @@ services:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
     volumes:
-      - ./:/app
       - D:/DataWorkspaces/stream-assist-bot/logs:/app/logs
       - D:/DataWorkspaces/stream-assist-bot/cache/:/app/local-cache/
   postgres:
