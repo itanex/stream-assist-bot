@@ -1,0 +1,68 @@
+{
+  // Place your stream-assist-bot workspace snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and
+  // description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope
+  // is left empty or omitted, the snippet gets applied to all languages. The prefix is what is
+  // used to trigger the snippet and the body will be expanded and inserted. Possible variables are:
+  // $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders.
+  // Placeholders with the same ids are connected.
+  // Example:
+  // "Print to console": {
+  // 	"scope": "javascript,typescript",
+  // 	"prefix": "log",
+  // 	"body": [
+  // 		"console.log('$1');",
+  // 		"$2"
+  // 	],
+  // 	"description": "Log output to console"
+  // }
+  "Bot.Command.Test": {
+    "scope": "typescript",
+    "prefix": "bot-command-test",
+    "body": [
+      "// reflect-metadata should be imported",
+      "// before any interface or other imports",
+      "// also it should be imported only once",
+      "// so that a singleton is created.",
+      "import 'reflect-metadata';",
+      "import { ChatClient, ChatUser } from '@twurple/chat';",
+      "import { Container } from 'inversify';",
+      "import winston from 'winston';",
+      "import { mockChatClient, mockLogger } from '../../tests/common.mocks';",
+      "import InjectionTypes from '../../dependency-management/types';",
+      "import { ICommandHandler } from './iCommandHandler';",
+      "",
+      "describe('${1:File Name/Test Description} Tests', () => {",
+      "    const container: Container = new Container();",
+      "    let expectedChatClient: ChatClient;",
+      "    let expectedLogger: winston.Logger;",
+      "",
+      "    beforeEach(() => {",
+      "        jest.resetAllMocks();",
+      "        container.unbindAll();",
+      "        container",
+      "            .bind<ChatClient>(ChatClient)",
+      "            .toConstantValue(mockChatClient);",
+      "",
+      "        container",
+      "            .bind<winston.Logger>(InjectionTypes.Logger)",
+      "            .toConstantValue(mockLogger);",
+      "",
+      "        container",
+      "            .bind<ICommandHandler>(InjectionTypes.CommandHandlers)",
+      "            .to(${2:Specific Command Handler Implementation});",
+      "",
+      "        expectedChatClient = container",
+      "            .get(ChatClient);",
+      "",
+      "        expectedLogger = container",
+      "            .get<winston.Logger>(InjectionTypes.Logger);",
+      "    });",
+      "",
+      "    // TODO: Write Tests",
+      "",
+      "});",
+      ""
+    ],
+    "description": "Scaffolding for jest unit tests of Bot Commands"
+  }
+}
