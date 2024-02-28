@@ -6,8 +6,10 @@ import Raiders from './models/raiders.dbo';
 import Subscribers from './models/subscribers.dbo';
 import SubscriptionType from './models/subscriptionType';
 import SubscriptionGiftUsers from './models/subscriptionGiftUsers.dbo';
+import BanEvent from './models/banEvent.dbo';
 
 export {
+    BanEvent,
     ChannelPointRedeem,
     CheerEvent,
     DeathCounts,
