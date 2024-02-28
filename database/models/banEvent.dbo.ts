@@ -90,7 +90,7 @@ export default class BanEvent extends Model {
     broadcasterDisplayName: string;
 
     /**
-    * The ID of the user.
+    * The ID of the user being banned/unbanned.
     */
     @Column({
         type: DataType.STRING(20),
@@ -98,7 +98,7 @@ export default class BanEvent extends Model {
     userId: string;
 
     /**
-    * The name of the user.
+    * The name of the user being banned/unbanned.
     */
     @Column({
         type: DataType.STRING(40),
@@ -106,7 +106,7 @@ export default class BanEvent extends Model {
     userName: string;
 
     /**
-    * The display name of the user.
+    * The display name of the user being banned/unbanned.
     */
     @Column({
         type: DataType.STRING(40),
