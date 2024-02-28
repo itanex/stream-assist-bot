@@ -3,9 +3,23 @@
 // also it should be imported only once
 // so that a singleton is created.
 import 'reflect-metadata';
-import { ChatClient, ChatCommunitySubInfo, ChatMessage, ChatRaidInfo, ChatSubExtendInfo, ChatSubGiftInfo, ChatSubInfo, UserNotice } from '@twurple/chat';
+import {
+    ChatClient,
+    ChatCommunitySubInfo,
+    ChatMessage,
+    ChatRaidInfo,
+    ChatSubExtendInfo,
+    ChatSubGiftInfo,
+    ChatSubInfo,
+    UserNotice,
+} from '@twurple/chat';
 import { EventSubWsListener } from '@twurple/eventsub-ws';
-import { EventSubChannelCheerEvent, EventSubChannelRedemptionAddEvent } from '@twurple/eventsub-base';
+import {
+    EventSubChannelBanEvent,
+    EventSubChannelCheerEvent,
+    EventSubChannelRedemptionAddEvent,
+    EventSubChannelUnbanEvent,
+} from '@twurple/eventsub-base';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import {
@@ -16,6 +30,7 @@ import {
     SubscriptionHandler,
 } from './handlers';
 import {
+    BanEventHandler,
     ChannelPointEventHandler,
     CheerEventHandler,
 } from './event-sub-handlers';
@@ -30,6 +45,7 @@ export default class ChatBot {
         @inject(MessageHandler) private messageHandler: MessageHandler,
         @inject(RaidHandler) private raidHandler: IRaidStreamEvent,
         @inject(SubscriptionHandler) private subscriptionHandler: ISubscriptionHandler,
+        @inject(BanEventHandler) private banEventHandler: BanEventHandler,
         @inject(ChannelPointEventHandler) private channelPointEventHandler: ChannelPointEventHandler,
         @inject(CheerEventHandler) private cheerEventHandler: CheerEventHandler,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
@@ -89,6 +105,20 @@ export default class ChatBot {
             environment.twitchBot.broadcaster.id,
             (event: EventSubChannelCheerEvent): void => {
                 this.cheerEventHandler.onCheer(event);
+            },
+        );
+
+        this.eventSubWsListener.onChannelBan(
+            environment.twitchBot.broadcaster.id,
+            (event: EventSubChannelBanEvent): void => {
+                this.banEventHandler.onBanEvent(event);
+            },
+        );
+
+        this.eventSubWsListener.onChannelUnban(
+            environment.twitchBot.broadcaster.id,
+            (event: EventSubChannelUnbanEvent): void => {
+                this.banEventHandler.onUnbanEvent(event);
             },
         );
 
