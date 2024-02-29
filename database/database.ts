@@ -10,6 +10,7 @@ import {
     DeathCounts,
     LurkingUsers,
     Raiders,
+    StreamEventRecord,
     SubscriptionGiftUsers,
     Subscribers,
 } from '.';
@@ -47,6 +48,7 @@ const pgConfig: SequelizeOptions = {
         BanEvent,
         ChannelPointRedeem,
         CheerEvent,
+        StreamEventRecord,
     ],
 };
 
