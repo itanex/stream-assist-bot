@@ -36,17 +36,14 @@ class App {
     }
 
     async exit(): Promise<void> {
-        await clearLurkingUsers(this.logger)
-            .then(async () => {
-                await Promise
-                    .all([
-                        this.database.disconnect(),
-                        this.chatBot.shutdown(),
-                    ])
-                    .then(() => {
-                        this.logger.info('Process Terminated (0)');
-                        process.exit();
-                    });
+        await Promise
+            .all([
+                this.database.disconnect(),
+                this.chatBot.shutdown(),
+            ])
+            .then(() => {
+                this.logger.info('Process Terminated (0)');
+                process.exit();
             });
     }
 }
