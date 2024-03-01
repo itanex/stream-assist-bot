@@ -82,10 +82,10 @@ export default class LurkingUsers extends Model {
             });
     }
 
-    static async setAllUsersToUnlurk(): Promise<[number, LurkingUsers[]]> {
+    static async setAllUsersToUnlurk(endTime?: Date): Promise<[number, LurkingUsers[]]> {
         return this
             .update(
-                { endTime: new Date() },
+                { endTime: endTime || new Date() },
                 {
                     where: { endTime: null },
                     returning: true,

@@ -19,6 +19,8 @@ import {
     EventSubChannelCheerEvent,
     EventSubChannelRedemptionAddEvent,
     EventSubChannelUnbanEvent,
+    EventSubStreamOfflineEvent,
+    EventSubStreamOnlineEvent,
 } from '@twurple/eventsub-base';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
@@ -33,6 +35,7 @@ import {
     BanEventHandler,
     ChannelPointEventHandler,
     CheerEventHandler,
+    StreamEventHandler,
 } from './event-sub-handlers';
 import InjectionTypes from '../dependency-management/types';
 import environment from '../configurations/environment';
@@ -48,6 +51,7 @@ export default class ChatBot {
         @inject(BanEventHandler) private banEventHandler: BanEventHandler,
         @inject(ChannelPointEventHandler) private channelPointEventHandler: ChannelPointEventHandler,
         @inject(CheerEventHandler) private cheerEventHandler: CheerEventHandler,
+        @inject(StreamEventHandler) private streamEventHandler: StreamEventHandler,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
         this.logger.info(`** Chat Bot initialized **`);
@@ -119,6 +123,20 @@ export default class ChatBot {
             environment.twitchBot.broadcaster.id,
             (event: EventSubChannelUnbanEvent): void => {
                 this.banEventHandler.onUnbanEvent(event);
+            },
+        );
+
+        this.eventSubWsListener.onStreamOnline(
+            environment.twitchBot.broadcaster.id,
+            (event: EventSubStreamOnlineEvent): void => {
+                this.streamEventHandler.streamOnline(event);
+            },
+        );
+
+        this.eventSubWsListener.onStreamOffline(
+            environment.twitchBot.broadcaster.id,
+            (event: EventSubStreamOfflineEvent): void => {
+                this.streamEventHandler.streamOffline(event);
             },
         );
 

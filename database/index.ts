@@ -1,12 +1,13 @@
+import BanEvent from './models/banEvent.dbo';
 import ChannelPointRedeem from './models/channelPointRedeem.dbo';
 import CheerEvent from './models/cheerEvent.dbo';
 import DeathCounts from './models/deathCountRecord.dbo';
 import LurkingUsers from './models/lurkingUser.dbo';
 import Raiders from './models/raiders.dbo';
+import StreamEventRecord from './models/stream-event-record.dbo';
 import Subscribers from './models/subscribers.dbo';
 import SubscriptionType from './models/subscriptionType';
 import SubscriptionGiftUsers from './models/subscriptionGiftUsers.dbo';
-import BanEvent from './models/banEvent.dbo';
 
 export {
     BanEvent,
@@ -15,6 +16,7 @@ export {
     DeathCounts,
     LurkingUsers,
     Raiders,
+    StreamEventRecord,
     SubscriptionType,
     SubscriptionGiftUsers,
     Subscribers,
