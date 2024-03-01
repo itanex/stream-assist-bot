@@ -1,4 +1,5 @@
 import { EventSubStreamOfflineEvent, EventSubStreamOnlineEvent } from '@twurple/eventsub-base';
+import { Op } from 'sequelize';
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
 
 @Table({
@@ -67,6 +68,27 @@ export default class StreamEventRecord extends Model {
     })
     broadcasterDisplayName: string;
 
+    /**
+     * Gets the last stream in the DB for the provided broadcaster
+     * @param broadcasterId the broadcaster to get the stream record of
+     * @returns the found stream record
+     */
+    static async getLastStream(broadcasterId: string): Promise<StreamEventRecord> {
+        return this
+            .findOne({
+                where: {
+                    broadcasterId,
+                    endDate: { [Op.not]: null },
+                },
+                order: [['endDate', 'DESC']],
+            });
+    }
+
+    /**
+     * Save the provided start stream event in the DB
+     * @param event the start stream event
+     * @returns the start stream event db record
+     */
     static async saveStreamStartEvent(event: EventSubStreamOnlineEvent): Promise<StreamEventRecord> {
         const record: Partial<StreamEventRecord> = {
             streamId: event.id,
@@ -82,6 +104,12 @@ export default class StreamEventRecord extends Model {
             .create(record);
     }
 
+    /**
+     * Save the provided end stream event in the DB
+     * @param endDate the datetime of the stream event (not on event)
+     * @param event the end stream event
+     * @returns the end stream event db record
+     */
     static async saveStreamEndEvent(endDate: Date, event: EventSubStreamOfflineEvent): Promise<[number, StreamEventRecord[]]> {
         return this
             .update(
