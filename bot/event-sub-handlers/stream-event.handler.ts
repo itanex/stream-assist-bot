@@ -1,6 +1,5 @@
 import { EventSubStreamOfflineEvent, EventSubStreamOnlineEvent } from '@twurple/eventsub-base';
 import { inject, injectable } from 'inversify';
-import cron from 'node-cron';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types';
 import { LurkingUsers, StreamEventRecord } from '../../database';
@@ -14,15 +13,25 @@ export default class StreamEventHandler {
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) { }
 
+    /**
+     * Start of stream processes
+     * 1) Invalidate outstanding timer (unlurk user)
+     * 2) Clean Up haning lurking users
+     * 3) Record Start Stream event into the DB
+     * @param event the stream online event
+     */
     async streamOnline(event: EventSubStreamOnlineEvent): Promise<void> {
         // if an existing timeout is in progress lets remove it
         // this is because we recovered from a stream shutdown event
         if (StreamEventHandler.clearTimeoutRef) {
             clearTimeout(StreamEventHandler.clearTimeoutRef);
             StreamEventHandler.clearTimeoutRef = null;
-        }
+        } else {
+            // Clean up lurking users on fresh stream...
+            const lastStream = await StreamEventRecord.getLastStream(event.broadcasterId);
 
-        // decide to clean up lurking users on fresh stream...
+            await LurkingUsers.setAllUsersToUnlurk(lastStream.endDate);
+        }
 
         return StreamEventRecord
             .saveStreamStartEvent(event)
@@ -36,6 +45,13 @@ export default class StreamEventHandler {
             );
     }
 
+    /**
+     * End of stream processes
+     * 1) Record End Stream event into the DB
+     * 2) Establishes a simple timeout to Unlurk
+     *    users that are remaining in the DB
+     * @param event the stream offline event
+     */
     async streamOffline(event: EventSubStreamOfflineEvent): Promise<void> {
         // Time we received the event
         const endTime = new Date();
