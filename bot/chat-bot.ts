@@ -35,7 +35,7 @@ import {
     BanEventHandler,
     ChannelPointEventHandler,
     CheerEventHandler,
-    StreamHandler,
+    StreamEventHandler,
 } from './event-sub-handlers';
 import InjectionTypes from '../dependency-management/types';
 import environment from '../configurations/environment';
@@ -51,7 +51,7 @@ export default class ChatBot {
         @inject(BanEventHandler) private banEventHandler: BanEventHandler,
         @inject(ChannelPointEventHandler) private channelPointEventHandler: ChannelPointEventHandler,
         @inject(CheerEventHandler) private cheerEventHandler: CheerEventHandler,
-        @inject(StreamHandler) private streamHandler: StreamHandler,
+        @inject(StreamEventHandler) private streamHandler: StreamEventHandler,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
         this.logger.info(`** Chat Bot initialized **`);
