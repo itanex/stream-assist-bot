@@ -51,7 +51,7 @@ export default class ChatBot {
         @inject(BanEventHandler) private banEventHandler: BanEventHandler,
         @inject(ChannelPointEventHandler) private channelPointEventHandler: ChannelPointEventHandler,
         @inject(CheerEventHandler) private cheerEventHandler: CheerEventHandler,
-        @inject(StreamEventHandler) private streamHandler: StreamEventHandler,
+        @inject(StreamEventHandler) private streamEventHandler: StreamEventHandler,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
         this.logger.info(`** Chat Bot initialized **`);
@@ -129,14 +129,14 @@ export default class ChatBot {
         this.eventSubWsListener.onStreamOnline(
             environment.twitchBot.broadcaster.id,
             (event: EventSubStreamOnlineEvent): void => {
-                this.streamHandler.streamOnline(event);
+                this.streamEventHandler.streamOnline(event);
             },
         );
 
         this.eventSubWsListener.onStreamOffline(
             environment.twitchBot.broadcaster.id,
             (event: EventSubStreamOfflineEvent): void => {
-                this.streamHandler.streamOffline(event);
+                this.streamEventHandler.streamOffline(event);
             },
         );
 
