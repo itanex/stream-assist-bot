@@ -34,7 +34,6 @@ describe('Stream Event Handler Tests', () => {
             .get<winston.Logger>(InjectionTypes.Logger);
     });
 
-    // TODO: Write Tests
     describe('Start Stream Event', () => {
         it('should not run timeout, invoke unlurk all users, and save record in db', async () => {
             // Arrange
@@ -81,9 +80,9 @@ describe('Stream Event Handler Tests', () => {
             expect(expectedLogger.info)
                 .toHaveBeenCalledTimes(1);
             expect(expectedLogger.info)
-                .toHaveBeenCalledWith(expect.stringContaining(event.id));
+                .toHaveBeenCalledWith(expect.stringContaining(`${event.id}`));
             expect(expectedLogger.info)
-                .toHaveBeenCalledWith(expect.stringContaining(record.streamId));
+                .toHaveBeenCalledWith(expect.stringContaining(`${record.streamId}`));
             expect(expectedLogger.error)
                 .not.toHaveBeenCalled();
         });
