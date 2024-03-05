@@ -95,17 +95,6 @@ export default class ModeratorEvent extends Model {
      * @returns Moderator Event Record
      */
     static async removeUserAsMod(event: EventSubChannelModeratorEvent): Promise<[number, ModeratorEvent[]]> {
-        const record: Partial<ModeratorEvent> = {
-            addDate: new Date(),
-            removeDate: null,
-            broadcasterId: event.broadcasterId,
-            broadcasterName: event.broadcasterName,
-            broadcasterDisplayName: event.broadcasterDisplayName,
-            userId: event.userId,
-            userName: event.userName,
-            userDisplayName: event.userDisplayName,
-        };
-
         return this
             .update(
                 { removeDate: new Date() },
