@@ -15,6 +15,7 @@ import {
     StreamEventRecord,
     SubscriptionGiftUsers,
     Subscribers,
+    RaidEvent,
 } from '.';
 import environment from '../configurations/environment';
 
@@ -49,6 +50,7 @@ const pgConfig: SequelizeOptions = {
         FollowEvent,
         LurkingUsers,
         ModeratorEvent,
+        RaidEvent,
         Raiders,
         StreamEventRecord,
         SubscriptionGiftUsers,

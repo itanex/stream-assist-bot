@@ -5,6 +5,7 @@ import DeathCounts from './models/deathCountRecord.dbo';
 import FollowEvent from './models/follow-event.dbo';
 import LurkingUsers from './models/lurkingUser.dbo';
 import ModeratorEvent from './models/moderatorEvent.dbo';
+import RaidEvent from './models/raid-event.dbo';
 import Raiders from './models/raiders.dbo';
 import StreamEventRecord from './models/stream-event-record.dbo';
 import Subscribers from './models/subscribers.dbo';
@@ -19,6 +20,7 @@ export {
     FollowEvent,
     LurkingUsers,
     ModeratorEvent,
+    RaidEvent,
     Raiders,
     StreamEventRecord,
     SubscriptionType,
