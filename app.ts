@@ -4,7 +4,6 @@ import ChatBot from './bot/chat-bot';
 import SAContainer from './dependency-management/inversify.config';
 import InjectionTypes from './dependency-management/types';
 import Database from './database/database';
-import { clearLurkingUsers } from './bot/commands/lurkCommands';
 import Scheduler from './bot/scheduler';
 import SocketServer, { ISocketServer } from './bot/overlay/socket.server';
 import OverlayServer, { IOverlayServer } from './bot/overlay/overlay.server';

@@ -19,6 +19,7 @@ import {
     EventSubChannelCheerEvent,
     EventSubChannelFollowEvent,
     EventSubChannelModeratorEvent,
+    EventSubChannelRaidEvent,
     EventSubChannelRedemptionAddEvent,
     EventSubChannelUnbanEvent,
     EventSubStreamOfflineEvent,
@@ -39,6 +40,7 @@ import {
     CheerEventHandler,
     FollowerEventHandler,
     ModeratorEventHandler,
+    RaidEventHandler,
     StreamEventHandler,
 } from './event-sub-handlers';
 import InjectionTypes from '../dependency-management/types';
@@ -57,6 +59,7 @@ export default class ChatBot {
         @inject(CheerEventHandler) private cheerEventHandler: CheerEventHandler,
         @inject(FollowerEventHandler) private followerEventHandler: FollowerEventHandler,
         @inject(ModeratorEventHandler) private moderatorEventHandler: ModeratorEventHandler,
+        @inject(RaidEventHandler) private raidEventHandler: RaidEventHandler,
         @inject(StreamEventHandler) private streamEventHandler: StreamEventHandler,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
@@ -153,6 +156,20 @@ export default class ChatBot {
             environment.twitchBot.broadcaster.id,
             (event: EventSubChannelModeratorEvent): void => {
                 this.moderatorEventHandler.removeModerator(event);
+            },
+        );
+
+        this.eventSubWsListener.onChannelRaidTo(
+            environment.twitchBot.broadcaster.id,
+            (event: EventSubChannelRaidEvent): void => {
+                this.raidEventHandler.raid(event);
+            },
+        );
+
+        this.eventSubWsListener.onChannelRaidFrom(
+            environment.twitchBot.broadcaster.id,
+            (event: EventSubChannelRaidEvent): void => {
+                this.raidEventHandler.raid(event);
             },
         );
 
