@@ -17,6 +17,7 @@ import { EventSubWsListener } from '@twurple/eventsub-ws';
 import {
     EventSubChannelBanEvent,
     EventSubChannelCheerEvent,
+    EventSubChannelModeratorEvent,
     EventSubChannelRedemptionAddEvent,
     EventSubChannelUnbanEvent,
     EventSubStreamOfflineEvent,
@@ -35,6 +36,7 @@ import {
     BanEventHandler,
     ChannelPointEventHandler,
     CheerEventHandler,
+    ModeratorEventHandler,
     StreamEventHandler,
 } from './event-sub-handlers';
 import InjectionTypes from '../dependency-management/types';
@@ -51,6 +53,7 @@ export default class ChatBot {
         @inject(BanEventHandler) private banEventHandler: BanEventHandler,
         @inject(ChannelPointEventHandler) private channelPointEventHandler: ChannelPointEventHandler,
         @inject(CheerEventHandler) private cheerEventHandler: CheerEventHandler,
+        @inject(ModeratorEventHandler) private moderatorEventHandler: ModeratorEventHandler,
         @inject(StreamEventHandler) private streamEventHandler: StreamEventHandler,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
@@ -123,6 +126,20 @@ export default class ChatBot {
             environment.twitchBot.broadcaster.id,
             (event: EventSubChannelUnbanEvent): void => {
                 this.banEventHandler.onUnbanEvent(event);
+            },
+        );
+
+        this.eventSubWsListener.onChannelModeratorAdd(
+            environment.twitchBot.broadcaster.id,
+            (event: EventSubChannelModeratorEvent): void => {
+                this.moderatorEventHandler.addModerator(event);
+            },
+        );
+
+        this.eventSubWsListener.onChannelModeratorRemove(
+            environment.twitchBot.broadcaster.id,
+            (event: EventSubChannelModeratorEvent): void => {
+                this.moderatorEventHandler.removeModerator(event);
             },
         );
 
