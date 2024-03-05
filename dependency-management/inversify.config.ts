@@ -55,6 +55,7 @@ import {
     CheerEventHandler,
     FollowerEventHandler,
     ModeratorEventHandler,
+    RaidEventHandler,
     StreamEventHandler,
 } from '../bot/event-sub-handlers';
 import Broadcaster from '../bot/utilities/broadcaster';
@@ -117,6 +118,7 @@ SAContainer.bind(ChannelPointEventHandler).toSelf();
 SAContainer.bind(CheerEventHandler).toSelf();
 SAContainer.bind(FollowerEventHandler).toSelf();
 SAContainer.bind(ModeratorEventHandler).toSelf();
+SAContainer.bind(RaidEventHandler).toSelf();
 SAContainer.bind(StreamEventHandler).toSelf();
 
 // Bind dependencies to container
