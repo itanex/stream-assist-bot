@@ -2,6 +2,7 @@ import BanEvent from './models/banEvent.dbo';
 import ChannelPointRedeem from './models/channelPointRedeem.dbo';
 import CheerEvent from './models/cheerEvent.dbo';
 import DeathCounts from './models/deathCountRecord.dbo';
+import FollowEvent from './models/follow-event.dbo';
 import LurkingUsers from './models/lurkingUser.dbo';
 import ModeratorEvent from './models/moderatorEvent.dbo';
 import Raiders from './models/raiders.dbo';
@@ -15,6 +16,7 @@ export {
     ChannelPointRedeem,
     CheerEvent,
     DeathCounts,
+    FollowEvent,
     LurkingUsers,
     ModeratorEvent,
     Raiders,

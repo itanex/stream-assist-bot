@@ -53,6 +53,7 @@ import {
     BanEventHandler,
     ChannelPointEventHandler,
     CheerEventHandler,
+    FollowerEventHandler,
     ModeratorEventHandler,
     StreamEventHandler,
 } from '../bot/event-sub-handlers';
@@ -114,6 +115,7 @@ SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(WishListCom
 SAContainer.bind(BanEventHandler).toSelf();
 SAContainer.bind(ChannelPointEventHandler).toSelf();
 SAContainer.bind(CheerEventHandler).toSelf();
+SAContainer.bind(FollowerEventHandler).toSelf();
 SAContainer.bind(ModeratorEventHandler).toSelf();
 SAContainer.bind(StreamEventHandler).toSelf();
 

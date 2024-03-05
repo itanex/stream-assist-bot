@@ -17,6 +17,7 @@ import { EventSubWsListener } from '@twurple/eventsub-ws';
 import {
     EventSubChannelBanEvent,
     EventSubChannelCheerEvent,
+    EventSubChannelFollowEvent,
     EventSubChannelModeratorEvent,
     EventSubChannelRedemptionAddEvent,
     EventSubChannelUnbanEvent,
@@ -36,6 +37,7 @@ import {
     BanEventHandler,
     ChannelPointEventHandler,
     CheerEventHandler,
+    FollowerEventHandler,
     ModeratorEventHandler,
     StreamEventHandler,
 } from './event-sub-handlers';
@@ -53,6 +55,7 @@ export default class ChatBot {
         @inject(BanEventHandler) private banEventHandler: BanEventHandler,
         @inject(ChannelPointEventHandler) private channelPointEventHandler: ChannelPointEventHandler,
         @inject(CheerEventHandler) private cheerEventHandler: CheerEventHandler,
+        @inject(FollowerEventHandler) private followerEventHandler: FollowerEventHandler,
         @inject(ModeratorEventHandler) private moderatorEventHandler: ModeratorEventHandler,
         @inject(StreamEventHandler) private streamEventHandler: StreamEventHandler,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
@@ -126,6 +129,16 @@ export default class ChatBot {
             environment.twitchBot.broadcaster.id,
             (event: EventSubChannelUnbanEvent): void => {
                 this.banEventHandler.onUnbanEvent(event);
+            },
+        );
+
+        // Requires that a moderator with permission is part of the subscription
+        // Using the broadcaster as that user
+        this.eventSubWsListener.onChannelFollow(
+            environment.twitchBot.broadcaster.id,
+            environment.twitchBot.broadcaster.id,
+            (event: EventSubChannelFollowEvent): void => {
+                this.followerEventHandler.follow(event);
             },
         );
 
