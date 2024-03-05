@@ -3,6 +3,7 @@ import ChannelPointRedeem from './models/channelPointRedeem.dbo';
 import CheerEvent from './models/cheerEvent.dbo';
 import DeathCounts from './models/deathCountRecord.dbo';
 import LurkingUsers from './models/lurkingUser.dbo';
+import ModeratorEvent from './models/moderatorEvent.dbo';
 import Raiders from './models/raiders.dbo';
 import StreamEventRecord from './models/stream-event-record.dbo';
 import Subscribers from './models/subscribers.dbo';
@@ -15,6 +16,7 @@ export {
     CheerEvent,
     DeathCounts,
     LurkingUsers,
+    ModeratorEvent,
     Raiders,
     StreamEventRecord,
     SubscriptionType,
