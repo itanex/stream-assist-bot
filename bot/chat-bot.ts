@@ -46,8 +46,15 @@ import {
 import InjectionTypes from '../dependency-management/types';
 import environment from '../configurations/environment';
 
+export interface IChatBot {
+    configure: () => IChatBot;
+    start: () => void;
+    restart: () => void;
+    shutdown: () => void;
+}
+
 @injectable()
-export default class ChatBot {
+export default class ChatBot implements IChatBot {
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(EventSubWsListener) private eventSubWsListener: EventSubWsListener,
@@ -66,8 +73,8 @@ export default class ChatBot {
         this.logger.info(`** Chat Bot initialized **`);
     }
 
-    async start(): Promise<void> {
-        this.chatClient.onMessage((channel: string, user: string, text: string, msg: ChatMessage) => {
+    configure(): IChatBot {
+        this.chatClient.onMessage(async (channel: string, user: string, text: string, msg: ChatMessage) => {
             this.messageHandler.handle(channel, user, text, msg.userInfo);
         });
 
@@ -100,9 +107,9 @@ export default class ChatBot {
         this.chatClient.onConnect(() => this.logger.info('Chat Client connected'));
         this.chatClient.onDisconnect((manual, reason) => {
             if (reason) {
-                this.logger.error('Chat Client disonnected', reason);
+                this.logger.error('Chat Client disconnected', reason);
             } else {
-                this.logger.info('Chat Client disonnected');
+                this.logger.info('Chat Client disconnected');
             }
         });
 
@@ -187,6 +194,10 @@ export default class ChatBot {
             },
         );
 
+        return this;
+    }
+
+    start(): void {
         // Connect Client
         this.chatClient.connect();
 
@@ -194,7 +205,12 @@ export default class ChatBot {
         this.eventSubWsListener.start();
     }
 
-    async shutdown() {
+    restart(): void {
+        this.shutdown();
+        this.start();
+    }
+
+    shutdown(): void {
         this.eventSubWsListener.stop();
         return this.chatClient.quit();
     }
