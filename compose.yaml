@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   app:
-    image: stream-assist-bot
+    image: itanex/stream-assist-bot:1.3.0
     build:
       context: . # Context should only operate on a File System context based on the root directory
       target: dev
@@ -19,7 +19,7 @@ services:
       - D:/DataWorkspaces/stream-assist-bot/logs:/app/logs
       - D:/DataWorkspaces/stream-assist-bot/cache/:/app/local-cache/
   postgres:
-    image: postgres
+    image: postgres:latest
     restart: always
     user: postgres
     volumes:
