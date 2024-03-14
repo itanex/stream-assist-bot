@@ -1,21 +1,23 @@
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import ChatBot from './bot/chat-bot';
+import ChatBot, { IChatBot } from './bot/chat-bot';
 import SAContainer from './dependency-management/inversify.config';
 import InjectionTypes from './dependency-management/types';
 import Database from './database/database';
 import Scheduler from './bot/scheduler';
 import SocketServer, { ISocketServer } from './bot/overlay/socket.server';
 import OverlayServer, { IOverlayServer } from './bot/overlay/overlay.server';
+import AuthenticationServer, { IAuthenticationServer } from './bot/auth/auth.server';
 
 @injectable()
 class App {
     constructor(
-        @inject(ChatBot) private chatBot: ChatBot,
+        @inject(ChatBot) private chatBot: IChatBot,
         @inject(Database) private database: Database,
         @inject(Scheduler) private scheduler: Scheduler,
         @inject(SocketServer) private socketServer: ISocketServer,
         @inject(OverlayServer) private overlayServer: IOverlayServer,
+        @inject(AuthenticationServer) private authServer: IAuthenticationServer,
         @inject(InjectionTypes.Logger) public logger: winston.Logger,
     ) {
         this.logger.info(`** Application initialized **`);
@@ -25,11 +27,12 @@ class App {
         this.logger.info(`** Bot application starting **`);
 
         await Promise.all([
-            this.chatBot.start(),
+            this.chatBot.configure().start(),
             this.database.connect(),
             this.database.sync(),
             this.socketServer.startServer(),
             this.overlayServer.configure().listen(),
+            this.authServer.configure().listen(),
             this.scheduler.scheduleChatEvents(),
         ]);
     }

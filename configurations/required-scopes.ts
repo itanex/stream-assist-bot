@@ -15,3 +15,5 @@ const requiredScopes = [
     'user:read:follows',
     'user:read:subscriptions',
 ];
+
+export default requiredScopes;
