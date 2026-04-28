@@ -3,23 +3,20 @@
 // also it should be imported only once
 // so that a singleton is created.
 import 'reflect-metadata';
-import { HelixPrivilegedUser, HelixStream } from '@twurple/api';
+import { ApiClient, HelixStream } from '@twurple/api';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import { Container } from 'inversify';
 import winston from 'winston';
-import { mockChatClient, mockLogger } from '../../tests/common.mocks';
+import { mockChatClient, mockApiClient, mockLogger } from '../../tests/common.mocks';
 import InjectionTypes from '../../dependency-management/types';
 import { ICommandHandler } from './iCommandHandler';
 import { DeathCommand, DeathCountCommand, LastDeathCountCommmand } from './deathCommands';
-import Broadcaster from '../utilities/broadcaster';
 import { DeathCounts } from '../../database';
 
 describe('Death Commands Tests', () => {
     const container: Container = new Container();
     let expectedChatClient: ChatClient;
     let expectedLogger: winston.Logger;
-    let mockBroadcaster: Broadcaster;
-    let mockBroadcastingUser: HelixPrivilegedUser;
 
     const channel = 'TestChannel';
     const command = 'TestCommand';
@@ -65,26 +62,20 @@ describe('Death Commands Tests', () => {
             .toConstantValue(mockChatClient);
 
         container
+            .bind<ApiClient>(ApiClient)
+            .toConstantValue(mockApiClient);
+
+        container
             .bind<winston.Logger>(InjectionTypes.Logger)
             .toConstantValue(mockLogger);
+
+        mockApiClient.streams.getStreamByUserName = jest.fn().mockReturnValue(streamData);
 
         expectedChatClient = container
             .get(ChatClient);
 
         expectedLogger = container
             .get<winston.Logger>(InjectionTypes.Logger);
-
-        mockBroadcastingUser = <unknown>{
-            getStream: jest.fn().mockResolvedValue(streamData),
-        } as HelixPrivilegedUser;
-
-        mockBroadcaster = <unknown>{
-            getBroadcaster: jest.fn().mockResolvedValue(mockBroadcastingUser),
-        } as Broadcaster;
-
-        container
-            .bind(Broadcaster)
-            .toConstantValue(mockBroadcaster);
     });
 
     describe('Death Command', () => {
@@ -131,8 +122,7 @@ describe('Death Commands Tests', () => {
                 }
 
                 // Assert
-                expect(mockBroadcaster.getBroadcaster).toHaveBeenCalledTimes(hasTimeout ? 2 : 1);
-                expect(mockBroadcastingUser.getStream).toHaveBeenCalledTimes(hasTimeout ? 2 : 1);
+                expect(mockApiClient.streams.getStreamByUserName).toHaveBeenCalledTimes(hasTimeout ? 2 : 1);
 
                 expect(DeathCounts.recordNewDeath)
                     .toHaveBeenCalledTimes(hasTimeout ? 2 : 1);
@@ -174,8 +164,7 @@ describe('Death Commands Tests', () => {
                 await subject.handle(channel, command, user, message, []);
 
                 // Assert
-                expect(mockBroadcaster.getBroadcaster).toHaveBeenCalledTimes(1);
-                expect(mockBroadcastingUser.getStream).toHaveBeenCalledTimes(1);
+                expect(mockApiClient.streams.getStreamByUserName).toHaveBeenCalledTimes(1);
 
                 expect(DeathCounts.getCurrentStreamDeathCount)
                     .toHaveBeenCalledTimes(1);
@@ -225,8 +214,7 @@ describe('Death Commands Tests', () => {
                 await subject.handle(channel, command, user, message, []);
 
                 // Assert
-                expect(mockBroadcaster.getBroadcaster).toHaveBeenCalledTimes(1);
-                expect(mockBroadcastingUser.getStream).toHaveBeenCalledTimes(1);
+                expect(mockApiClient.streams.getStreamByUserName).toHaveBeenCalledTimes(1);
 
                 expect(DeathCounts.getLastStreamDeathCount)
                     .toHaveBeenCalledTimes(1);
