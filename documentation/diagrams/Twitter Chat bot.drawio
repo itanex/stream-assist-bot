@@ -1,0 +1,106 @@
+<mxfile host="65bd71144e">
+    <diagram id="8tQJV8m8m_nk9vcsK3re" name="Previous Stream Title Algo">
+        <mxGraphModel dx="1002" dy="573" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="If_p3n30EdfCmcMn5kvQ-3" target="If_p3n30EdfCmcMn5kvQ-4" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-6" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;No&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="If_p3n30EdfCmcMn5kvQ-5" vertex="1" connectable="0">
+                    <mxGeometry x="-0.2627" y="1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-9" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.16;entryY=0.55;entryDx=0;entryDy=0;entryPerimeter=0;fontSize=14;" parent="1" source="If_p3n30EdfCmcMn5kvQ-3" target="If_p3n30EdfCmcMn5kvQ-8" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-3" value="Is this user&#xa;in twitchAPI&#xa;" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=2;fillWeight=-1;hachureGap=8;fillStyle=solid;fillColor=#d5e8d4;sketch=1;align=center;verticalAlign=middle;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="120" y="80" width="120" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-4" value="EXIT Method" style="shape=image;html=1;verticalLabelPosition=bottom;verticalAlign=top;imageAspect=1;aspect=fixed;image=img/clipart/Gear_128x128.png" parent="1" vertex="1">
+                    <mxGeometry x="30" y="109.5" width="52" height="61" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" parent="1" source="If_p3n30EdfCmcMn5kvQ-8" target="If_p3n30EdfCmcMn5kvQ-10" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-8" value="Call TwitchAPI&lt;br&gt;Schedule &lt;br&gt;for user" style="ellipse;shape=cloud;whiteSpace=wrap;html=1;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="320" y="100" width="120" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" parent="1" source="If_p3n30EdfCmcMn5kvQ-10" target="If_p3n30EdfCmcMn5kvQ-13" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-24" value="Yes" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;" parent="If_p3n30EdfCmcMn5kvQ-14" vertex="1" connectable="0">
+                    <mxGeometry x="-0.2462" y="4" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-27" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.16;entryY=0.55;entryDx=0;entryDy=0;entryPerimeter=0;fontSize=14;" parent="1" source="If_p3n30EdfCmcMn5kvQ-10" target="If_p3n30EdfCmcMn5kvQ-26" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-10" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;Is there a schedule that&lt;br&gt;has items&lt;br&gt;&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=2;fillWeight=-1;hachureGap=8;fillStyle=solid;fillColor=#d5e8d4;sketch=1;align=center;verticalAlign=middle;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="225" y="240" width="120" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;fontSize=14;" parent="1" target="If_p3n30EdfCmcMn5kvQ-16" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="225" y="420" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="105" y="420" as="sourcePoint"/>
+                        <mxPoint x="55" y="500" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-13" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;start date &lt;br&gt;before dayjs&lt;br&gt;&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=2;fillWeight=-1;hachureGap=8;fillStyle=solid;fillColor=#d5e8d4;sketch=1;align=center;verticalAlign=middle;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="95" y="360" width="120" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-15" value="Was Streaming" style="triangle;whiteSpace=wrap;html=1;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="15" y="480" width="60" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-16" value="Plans to&lt;br&gt;stream" style="triangle;whiteSpace=wrap;html=1;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="235" y="480" width="60" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-30" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0.088;entryDx=0;entryDy=0;entryPerimeter=0;fontSize=14;" parent="1" source="If_p3n30EdfCmcMn5kvQ-21" target="If_p3n30EdfCmcMn5kvQ-29" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-42" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" parent="1" source="If_p3n30EdfCmcMn5kvQ-21" target="If_p3n30EdfCmcMn5kvQ-41" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-21" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;Has Videos&lt;br&gt;&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=2;fillWeight=-1;hachureGap=8;fillStyle=solid;fillColor=#d5e8d4;sketch=1;align=center;verticalAlign=middle;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="530" y="360" width="120" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" parent="1" source="If_p3n30EdfCmcMn5kvQ-26" target="If_p3n30EdfCmcMn5kvQ-21" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-26" value="Get User &lt;br&gt;Video list" style="ellipse;shape=cloud;whiteSpace=wrap;html=1;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="530" y="260" width="120" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=14;" parent="1" source="If_p3n30EdfCmcMn5kvQ-29" target="If_p3n30EdfCmcMn5kvQ-32" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-29" value="Get User&#39;s&lt;br&gt;Channel Info" style="ellipse;shape=cloud;whiteSpace=wrap;html=1;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="380" y="510" width="120" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-38" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" parent="1" source="If_p3n30EdfCmcMn5kvQ-32" target="If_p3n30EdfCmcMn5kvQ-37" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-43" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=14;" parent="1" source="If_p3n30EdfCmcMn5kvQ-32" target="If_p3n30EdfCmcMn5kvQ-34" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-32" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;was video &lt;br&gt;&amp;lt;10 days ago&lt;br&gt;&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=2;fillWeight=-1;hachureGap=8;fillStyle=solid;fillColor=#d5e8d4;sketch=1;align=center;verticalAlign=middle;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="320" y="640" width="120" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-34" value="Was streaming&lt;br&gt;{x} {y} {z}" style="triangle;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeWidth=2;fillWeight=-1;hachureGap=8;fillStyle=solid;sketch=1;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="770" width="60" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-37" value="was streaming {x} {z}" style="triangle;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeWidth=2;fillWeight=-1;hachureGap=8;fillStyle=solid;sketch=1;fontSize=14;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="460" y="770" width="60" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="If_p3n30EdfCmcMn5kvQ-41" value="Check out user" style="triangle;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeWidth=2;fillWeight=-1;hachureGap=8;fillStyle=solid;sketch=1;fontSize=14;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="690" y="490" width="60" height="80" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
