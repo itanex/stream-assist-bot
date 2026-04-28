@@ -41,6 +41,7 @@ const environment = {
         },
         /** User Name - TimyTheTermite */
         username: process.env.TWITCH_BOT_USERNAME,
+        userId: process.env.TWITCH_BOT_USER_ID,
         /** Channel(s) to join - TimyTheTermite */
         channel: process.env.TWITCH_CHANNEL,
         oauthToken: process.env.TWITCH_APP_OAUTH_TOKEN,
