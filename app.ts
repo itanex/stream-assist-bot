@@ -8,6 +8,7 @@ import Scheduler from './bot/scheduler';
 import SocketServer, { ISocketServer } from './bot/overlay/socket.server';
 import OverlayServer, { IOverlayServer } from './bot/overlay/overlay.server';
 import AuthenticationServer, { IAuthenticationServer } from './bot/auth/auth.server';
+import { isUserAuthenticated } from './bot/auth/authProvider';
 
 @injectable()
 class App {
@@ -26,8 +27,9 @@ class App {
     async main(): Promise<void> {
         this.logger.info(`** Bot application starting **`);
 
+        this.chatBot.configure();
+
         await Promise.all([
-            this.chatBot.configure().start(),
             this.database.connect(),
             this.database.sync(),
             this.socketServer.startServer(),
@@ -35,6 +37,12 @@ class App {
             this.authServer.configure().listen(),
             this.scheduler.scheduleChatEvents(),
         ]);
+
+        if (isUserAuthenticated()) {
+            this.chatBot.start();
+        } else {
+            this.logger.info('ChatBot is waiting for authorization — complete the OAuth flow and the auth server will start it automatically');
+        }
     }
 
     async exit(): Promise<void> {
