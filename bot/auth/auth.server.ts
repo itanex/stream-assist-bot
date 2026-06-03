@@ -156,7 +156,7 @@ export default class AuthenticationServer implements IAuthenticationServer {
             res.sendFile(path.join(__dirname, '/index.html'));
         });
 
-        app.get('/*', (req, res) => {
+        app.get('/{*wildcard}', (req, res) => {
             res.sendFile(path.join(__dirname, '/index.html'));
         });
 
