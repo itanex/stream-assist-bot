@@ -26,7 +26,7 @@ docker compose up      # Start app + PostgreSQL
 ## Project Structure
 
 ```
-app.ts                          # Entry point — bootstraps all services
+app.ts                          # Entry point - bootstraps all services
 configurations/
   environment.ts                # Centralized env var loader (from .env)
   required-scopes.ts            # Twitch OAuth scopes
@@ -38,7 +38,7 @@ database/
   models/                       # ORM models (Subscribers, BanEvent, etc.)
   migrations/                   # Sequelize CLI migrations
 bot/
-  chat-bot.ts                   # ChatBot orchestrator — wires all listeners
+  chat-bot.ts                   # ChatBot orchestrator - wires all listeners
   scheduler.ts                  # Cron jobs (e.g. broadcast !socials every 30min)
   commands/                     # ICommandHandler implementations (25+ commands)
   handlers/
@@ -117,6 +117,6 @@ WEATHER_API_KEY / WAYPOINT_DEV_KEY_1 / WAYPOINT_DEV_KEY_2
 ## Testing Conventions
 
 - Test files live alongside source or in a `__tests__/` folder
-- Use `ts-jest` for TypeScript support — no separate compile step
+- Use `ts-jest` for TypeScript support - no separate compile step
 - Integration tests should use a real database, not mocks (mocked tests have caused prod divergence issues before)
 - Run `npm test` before committing to catch open handles
