@@ -34,7 +34,7 @@ export function addUserFromTokenFile(userId: string, intents: string[]): boolean
 
     const missingScopes = requiredScopes.filter(scope => !tokenData.scope.includes(scope));
     if (missingScopes.length > 0) {
-        logger.warn(`Token for user ${userId} is missing required scopes: ${missingScopes.join(', ')} — re-authorization required`);
+        logger.warn(`Token for user ${userId} is missing required scopes: ${missingScopes.join(', ')} - re-authorization required`);
         return false;
     }
 

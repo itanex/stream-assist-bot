@@ -200,7 +200,7 @@ export default class ChatBot implements IChatBot {
 
     start(): void {
         if (!isUserAuthenticated()) {
-            this.logger.warn('ChatBot start called without an authenticated user — complete the OAuth flow at the auth server URL');
+            this.logger.warn('ChatBot start called without an authenticated user - complete the OAuth flow at the auth server URL');
             return;
         }
 

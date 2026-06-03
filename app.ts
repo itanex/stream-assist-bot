@@ -41,7 +41,7 @@ class App {
         if (isUserAuthenticated()) {
             this.chatBot.start();
         } else {
-            this.logger.info('ChatBot is waiting for authorization — complete the OAuth flow and the auth server will start it automatically');
+            this.logger.info('ChatBot is waiting for authorization - complete the OAuth flow and the auth server will start it automatically');
         }
     }
 

@@ -170,7 +170,7 @@ export default class AuthenticationServer implements IAuthenticationServer {
             this.logger.info(`** Auth Web Server is running on http://${this.host}:${this.port}`);
 
             if (!isUserAuthenticated()) {
-                this.logger.info(`Authentication required — visit http://localhost:${this.port}/index to authorize`);
+                this.logger.info(`Authentication required - visit http://localhost:${this.port}/index to authorize`);
             }
         });
 
