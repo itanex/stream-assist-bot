@@ -1,14 +1,16 @@
 import 'reflect-metadata';
 import { Container } from 'inversify';
 import request from 'supertest';
-import axios from 'axios';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types';
 import ChatBot from '../chat-bot';
 import AuthenticationServer from './auth.server';
 import { addUserFromToken, writeUserTokenToFile, removeUserTokenFile, isUserAuthenticated } from './authProvider';
 
-jest.mock('axios');
+jest.mock('axios', () => ({
+    __esModule: true,
+    default: { post: jest.fn() },
+}));
 jest.mock('./authProvider', () => ({
     addUserFromToken: jest.fn(),
     writeUserTokenToFile: jest.fn(),
@@ -18,6 +20,13 @@ jest.mock('./authProvider', () => ({
 jest.mock('../../configurations/environment', () => ({
     __esModule: true,
     default: {
+        postgresDB: {
+            database: 'test',
+            username: 'test',
+            password: 'test',
+            host: 'localhost',
+            port: 5432,
+        },
         twitchBot: {
             clientId: 'test-client-id',
             clientSecret: 'test-client-secret',
@@ -44,14 +53,18 @@ const mockLogger: winston.Logger = <unknown>{
     warn: jest.fn(),
 } as winston.Logger;
 
-const mockedAxios = axios as jest.Mocked<typeof axios>;
-
 describe('AuthenticationServer', () => {
     let authServer: AuthenticationServer;
-    let app: Express.Application;
+    // typed as any to avoid supertest/Express.Application incompatibility
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let app: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let mockAxiosPost: any;
 
     beforeEach(() => {
         jest.clearAllMocks();
+        // Retrieve the post mock after the factory has run
+        mockAxiosPost = require('axios').default.post;
 
         const container = new Container();
         container.bind(ChatBot).toConstantValue(mockChatBot as unknown as ChatBot);
@@ -60,7 +73,8 @@ describe('AuthenticationServer', () => {
 
         authServer = container.get(AuthenticationServer);
         authServer.configure();
-        app = (authServer as unknown as { app: Express.Application }).app;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        app = (authServer as any).app;
     });
 
     describe('GET /auth-url', () => {
@@ -101,7 +115,7 @@ describe('AuthenticationServer', () => {
 
         it('on successful token exchange: writes token, registers user, starts bot, returns success page', async () => {
             // Arrange
-            mockedAxios.post.mockResolvedValue({ data: successTokenData });
+            mockAxiosPost.mockResolvedValue({ data: successTokenData });
 
             // Act
             const response = await request(app).get('/auth?code=test-auth-code');
@@ -123,7 +137,7 @@ describe('AuthenticationServer', () => {
 
         it('when token exchange returns no data: returns failure page and does not start bot', async () => {
             // Arrange
-            mockedAxios.post.mockResolvedValue({ data: null });
+            mockAxiosPost.mockResolvedValue({ data: null });
 
             // Act
             const response = await request(app).get('/auth?code=test-auth-code');
@@ -136,7 +150,7 @@ describe('AuthenticationServer', () => {
 
         it('when axios throws: returns error page, logs error, and does not start bot', async () => {
             // Arrange
-            mockedAxios.post.mockRejectedValue(new Error('Network error'));
+            mockAxiosPost.mockRejectedValue(new Error('Network error'));
 
             // Act
             const response = await request(app).get('/auth?code=bad-code');
@@ -152,7 +166,7 @@ describe('AuthenticationServer', () => {
     describe('GET /revoke', () => {
         it('on successful revocation: removes token file, shuts down bot, returns success page', async () => {
             // Arrange
-            mockedAxios.post.mockResolvedValue({});
+            mockAxiosPost.mockResolvedValue({});
 
             // Act
             const response = await request(app).get('/revoke?token=test-token&userId=test-broadcaster-id');
@@ -166,7 +180,7 @@ describe('AuthenticationServer', () => {
 
         it('when axios throws: returns error page and logs error without shutting down bot', async () => {
             // Arrange
-            mockedAxios.post.mockRejectedValue(new Error('Revoke failed'));
+            mockAxiosPost.mockRejectedValue(new Error('Revoke failed'));
 
             // Act
             const response = await request(app).get('/revoke?token=bad-token');
@@ -186,7 +200,7 @@ describe('AuthenticationServer', () => {
             const listenSpy = jest.spyOn(app, 'listen').mockImplementation(
                 (_port: unknown, _host: unknown, callback?: () => void) => {
                     if (callback) callback();
-                    return {} as ReturnType<typeof app.listen>;
+                    return {} as any;
                 },
             );
 
@@ -207,7 +221,7 @@ describe('AuthenticationServer', () => {
             const listenSpy = jest.spyOn(app, 'listen').mockImplementation(
                 (_port: unknown, _host: unknown, callback?: () => void) => {
                     if (callback) callback();
-                    return {} as ReturnType<typeof app.listen>;
+                    return {} as any;
                 },
             );
 
