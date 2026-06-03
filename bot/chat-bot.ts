@@ -45,6 +45,7 @@ import {
 } from './event-sub-handlers';
 import InjectionTypes from '../dependency-management/types';
 import environment from '../configurations/environment';
+import { isUserAuthenticated } from './auth/authProvider';
 
 export interface IChatBot {
     configure: () => IChatBot;
@@ -198,10 +199,12 @@ export default class ChatBot implements IChatBot {
     }
 
     start(): void {
-        // Connect Client
-        this.chatClient.connect();
+        if (!isUserAuthenticated()) {
+            this.logger.warn('ChatBot start called without an authenticated user — complete the OAuth flow at the auth server URL');
+            return;
+        }
 
-        // Connect web socket listener
+        this.chatClient.connect();
         this.eventSubWsListener.start();
     }
 
