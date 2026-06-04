@@ -5,7 +5,7 @@ import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types';
 import ChatBot from '../chat-bot';
 import AuthenticationServer from './auth.server';
-import { addUserFromToken, writeUserTokenToFile, removeUserTokenFile, isUserAuthenticated } from './authProvider';
+import { addUserFromToken, writeUserTokenToFile, removeUserTokenFile, isUserAuthenticated, getAuthFailureReason } from './authProvider';
 
 jest.mock('axios', () => ({
     __esModule: true,
@@ -16,6 +16,7 @@ jest.mock('./authProvider', () => ({
     writeUserTokenToFile: jest.fn(),
     removeUserTokenFile: jest.fn(),
     isUserAuthenticated: jest.fn(),
+    getAuthFailureReason: jest.fn(),
 }));
 jest.mock('../../configurations/environment', () => ({
     __esModule: true,
@@ -194,9 +195,10 @@ describe('AuthenticationServer', () => {
     });
 
     describe('listen()', () => {
-        it('logs the auth URL when user is not authenticated', () => {
+        it('logs the auth URL and failure reason when user is not authenticated', () => {
             // Arrange
             (isUserAuthenticated as jest.Mock).mockReturnValue(false);
+            (getAuthFailureReason as jest.Mock).mockReturnValue('No token file found - authorization required');
             const listenSpy = jest.spyOn(app, 'listen').mockImplementation(
                 (_port: unknown, _host: unknown, callback?: () => void) => {
                     if (callback) callback();
@@ -208,6 +210,9 @@ describe('AuthenticationServer', () => {
             authServer.listen();
 
             // Assert
+            expect(mockLogger.info).toHaveBeenCalledWith(
+                expect.stringContaining('No token file found - authorization required'),
+            );
             expect(mockLogger.info).toHaveBeenCalledWith(
                 expect.stringContaining('/index'),
             );

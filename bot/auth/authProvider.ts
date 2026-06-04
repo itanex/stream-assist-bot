@@ -12,9 +12,14 @@ const authProvider = new RefreshingAuthProvider({
 });
 
 let _userAuthenticated = false;
+let _authFailureReason: string | null = null;
 
 export function isUserAuthenticated(): boolean {
     return _userAuthenticated;
+}
+
+export function getAuthFailureReason(): string | null {
+    return _authFailureReason;
 }
 
 /**
@@ -26,6 +31,7 @@ export function addUserFromTokenFile(userId: string, intents: string[]): boolean
     const tokenFilePath = `./local-cache/auth-tokens.${userId}.json`;
 
     if (!fs.existsSync(tokenFilePath)) {
+        _authFailureReason = 'No token file found - authorization required';
         logger.error(`Unable to find token file for user: ${userId}`);
         return false;
     }
@@ -34,10 +40,12 @@ export function addUserFromTokenFile(userId: string, intents: string[]): boolean
 
     const missingScopes = requiredScopes.filter(scope => !tokenData.scope.includes(scope));
     if (missingScopes.length > 0) {
+        _authFailureReason = `Token is missing required scopes: ${missingScopes.join(', ')}`;
         logger.warn(`Token for user ${userId} is missing required scopes: ${missingScopes.join(', ')} - re-authorization required`);
         return false;
     }
 
+    _authFailureReason = null;
     authProvider.addUser(userId, tokenData, intents);
     return true;
 }
@@ -49,6 +57,7 @@ export function addUserFromTokenFile(userId: string, intents: string[]): boolean
 export function addUserFromToken(userId: string, tokenData: AccessToken, intents: string[]): void {
     authProvider.addUser(userId, tokenData, intents);
     _userAuthenticated = true;
+    _authFailureReason = null;
 }
 
 export function writeUserTokenToFile(userId: string, tokenData: AccessToken): void {

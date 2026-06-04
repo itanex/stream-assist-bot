@@ -7,7 +7,7 @@ import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types';
 import environment from '../../configurations/environment';
 import requiredScopes from '../../configurations/required-scopes';
-import { addUserFromToken, isUserAuthenticated, removeUserTokenFile, writeUserTokenToFile } from './authProvider';
+import { addUserFromToken, getAuthFailureReason, isUserAuthenticated, removeUserTokenFile, writeUserTokenToFile } from './authProvider';
 import ChatBot, { IChatBot } from '../chat-bot';
 
 export interface IAuthenticationServer {
@@ -170,7 +170,8 @@ export default class AuthenticationServer implements IAuthenticationServer {
             this.logger.info(`** Auth Web Server is running on http://${this.host}:${this.port}`);
 
             if (!isUserAuthenticated()) {
-                this.logger.info(`Authentication required - visit http://localhost:${this.port}/index to authorize`);
+                const reason = getAuthFailureReason();
+                this.logger.info(`Authentication required - ${reason} - visit http://localhost:${this.port}/index to authorize`);
             }
         });
 

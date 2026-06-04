@@ -51,6 +51,7 @@ describe('authProvider', () => {
     let writeUserTokenToFile: (userId: string, tokenData: object) => void;
     let removeUserTokenFile: (userId: string) => void;
     let isUserAuthenticated: () => boolean;
+    let getAuthFailureReason: () => string | null;
     let mockProviderAddUser: jest.Mock;
     let mockProviderRemoveUser: jest.Mock;
     let mockLogger: { info: jest.Mock; error: jest.Mock; warn: jest.Mock };
@@ -69,6 +70,7 @@ describe('authProvider', () => {
         writeUserTokenToFile = module.writeUserTokenToFile;
         removeUserTokenFile = module.removeUserTokenFile;
         isUserAuthenticated = module.isUserAuthenticated;
+        getAuthFailureReason = module.getAuthFailureReason;
 
         const { RefreshingAuthProvider } = require('@twurple/auth');
         // mock.results tracks return values of the constructor; mock.instances tracks `this`,
@@ -110,6 +112,7 @@ describe('authProvider', () => {
                 expect.stringContaining(TEST_USER_ID),
             );
             expect(mockProviderAddUser).not.toHaveBeenCalled();
+            expect(getAuthFailureReason()).toContain('No token file found');
         });
 
         it('returns true and calls authProvider.addUser when file exists with all required scopes', () => {
@@ -145,6 +148,7 @@ describe('authProvider', () => {
                 expect.stringContaining('chat:edit'),
             );
             expect(mockProviderAddUser).not.toHaveBeenCalled();
+            expect(getAuthFailureReason()).toContain('chat:edit');
         });
     });
 
@@ -158,6 +162,7 @@ describe('authProvider', () => {
 
             // Assert
             expect(isUserAuthenticated()).toBe(true);
+            expect(getAuthFailureReason()).toBeNull();
             expect(mockProviderAddUser).toHaveBeenCalledWith(
                 TEST_USER_ID, validToken, ['chat', 'events'],
             );
