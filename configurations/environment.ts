@@ -34,6 +34,11 @@ const environment = {
             host: process.env.TWITCH_WEBSOCKET_HOST,
             port: Number(process.env.TWITCH_WEBSOCKET_PORT),
         },
+        /** Authentication Web server */
+        auth: {
+            host: process.env.TWITCH_AUTH_HOST || '0.0.0.0',
+            port: Number(process.env.TWITCH_AUTH_PORT) || 8090,
+        },
         /** User Name - TimyTheTermite */
         username: process.env.TWITCH_BOT_USERNAME,
         /** Channel(s) to join - TimyTheTermite */

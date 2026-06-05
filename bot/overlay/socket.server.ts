@@ -31,7 +31,7 @@ export default class SocketServer implements ISocketServer {
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
         this.host = environment.twitchBot.websocket.host;
-        this.port = environment.twitchBot.websocket.port;
+        this.port = environment.twitchBot.websocket.port + 1;
     }
 
     /** Initializes and starts the server */

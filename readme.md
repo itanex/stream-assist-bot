@@ -24,17 +24,41 @@ Install the latest Docker CLI / Docker Desktop.
 npm install
 ```
 
-### Generate Twitch API Token
+### Twitch Authentication
 
-1. Identify twitch User Id
-2. Create `auth-token.%twitch-user-id%.json` file in the `/local-cache` folder
-   - See `/configuration/required-scopes.ts` for list of required scopes
-3. Generate an API Token for that user Id
-4. Store token result in the token file
+On first run, if no auth token file is present, the application will guide you through the OAuth flow via the auth server (port 8090). Complete the flow in a browser and the bot will start automatically.
 
-### Starting the application
+To pre-seed a token instead, create `auth-tokens.{TWITCH_BROADCASTER_ID}.json` in the mapped local-cache directory before starting. See `configurations/required-scopes.ts` for the required scopes.
 
-`npm start` script will ensure that the docker resources are set up before starting the actual application code.
+### Deployment
+
+> Note: Deployment is currently manual and local. CI/CD via a hosted service is not yet configured.
+
+**First run or after code changes - rebuild the image and start:**
+
+```bash
+docker compose up --build -d
+```
+
+**Start without rebuilding (config or volume changes only):**
+
+```bash
+docker compose up -d
+```
+
+**Stop all containers:**
+
+```bash
+docker compose down
+```
+
+**Stream logs from the running app container:**
+
+```bash
+docker compose logs -f app
+```
+
+The `-d` flag detaches immediately after starting. Omit it to follow logs in the foreground, but prefer `docker compose logs -f app` for monitoring a running deployment.
 
 ## Usage
 
@@ -69,4 +93,4 @@ Distributed currently under GPLv3. For more infomation see the `License` file in
 
 [TimyTheTermite](https://twitch.tv/timythetermite)
 
-Contact [TimyTheTermite](https://x.com/timythetermite) on [x.com](https://x.com)
+Contact [TimyTheTermite](https://bsky.app/profile/timythetermite.bsky.social) on [Blue Sky](https://bsky.app/)

@@ -12,7 +12,7 @@ export interface IOverlayServer {
 }
 
 @injectable()
-export default class OverlayServer {
+export default class OverlayServer implements IOverlayServer {
     private server: Server;
     /** Configured Web Host */
     private host: string;
@@ -24,7 +24,7 @@ export default class OverlayServer {
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
         this.host = environment.twitchBot.overlay.host;
-        this.port = environment.twitchBot.overlay.port;
+        this.port = environment.twitchBot.overlay.port + 1;
     }
 
     configure(): IOverlayServer {

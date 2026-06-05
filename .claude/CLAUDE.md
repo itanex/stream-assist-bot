@@ -26,7 +26,7 @@ docker compose up      # Start app + PostgreSQL
 ## Project Structure
 
 ```
-app.ts                          # Entry point — bootstraps all services
+app.ts                          # Entry point - bootstraps all services
 configurations/
   environment.ts                # Centralized env var loader (from .env)
   required-scopes.ts            # Twitch OAuth scopes
@@ -38,7 +38,7 @@ database/
   models/                       # ORM models (Subscribers, BanEvent, etc.)
   migrations/                   # Sequelize CLI migrations
 bot/
-  chat-bot.ts                   # ChatBot orchestrator — wires all listeners
+  chat-bot.ts                   # ChatBot orchestrator - wires all listeners
   scheduler.ts                  # Cron jobs (e.g. broadcast !socials every 30min)
   commands/                     # ICommandHandler implementations (25+ commands)
   handlers/
@@ -48,7 +48,7 @@ bot/
     socket.server.ts            # WebSocket broadcast server (port 8081)
     overlay.server.ts           # HTTP server for OBS browser sources (port 8070)
   auth/
-    auth.server.ts              # Twitch OAuth callback handler
+    auth.server.ts              # Twitch OAuth callback handler (port 8090)
   utilities/                    # Shared helpers (Broadcaster, etc.)
   types/                        # Shared type definitions
 logger/
@@ -96,13 +96,15 @@ The `MessageHandler` enforces this before routing to any command.
 ## Environment Setup
 
 1. Copy `.env` and fill in real credentials
-2. Create auth token file: `./local-cache/auth-tokens.{TWITCH_BROADCASTER_ID}.json`
+2. (Optional) Create auth token file: `./local-cache/auth-tokens.{TWITCH_BROADCASTER_ID}.json`
    - Must contain a valid Twitch `RefreshingAuthProvider` AccessToken JSON
+   - If absent, the app will guide through OAuth on first run via the auth server
 3. PostgreSQL must be running (local port 6432, or via `docker compose up`)
 
 ## Key .env Variables
 
 ```
+TWITCH_AUTH_HOST / TWITCH_AUTH_PORT
 TWITCH_USERNAME / TWITCH_BROADCASTER_ID / TWITCH_CHANNEL
 TWITCH_BOT_USERNAME / TWITCH_BOT_USER_ID
 TWITCH_APP_OAUTH_TOKEN / TWITCH_APP_CLIENT_ID / TWITCH_APP_CLIENT_SECRET
@@ -117,6 +119,6 @@ WEATHER_API_KEY / WAYPOINT_DEV_KEY_1 / WAYPOINT_DEV_KEY_2
 ## Testing Conventions
 
 - Test files live alongside source or in a `__tests__/` folder
-- Use `ts-jest` for TypeScript support — no separate compile step
+- Use `ts-jest` for TypeScript support - no separate compile step
 - Integration tests should use a real database, not mocks (mocked tests have caused prod divergence issues before)
 - Run `npm test` before committing to catch open handles
