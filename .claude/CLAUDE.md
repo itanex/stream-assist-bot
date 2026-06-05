@@ -48,7 +48,7 @@ bot/
     socket.server.ts            # WebSocket broadcast server (port 8081)
     overlay.server.ts           # HTTP server for OBS browser sources (port 8070)
   auth/
-    auth.server.ts              # Twitch OAuth callback handler
+    auth.server.ts              # Twitch OAuth callback handler (port 8090)
   utilities/                    # Shared helpers (Broadcaster, etc.)
   types/                        # Shared type definitions
 logger/
@@ -96,13 +96,15 @@ The `MessageHandler` enforces this before routing to any command.
 ## Environment Setup
 
 1. Copy `.env` and fill in real credentials
-2. Create auth token file: `./local-cache/auth-tokens.{TWITCH_BROADCASTER_ID}.json`
+2. (Optional) Create auth token file: `./local-cache/auth-tokens.{TWITCH_BROADCASTER_ID}.json`
    - Must contain a valid Twitch `RefreshingAuthProvider` AccessToken JSON
+   - If absent, the app will guide through OAuth on first run via the auth server
 3. PostgreSQL must be running (local port 6432, or via `docker compose up`)
 
 ## Key .env Variables
 
 ```
+TWITCH_AUTH_HOST / TWITCH_AUTH_PORT
 TWITCH_USERNAME / TWITCH_BROADCASTER_ID / TWITCH_CHANNEL
 TWITCH_BOT_USERNAME / TWITCH_BOT_USER_ID
 TWITCH_APP_OAUTH_TOKEN / TWITCH_APP_CLIENT_ID / TWITCH_APP_CLIENT_SECRET
