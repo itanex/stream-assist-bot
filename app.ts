@@ -9,6 +9,8 @@ import SocketServer, { ISocketServer } from './bot/overlay/socket.server';
 import OverlayServer, { IOverlayServer } from './bot/overlay/overlay.server';
 import AuthenticationServer, { IAuthenticationServer } from './bot/auth/auth.server';
 import { isUserAuthenticated } from './bot/auth/authProvider';
+import environment from './configurations/environment';
+import { name, version } from './package.json';
 
 @injectable()
 class App {
@@ -37,6 +39,11 @@ class App {
             this.authServer.configure().listen(),
             this.scheduler.scheduleChatEvents(),
         ]);
+
+        console.log(`\n${name} v${version}`);
+        console.log(`  Overlay:   http://${environment.twitchBot.overlay.host}:${environment.twitchBot.overlay.port}`);
+        console.log(`  WebSocket: ws://${environment.twitchBot.websocket.host}:${environment.twitchBot.websocket.port}`);
+        console.log(`  Auth:      http://${environment.twitchBot.auth.host}:${environment.twitchBot.auth.port}\n`);
 
         if (isUserAuthenticated()) {
             this.chatBot.start();
