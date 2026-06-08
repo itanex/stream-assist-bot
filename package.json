@@ -32,7 +32,7 @@
     "uuid": "9.0.1",
     "winston": "3.13.0",
     "winston-daily-rotate-file": "5.0.0",
-    "ws": "8.16.0"
+    "ws": "8.20.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
@@ -51,6 +51,11 @@
     "sequelize-cli": "6.6.2",
     "supertest": "^7.2.2",
     "ts-jest": "29.1.2"
+  },
+  "overrides": {
+    "brace-expansion": "1.1.13",
+    "js-cookie": "3.0.7",
+    "picomatch": "2.3.2"
   },
   "scripts": {
     "start": "ts-node app.ts",
