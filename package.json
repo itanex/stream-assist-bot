@@ -29,7 +29,7 @@
     "tedious": "18.1.0",
     "ts-node": "10.9.2",
     "typescript": "5.4.5",
-    "uuid": "9.0.1",
+    "uuid": "11.1.1",
     "winston": "3.13.0",
     "winston-daily-rotate-file": "5.0.0",
     "ws": "8.20.1"
