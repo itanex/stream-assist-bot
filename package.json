@@ -17,7 +17,6 @@
     "dayjs": "1.11.10",
     "dotenv": "16.4.5",
     "express": "^5.2.1",
-    "google-tts-api": "2.0.2",
     "https": "1.0.0",
     "inversify": "6.0.2",
     "md5": "2.3.0",
