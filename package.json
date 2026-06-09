@@ -1,6 +1,6 @@
 {
   "name": "stream-assist-bot",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Twitch Bot for stream assistance, command interpretation, and additional processes.",
   "main": "app.ts",
   "module": "module",
@@ -17,7 +17,6 @@
     "dayjs": "1.11.10",
     "dotenv": "16.4.5",
     "express": "^5.2.1",
-    "google-tts-api": "2.0.2",
     "https": "1.0.0",
     "inversify": "6.0.2",
     "md5": "2.3.0",
@@ -29,10 +28,10 @@
     "tedious": "18.1.0",
     "ts-node": "10.9.2",
     "typescript": "5.4.5",
-    "uuid": "9.0.1",
+    "uuid": "11.1.1",
     "winston": "3.13.0",
     "winston-daily-rotate-file": "5.0.0",
-    "ws": "8.16.0"
+    "ws": "8.20.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
@@ -51,6 +50,12 @@
     "sequelize-cli": "6.6.2",
     "supertest": "^7.2.2",
     "ts-jest": "29.1.2"
+  },
+  "overrides": {
+    "brace-expansion": "1.1.13",
+    "js-cookie": "3.0.7",
+    "lodash": "4.18.1",
+    "picomatch": "2.3.2"
   },
   "scripts": {
     "start": "ts-node app.ts",

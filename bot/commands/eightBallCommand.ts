@@ -2,7 +2,7 @@ import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import fs from 'fs';
-import { getAudioBase64 } from 'google-tts-api';
+import axios from 'axios';
 import md5 from 'md5';
 import { WebSocket } from 'ws';
 import { ICommandHandler, OnlineState } from './iCommandHandler';
@@ -124,12 +124,21 @@ export class EightBallCommand implements ICommandHandler {
     }
 
     private async getAudioFromGoogleTTS(content: string): Promise<string> {
-        return getAudioBase64(content, {
-            lang: 'en',
-            slow: false,
-            host: 'https://translate.google.com',
-            timeout: 20000,
-        });
+        const payload = `f.req=${encodeURIComponent(
+            JSON.stringify([[['jQ1olc', JSON.stringify([content, 'en', null, 'null']), null, 'generic']]]),
+        )}`;
+        const res = await axios.post(
+            'https://translate.google.com/_/TranslateWebserverUi/data/batchexecute',
+            payload,
+            {
+                timeout: 20000,
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            },
+        );
+        const outer = JSON.parse(res.data.slice(5));
+        const audio = JSON.parse(outer[0][2])?.[0];
+        if (!audio) throw new Error('Google TTS returned no audio data');
+        return audio;
     }
 
     private generateFile(buffer: Buffer, rootPath: string, filePath: string) {

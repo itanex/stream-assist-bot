@@ -26,12 +26,12 @@ const environment = {
         },
         /** OBS Overlay Web server */
         overlay: {
-            host: process.env.TWITCH_OVERLAY_HOST,
+            host: String(process.env.TWITCH_OVERLAY_HOST),
             port: Number(process.env.TWITCH_OVERLAY_PORT),
         },
         /** Web Socket server */
         websocket: {
-            host: process.env.TWITCH_WEBSOCKET_HOST,
+            host: String(process.env.TWITCH_WEBSOCKET_HOST),
             port: Number(process.env.TWITCH_WEBSOCKET_PORT),
         },
         /** Authentication Web server */

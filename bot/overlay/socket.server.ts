@@ -19,11 +19,11 @@ export interface ISocketServer {
 @injectable()
 export default class SocketServer implements ISocketServer {
     /** Instance of the Web Socket server */
-    private server: Server;
+    private server: Server | undefined;
     /** Configured Web Socket Host */
-    private host: string;
+    private readonly host: string;
     /** Configured Web Socket Port */
-    private port: number;
+    private readonly port: number;
     /** Connected Web Socket Users */
     private users: Set<UserRef> = new Set();
 
@@ -31,7 +31,7 @@ export default class SocketServer implements ISocketServer {
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
         this.host = environment.twitchBot.websocket.host;
-        this.port = environment.twitchBot.websocket.port + 1;
+        this.port = environment.twitchBot.websocket.port;
     }
 
     /** Initializes and starts the server */
