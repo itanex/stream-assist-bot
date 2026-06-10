@@ -23,7 +23,7 @@
     "node-cron": "3.0.3",
     "pg": "8.11.5",
     "reflect-metadata": "0.2.2",
-    "sequelize": "6.37.3",
+    "sequelize": "6.37.8",
     "sequelize-typescript": "2.1.6",
     "tedious": "18.1.0",
     "ts-node": "10.9.2",
