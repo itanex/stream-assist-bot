@@ -20,7 +20,7 @@
     "https": "1.0.0",
     "inversify": "6.0.2",
     "md5": "2.3.0",
-    "node-cron": "3.0.3",
+    "node-cron": "4.2.1",
     "pg": "8.11.5",
     "reflect-metadata": "0.2.2",
     "sequelize": "6.37.8",
