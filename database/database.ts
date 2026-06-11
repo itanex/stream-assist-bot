@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
-import { Dialect } from '@sequelize/core';
+import { DialectName } from '@sequelize/core';
 import InjectionTypes from '../dependency-management/types';
 import {
     BanEvent,
@@ -22,7 +22,7 @@ import environment from '../configurations/environment';
 /**
  * which sequelize dialect to use
  */
-const dbDialect: Dialect = 'postgres';
+const dbDialect: DialectName = 'postgres';
 
 /**
  * Connection information for Postgres,
