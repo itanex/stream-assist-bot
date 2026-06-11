@@ -25,7 +25,7 @@
     "reflect-metadata": "0.2.2",
     "sequelize": "6.37.8",
     "sequelize-typescript": "2.1.6",
-    "tedious": "18.1.0",
+    "tedious": "19.2.1",
     "ts-node": "10.9.2",
     "typescript": "5.4.5",
     "uuid": "11.1.1",
