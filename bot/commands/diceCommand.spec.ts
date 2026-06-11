@@ -90,7 +90,7 @@ describe('Dice Command Tests', () => {
         // Assert
         expect(actual.rolls).toHaveLength(2);
         expect(actual.rolls.reduce((prev, cur) => prev + cur));
-        expect(actual.total).toBeGreaterThan(2);
+        expect(actual.total).toBeGreaterThanOrEqual(2);
         expect(actual.total).toBeLessThanOrEqual(12);
     });
 });
