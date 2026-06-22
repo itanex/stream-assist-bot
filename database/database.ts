@@ -17,6 +17,7 @@ import {
     Subscribers,
     RaidEvent,
 } from '.';
+import sqlLogger from '../logger/sql-logger';
 import environment from '../configurations/environment';
 
 /**
@@ -41,7 +42,7 @@ const pgConfig: SequelizeOptions = {
         acquire: 30000,
         idle: 10000,
     },
-    logging: false,
+    logging: (sql: string) => sqlLogger.debug(sql),
     models: [
         BanEvent,
         ChannelPointRedeem,
@@ -79,7 +80,9 @@ export default class Database {
     }
 
     async sync(): Promise<void> {
-        await this.sequelize.sync({ logging: false })
+        await this.sequelize
+            // sync logging has no diagnostic value
+            .sync({ logging: false })
             .then(obj => this.logger.info('DB Sync completed successfully'))
             .catch((error: any) => this.logger.error('**DB Sync Failed**:', error));
     }
