@@ -11,6 +11,8 @@ export class LurkCommand implements ICommandHandler {
     timeout: number = 5;
     mod: boolean = true;
     vip: boolean = true;
+    artist: boolean = false;
+    founder: boolean = true;
     subscriber: boolean = true;
     follower: boolean = true;
     viewer: boolean = true;
@@ -43,6 +45,8 @@ export class UnLurkCommand implements ICommandHandler {
     timeout: number = 5;
     mod: boolean = true;
     vip: boolean = true;
+    artist: boolean = false;
+    founder: boolean = true;
     subscriber: boolean = true;
     follower: boolean = true;
     viewer: boolean = true;
@@ -80,6 +84,8 @@ export class WhoIsLurkingCommand implements ICommandHandler {
     timeout: number = 5;
     mod: boolean = true;
     vip: boolean = true;
+    artist: boolean = false;
+    founder: boolean = false;
     subscriber: boolean = false;
     follower: boolean = false;
     viewer: boolean = false;

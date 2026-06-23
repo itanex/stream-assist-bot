@@ -11,6 +11,8 @@ export default class BrainCommand implements ICommandHandler {
     timeout: number = 5;
     mod: boolean = true;
     vip: boolean = true;
+    artist: boolean = false;
+    founder: boolean = true;
     subscriber: boolean = true;
     follower: boolean = true;
     viewer: boolean = false;

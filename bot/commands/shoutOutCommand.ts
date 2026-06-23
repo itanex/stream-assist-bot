@@ -20,6 +20,8 @@ export class ShoutOutCommand implements ICommandHandler {
     timeout: number = 30;
     mod: boolean = true;
     vip: boolean = true;
+    artist: boolean = false;
+    founder: boolean = false;
     subscriber: boolean = false;
     follower: boolean = false;
     viewer: boolean = false;

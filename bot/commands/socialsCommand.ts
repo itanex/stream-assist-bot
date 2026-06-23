@@ -11,6 +11,8 @@ export class SocialsCommand implements ICommandHandler {
     timeout: number = 30;
     mod: boolean = true;
     vip: boolean = true;
+    artist: boolean = false;
+    founder: boolean = true;
     subscriber: boolean = true;
     follower: boolean = false;
     viewer: boolean = false;

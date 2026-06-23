@@ -10,6 +10,8 @@ export class HelpCommand implements ICommandHandler {
     timeout: number = 15;
     mod: boolean = true;
     vip: boolean = true;
+    artist: boolean = false;
+    founder: boolean = true;
     subscriber: boolean = true;
     follower: boolean = true;
     viewer: boolean = true;
