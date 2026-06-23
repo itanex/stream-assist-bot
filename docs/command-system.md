@@ -70,7 +70,6 @@ Broadcaster (`ChatUser.isBroadcaster`) always passes regardless of flags.
 ### Implied Relationships
 
 - **Subscriber implies follower.** Twitch requires following before subscribing. A subscriber satisfies any command that allows followers.
-- **Founder implies follower.** Same logic - founders subscribed, and subscribing requires following.
 - **Roles do not imply subscription.** A mod or VIP who is not subscribed does not satisfy `subscriber: true`.
 
 ### Authorization Logic
