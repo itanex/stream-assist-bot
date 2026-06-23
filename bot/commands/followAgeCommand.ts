@@ -13,6 +13,8 @@ export class FollowAgeCommand implements ICommandHandler {
     timeout: number = 10;
     mod: boolean = true;
     vip: boolean = true;
+    artist: boolean = false;
+    founder: boolean = true;
     subscriber: boolean = true;
     follower: boolean = true;
     viewer: boolean = false;

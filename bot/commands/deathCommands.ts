@@ -22,6 +22,8 @@ export class DeathCommand implements ICommandHandler {
     timeout: number = 5;
     mod: boolean = true;
     vip: boolean = true;
+    artist: boolean = false;
+    founder: boolean = true;
     subscriber: boolean = true;
     follower: boolean = true;
     viewer: boolean = false;
@@ -85,6 +87,8 @@ export class DeathCountCommand implements ICommandHandler {
     timeout: number = 20;
     mod: boolean = true;
     vip: boolean = true;
+    artist: boolean = false;
+    founder: boolean = true;
     subscriber: boolean = true;
     follower: boolean = true;
     viewer: boolean = false;
@@ -121,6 +125,8 @@ export class LastDeathCountCommmand implements ICommandHandler {
     timeout: number = 30;
     mod: boolean = true;
     vip: boolean = true;
+    artist: boolean = false;
+    founder: boolean = true;
     subscriber: boolean = true;
     follower: boolean = true;
     viewer: boolean = false;
