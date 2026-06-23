@@ -12,6 +12,8 @@ export interface ICommandHandler {
     timeout: number;
     mod: boolean;
     vip: boolean;
+    artist: boolean;
+    founder: boolean;
     subscriber: boolean;
     follower: boolean;
     viewer: boolean;

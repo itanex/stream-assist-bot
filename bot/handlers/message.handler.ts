@@ -117,7 +117,7 @@ export class MessageHandler {
         }
     }
 
-    private async isAuthorized(user: ChatUser, isFollower: boolean, command: ICommandHandler): Promise<boolean> {
+    private isAuthorized(user: ChatUser, isFollower: boolean, command: ICommandHandler): boolean {
         if (command.viewer) {
             return true;
         }
@@ -130,15 +130,23 @@ export class MessageHandler {
             return true;
         }
 
-        if (user.isSubscriber && command.subscriber) {
-            return true;
-        }
-
         if (user.isVip && command.vip) {
             return true;
         }
 
-        return isFollower;
+        if (command.artist && user.isArtist) {
+            return true;
+        }
+
+        if (command.founder && user.isFounder) {
+            return true;
+        }
+
+        if (user.isSubscriber && command.subscriber) {
+            return true;
+        }
+
+        return command.follower && (isFollower || user.isSubscriber || user.isFounder);
     }
 
     private timeoutPeriod(user: ChatUser, command: ICommandHandler): number {
@@ -146,7 +154,7 @@ export class MessageHandler {
             return 0;
         }
 
-        return user.isFounder || user.isMod || user.isSubscriber || user.isVip
+        return user.isFounder || user.isMod || user.isSubscriber || user.isVip || user.isArtist
             ? command.timeout / 2
             : command.timeout;
     }
