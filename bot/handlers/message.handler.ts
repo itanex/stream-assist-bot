@@ -146,7 +146,7 @@ export class MessageHandler {
             return true;
         }
 
-        return command.follower && (isFollower || user.isSubscriber || user.isFounder);
+        return command.follower && (isFollower || user.isSubscriber);
     }
 
     private timeoutPeriod(user: ChatUser, command: ICommandHandler): number {
