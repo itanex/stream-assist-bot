@@ -116,28 +116,28 @@ export default class ChatBot implements IChatBot {
 
         // Event Sub API registration
         this.eventSubWsListener.onChannelRedemptionAdd(
-            `${environment.twitchBot.userId}`,
+            `${environment.twitchBot.broadcaster.id}`,
             (event: EventSubChannelRedemptionAddEvent): void => {
                 this.channelPointEventHandler.onChannelPointRedeem(event);
             },
         );
 
         this.eventSubWsListener.onChannelCheer(
-            `${environment.twitchBot.userId}`,
+            `${environment.twitchBot.broadcaster.id}`,
             (event: EventSubChannelCheerEvent): void => {
                 this.cheerEventHandler.onCheer(event);
             },
         );
 
         this.eventSubWsListener.onChannelBan(
-            `${environment.twitchBot.userId}`,
+            `${environment.twitchBot.broadcaster.id}`,
             (event: EventSubChannelBanEvent): void => {
                 this.banEventHandler.onBanEvent(event);
             },
         );
 
         this.eventSubWsListener.onChannelUnban(
-            `${environment.twitchBot.userId}`,
+            `${environment.twitchBot.broadcaster.id}`,
             (event: EventSubChannelUnbanEvent): void => {
                 this.banEventHandler.onUnbanEvent(event);
             },
@@ -146,50 +146,50 @@ export default class ChatBot implements IChatBot {
         // Requires that a moderator with permission is part of the subscription
         // Using the broadcaster as that user
         this.eventSubWsListener.onChannelFollow(
-            `${environment.twitchBot.userId}`,
-            `${environment.twitchBot.userId}`,
+            `${environment.twitchBot.broadcaster.id}`,
+            `${environment.twitchBot.broadcaster.id}`,
             (event: EventSubChannelFollowEvent): void => {
                 this.followerEventHandler.follow(event);
             },
         );
 
         this.eventSubWsListener.onChannelModeratorAdd(
-            `${environment.twitchBot.userId}`,
+            `${environment.twitchBot.broadcaster.id}`,
             (event: EventSubChannelModeratorEvent): void => {
                 this.moderatorEventHandler.addModerator(event);
             },
         );
 
         this.eventSubWsListener.onChannelModeratorRemove(
-            `${environment.twitchBot.userId}`,
+            `${environment.twitchBot.broadcaster.id}`,
             (event: EventSubChannelModeratorEvent): void => {
                 this.moderatorEventHandler.removeModerator(event);
             },
         );
 
         this.eventSubWsListener.onChannelRaidTo(
-            `${environment.twitchBot.userId}`,
+            `${environment.twitchBot.broadcaster.id}`,
             (event: EventSubChannelRaidEvent): void => {
                 this.raidEventHandler.raid(event);
             },
         );
 
         this.eventSubWsListener.onChannelRaidFrom(
-            `${environment.twitchBot.userId}`,
+            `${environment.twitchBot.broadcaster.id}`,
             (event: EventSubChannelRaidEvent): void => {
                 this.raidEventHandler.raid(event);
             },
         );
 
         this.eventSubWsListener.onStreamOnline(
-            `${environment.twitchBot.userId}`,
+            `${environment.twitchBot.broadcaster.id}`,
             (event: EventSubStreamOnlineEvent): void => {
                 this.streamEventHandler.streamOnline(event);
             },
         );
 
         this.eventSubWsListener.onStreamOffline(
-            `${environment.twitchBot.userId}`,
+            `${environment.twitchBot.broadcaster.id}`,
             (event: EventSubStreamOfflineEvent): void => {
                 this.streamEventHandler.streamOffline(event);
             },
