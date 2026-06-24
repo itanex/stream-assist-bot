@@ -29,7 +29,7 @@ export default class Scheduler {
         this.socialsCommand = commandHandlers.find(x => x.constructor.name === `${SocialsCommand.name}`) as SocialsCommand;
 
         this.chatUser = <ChatUser>{
-            displayName: environment.twitchBot.username,
+            displayName: environment.twitchBot.bot.username,
         };
     }
 
