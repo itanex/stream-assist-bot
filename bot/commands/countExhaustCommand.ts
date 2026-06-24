@@ -1,7 +1,6 @@
 import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import environment from '../../configurations/environment';
 import InjectionTypes from '../../dependency-management/types';
 import { ICommandHandler, OnlineState } from './iCommandHandler';
 
@@ -20,7 +19,7 @@ export class CountExhaustCommand implements ICommandHandler {
     restriction: OnlineState = 'online';
 
     responses = [
-        `I am about to run out of toes to count on ${environment.twitchBot.broadcaster}`,
+        `I am about to run out of toes to count on %broadcaster_name%`,
         `I think I need to go back to school to learn more math to count that high`,
     ];
 
@@ -32,9 +31,15 @@ export class CountExhaustCommand implements ICommandHandler {
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         if (this.responses.length) {
-            this.chatClient.say(channel, this.responses[Math.floor(Math.random() * this.responses.length)]);
+            const msg = this.tokenizeMessage(this.responses[Math.floor(Math.random() * this.responses.length)], channel);
+
+            this.chatClient.say(channel, msg);
 
             this.logger.info(`* Executed ${commandName} in ${channel} :: ${userstate.displayName} > ${message}`);
         }
+    }
+
+    tokenizeMessage(message: string, channel: string): string {
+        return message.replace('%broadcaster_name%', channel);
     }
 }

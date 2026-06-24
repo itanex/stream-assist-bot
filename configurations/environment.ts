@@ -24,6 +24,13 @@ const environment = {
             /** Twitch user id / broadcasterId */
             id: process.env.TWITCH_BROADCASTER_ID,
         },
+        /** twitch bot information/identity */
+        bot:{
+            /** Bot Account Username */
+            username: process.env.TWITCH_BOT_USERNAME,
+            /** Bot Account twitch UserId */
+            userId: process.env.TWITCH_BOT_USER_ID
+        },
         /** OBS Overlay Web server */
         overlay: {
             host: String(process.env.TWITCH_OVERLAY_HOST),
@@ -39,8 +46,6 @@ const environment = {
             host: process.env.TWITCH_AUTH_HOST || '0.0.0.0',
             port: Number(process.env.TWITCH_AUTH_PORT) || 8090,
         },
-        /** User Name - TimyTheTermite */
-        username: process.env.TWITCH_BOT_USERNAME,
         /** Channel(s) to join - TimyTheTermite */
         channel: process.env.TWITCH_CHANNEL,
         oauthToken: process.env.TWITCH_APP_OAUTH_TOKEN,

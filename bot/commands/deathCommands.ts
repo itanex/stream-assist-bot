@@ -9,6 +9,7 @@ import InjectionTypes from '../../dependency-management/types';
 import { CommandTimeout } from '../types/CommandTimeout';
 import Broadcaster from '../utilities/broadcaster';
 import { DeathCounts } from '../../database';
+import { ApiClient } from '@twurple/api';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(isToday);
@@ -40,14 +41,13 @@ export class DeathCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(Broadcaster) private broadcaster: Broadcaster,
+        @inject(ApiClient) private apiClient: ApiClient,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        const broadcaster = await this.broadcaster.getBroadcaster();
-        const stream = await broadcaster.getStream();
+        const stream = await this.apiClient.streams.getStreamByUserName(channel.replace('#', ''));
 
         await DeathCounts
             .recordNewDeath(stream)
@@ -97,14 +97,13 @@ export class DeathCountCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(Broadcaster) private broadcaster: Broadcaster,
+        @inject(ApiClient) private apiClient: ApiClient,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        const broadcaster = await this.broadcaster.getBroadcaster();
-        const stream = await broadcaster.getStream();
+        const stream = await this.apiClient.streams.getStreamByUserName(channel.replace('#', ''));;
 
         await DeathCounts
             .getCurrentStreamDeathCount(stream)
@@ -135,14 +134,13 @@ export class LastDeathCountCommmand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(Broadcaster) private broadcaster: Broadcaster,
+        @inject(ApiClient) private apiClient: ApiClient,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        const broadcaster = await this.broadcaster.getBroadcaster();
-        const stream = await broadcaster.getStream();
+        const stream = await this.apiClient.streams.getStreamByUserName(channel.replace('#', ''));;
 
         await DeathCounts
             .getLastStreamDeathCount(stream.id)

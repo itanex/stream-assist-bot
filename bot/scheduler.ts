@@ -14,7 +14,7 @@ export default class Scheduler {
     /**
      * User to use for chat command
      */
-    private chatUser: ChatUser = null;
+    private chatUser: ChatUser;
 
     private socialsCommand: SocialsCommand;
 
@@ -29,7 +29,7 @@ export default class Scheduler {
         this.socialsCommand = commandHandlers.find(x => x.constructor.name === `${SocialsCommand.name}`) as SocialsCommand;
 
         this.chatUser = <ChatUser>{
-            displayName: environment.twitchBot.broadcaster.username,
+            displayName: environment.twitchBot.bot.username,
         };
     }
 
@@ -45,7 +45,7 @@ export default class Scheduler {
 
                 if (isLive) {
                     this.socialsCommand.handle(
-                        environment.twitchBot.channel,
+                        `${environment.twitchBot.channel}`,
                         `${command} - Socials`,
                         this.chatUser,
                         '',
