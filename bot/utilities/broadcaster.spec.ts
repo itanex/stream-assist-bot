@@ -1,25 +1,23 @@
 import 'reflect-metadata';
-import { ApiClient, HelixPrivilegedUser } from '@twurple/api';
+import { ApiClient } from '@twurple/api';
 import Broadcaster from './broadcaster';
-
-const expectedBroadcasterId = 'test-broadcaster-id';
-const expectedBotId = 'test-bot-user-id';
 
 jest.mock('../../configurations/environment', () => ({
     __esModule: true,
     default: {
         twitchBot: {
             broadcaster: {
-                id: expectedBroadcasterId,
+                id: 'test-broadcaster-id',
             },
             bot: {
-                userId: expectedBotId,
+                userId: 'test-bot-user-id',
             },
         },
     },
 }));
 
 const mockGetAuthenticatedUser = jest.fn();
+const mockGetStream = jest.fn();
 
 const mockApiClient = {
     users: {
@@ -27,12 +25,20 @@ const mockApiClient = {
     },
 } as unknown as ApiClient;
 
+
 describe('Broadcaster', () => {
     let broadcaster: Broadcaster;
 
     beforeEach(() => {
         jest.clearAllMocks();
+        jest.useFakeTimers();
+        
+        mockGetAuthenticatedUser.mockResolvedValue({ getStream: mockGetStream })
         broadcaster = new Broadcaster(mockApiClient);
+    });
+
+    afterEach(() => {
+        jest.useRealTimers();
     });
 
     describe('getBroadcaster()', () => {
@@ -42,8 +48,57 @@ describe('Broadcaster', () => {
             await broadcaster.getBroadcaster();
 
             // Assert - verify the correct identity was passed
-            expect(mockGetAuthenticatedUser).toHaveBeenCalledWith(expectedBroadcasterId);
-            expect(mockGetAuthenticatedUser).not.toHaveBeenCalledWith(expectedBotId);
+            expect(mockGetAuthenticatedUser).toHaveBeenCalledWith('test-broadcaster-id');
+            expect(mockGetAuthenticatedUser).not.toHaveBeenCalledWith('test-bot-user-id');
+        });
+        it('returns cached value on second call without hitting the API again', async () => {
+            // Arrange - Completed by beforeEach
+            // Act
+            await broadcaster.getBroadcaster();
+            await broadcaster.getBroadcaster();
+
+            // Assert
+            expect(mockGetAuthenticatedUser).toHaveBeenCalledTimes(1);
+        });
+        it('calls getAuthenticatedUser a second time when cache timer has expired', async () => {
+            // Arrange - Completed by beforeEach
+            // Act
+            await broadcaster.getBroadcaster();
+            jest.advanceTimersByTime(5 * 60 * 1000);
+            await broadcaster.getBroadcaster();
+
+            // Assert
+            expect(mockGetAuthenticatedUser).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    describe('isOnline()', () => {
+        it('calls getStream to check live status', async () => {
+            // Arrange - Completed by beforeEach
+            // Act
+            await broadcaster.isOnline();
+
+            // Assert - verify the correct identity was passed
+            expect(mockGetStream).toHaveBeenCalledTimes(1);
+        });
+        it('returns cached value on second call without hitting the API again', async () => {
+            // Arrange - Completed by beforeEach
+            // Act
+            await broadcaster.isOnline();
+            await broadcaster.isOnline();
+
+            // Assert - verify the correct identity was passed
+            expect(mockGetStream).toHaveBeenCalledTimes(1);
+        });
+        it('calls getStream a second time when cache timer has expired', async () => {
+            // Arrange - Completed by beforeEach
+            // Act
+            await broadcaster.isOnline();
+            jest.advanceTimersByTime(5 * 60 * 1000);
+            await broadcaster.isOnline();
+
+            // Assert - verify the correct identity was passed
+            expect(mockGetStream).toHaveBeenCalledTimes(2);
         });
     });
 });

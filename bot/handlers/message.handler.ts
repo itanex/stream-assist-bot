@@ -7,7 +7,7 @@ import { CommandTimeout } from '../types/CommandTimeout';
 import Broadcaster from '../utilities/broadcaster';
 
 type ParsedCommand = {
-    commandHandler: ICommandHandler,
+    commandHandler: ICommandHandler | undefined,
     commandArguments: string[]
 }
 
@@ -33,9 +33,7 @@ export class MessageHandler {
 
         const instruction = commandHandler.constructor.name;
         const broadcaster = await this.broadcaster.getBroadcaster();
-
-        // The returned stream will be `null|undefined` for offline broadcaster
-        const isLive = !!(await broadcaster.getStream());
+        const isLive = await this.broadcaster.isOnline();
 
         if (!this.canExecute(commandHandler, isLive)) {
             return;
@@ -89,7 +87,7 @@ export class MessageHandler {
     }
 
     private parseCommand(message: string): ParsedCommand {
-        let commandArguments: string[];
+        let commandArguments: string[] = [];
 
         const commandHandler = this.commandHandlers.find(x => {
             const result = message.trim().match(x.exp);
@@ -126,11 +124,11 @@ export class MessageHandler {
             return true;
         }
 
-        if (user.isMod && command.mod) {
+        if (command.mod && user.isMod) {
             return true;
         }
 
-        if (user.isVip && command.vip) {
+        if (command.vip && user.isVip) {
             return true;
         }
 
@@ -142,7 +140,7 @@ export class MessageHandler {
             return true;
         }
 
-        if (user.isSubscriber && command.subscriber) {
+        if (command.subscriber && user.isSubscriber) {
             return true;
         }
 
