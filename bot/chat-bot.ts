@@ -46,6 +46,7 @@ import {
 import InjectionTypes from '../dependency-management/types';
 import environment from '../configurations/environment';
 import { isUserAuthenticated } from './auth/authProvider';
+import StreamStateService from './utilities/stream-state.service';
 
 export interface IChatBot {
     configure: () => IChatBot;
@@ -69,6 +70,7 @@ export default class ChatBot implements IChatBot {
         @inject(ModeratorEventHandler) private moderatorEventHandler: ModeratorEventHandler,
         @inject(RaidEventHandler) private raidEventHandler: RaidEventHandler,
         @inject(StreamEventHandler) private streamEventHandler: StreamEventHandler,
+        @inject(StreamStateService) private streamStateService: StreamStateService,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
         this.logger.info(`** Chat Bot initialized **`);
@@ -205,6 +207,7 @@ export default class ChatBot implements IChatBot {
         }
 
         this.chatClient.connect();
+        this.streamStateService.initialize();
         this.eventSubWsListener.start();
     }
 
