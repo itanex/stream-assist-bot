@@ -17,7 +17,7 @@ export interface IAuthenticationServer {
 
 @injectable()
 export default class AuthenticationServer implements IAuthenticationServer {
-    private app: Express;
+    private app: Express | null = null;
     private host: string;
     private port: number;
 
@@ -160,13 +160,13 @@ export default class AuthenticationServer implements IAuthenticationServer {
             res.sendFile('index.html', { root: __dirname });
         });
 
-        this.app = app;
+        this.app = app!;
 
         return this;
     }
 
     listen(): IAuthenticationServer {
-        this.app.listen(this.port, this.host, () => {
+        this.app?.listen(this.port, this.host, () => {
             this.logger.info(`** Auth Web Server is running on http://${this.host}:${this.port}`);
 
             if (!isUserAuthenticated()) {
