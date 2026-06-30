@@ -35,10 +35,13 @@ class App {
             this.database.connect(),
             this.database.sync(),
             this.socketServer.startServer(),
-            this.overlayServer.configure().listen(),
-            this.authServer.configure().listen(),
+            this.overlayServer.configure(),
+            this.authServer.configure(),
             this.scheduler.scheduleChatEvents(),
         ]);
+
+        this.authServer.listen();
+        this.overlayServer.listen();
 
         console.log(`\n${name} v${version}`);
         console.log(`  Overlay:   http://${environment.twitchBot.overlay.host}:${environment.twitchBot.overlay.port}`);

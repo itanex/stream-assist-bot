@@ -46,10 +46,12 @@ import {
 import InjectionTypes from '../dependency-management/types';
 import environment from '../configurations/environment';
 import { isUserAuthenticated } from './auth/authProvider';
+import StreamStateService from './utilities/stream-state.service';
+import JoinGreetingHandler from './handlers/join-greeting.handler';
 
 export interface IChatBot {
     configure: () => IChatBot;
-    start: () => void;
+    start: () => Promise<void>;
     restart: () => void;
     shutdown: () => void;
 }
@@ -69,6 +71,8 @@ export default class ChatBot implements IChatBot {
         @inject(ModeratorEventHandler) private moderatorEventHandler: ModeratorEventHandler,
         @inject(RaidEventHandler) private raidEventHandler: RaidEventHandler,
         @inject(StreamEventHandler) private streamEventHandler: StreamEventHandler,
+        @inject(StreamStateService) private streamStateService: StreamStateService,
+        @inject(JoinGreetingHandler) private joinGreetingHandler: JoinGreetingHandler,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
         this.logger.info(`** Chat Bot initialized **`);
@@ -77,6 +81,7 @@ export default class ChatBot implements IChatBot {
     configure(): IChatBot {
         this.chatClient.onMessage(async (channel: string, user: string, text: string, msg: ChatMessage) => {
             this.messageHandler.handle(channel, user, text, msg.userInfo);
+            this.joinGreetingHandler.greetIfEligible(channel, msg.userInfo);
         });
 
         this.chatClient.onRaid(async (channel: string, user: string, raidInfo: ChatRaidInfo, msg: UserNotice) => {
@@ -185,6 +190,7 @@ export default class ChatBot implements IChatBot {
             `${environment.twitchBot.broadcaster.id}`,
             (event: EventSubStreamOnlineEvent): void => {
                 this.streamEventHandler.streamOnline(event);
+                this.streamStateService.setOnline();
             },
         );
 
@@ -192,19 +198,21 @@ export default class ChatBot implements IChatBot {
             `${environment.twitchBot.broadcaster.id}`,
             (event: EventSubStreamOfflineEvent): void => {
                 this.streamEventHandler.streamOffline(event);
+                this.streamStateService.setOffline();
             },
         );
 
         return this;
     }
 
-    start(): void {
+    async start(): Promise<void> {
         if (!isUserAuthenticated()) {
             this.logger.warn('ChatBot start called without an authenticated user - complete the OAuth flow at the auth server URL');
             return;
         }
 
         this.chatClient.connect();
+        await this.streamStateService.initialize();
         this.eventSubWsListener.start();
     }
 

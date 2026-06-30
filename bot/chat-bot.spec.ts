@@ -16,6 +16,8 @@ import {
     StreamEventHandler,
 } from './event-sub-handlers';
 import { isUserAuthenticated } from './auth/authProvider';
+import StreamStateService from './utilities/stream-state.service';
+import JoinGreetingHandler from './handlers/join-greeting.handler';
 
 jest.mock('./auth/authProvider', () => ({
     isUserAuthenticated: jest.fn(),
@@ -53,6 +55,11 @@ const mockEventSubWsListener = <unknown>{
     onStreamOffline: jest.fn(),
 } as EventSubWsListener;
 
+const mockInitialize = jest.fn();
+const mockStreamStateService = {
+    initialize: mockInitialize
+} as unknown as StreamStateService;
+
 const mockLogger: winston.Logger = <unknown>{
     info: jest.fn(),
     error: jest.fn(),
@@ -82,17 +89,19 @@ describe('ChatBot start() guard', () => {
         container.bind(ModeratorEventHandler).toConstantValue(emptyHandler);
         container.bind(RaidEventHandler).toConstantValue(emptyHandler);
         container.bind(StreamEventHandler).toConstantValue(emptyHandler);
+        container.bind(JoinGreetingHandler).toConstantValue(emptyHandler);
+        container.bind(StreamStateService).toConstantValue(mockStreamStateService);
         container.bind(ChatBot).to(ChatBot);
 
         chatBot = container.get(ChatBot);
     });
 
-    it('returns early with a warning when user is not authenticated', () => {
+    it('returns early with a warning when user is not authenticated', async () => {
         // Arrange
         (isUserAuthenticated as jest.Mock).mockReturnValue(false);
 
         // Act
-        chatBot.start();
+        await chatBot.start();
 
         // Assert
         expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -100,18 +109,21 @@ describe('ChatBot start() guard', () => {
         );
         expect(mockChatClient.connect).not.toHaveBeenCalled();
         expect(mockEventSubWsListener.start).not.toHaveBeenCalled();
+        expect(mockStreamStateService.initialize).not.toHaveBeenCalled();
     });
 
-    it('connects chat client and starts EventSub listener when user is authenticated', () => {
+    it('connects chat client and starts EventSub listener when user is authenticated', async () => {
         // Arrange
         (isUserAuthenticated as jest.Mock).mockReturnValue(true);
 
+
         // Act
-        chatBot.start();
+        await chatBot.start();
 
         // Assert
         expect(mockChatClient.connect).toHaveBeenCalledTimes(1);
         expect(mockEventSubWsListener.start).toHaveBeenCalledTimes(1);
+        expect(mockStreamStateService.initialize).toHaveBeenCalledTimes(1);
         expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 });

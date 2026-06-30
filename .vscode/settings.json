@@ -1,3 +1,17 @@
 {
-  "typescript.preferences.quoteStyle": "single"
+  "js/ts.preferences.quoteStyle": "single",
+  "testing.automaticallyOpenTestResults": "neverOpen",
+  "jest.enable": true,
+  "jest.coverageFormatter": "GutterFormatter",
+  "jest.runMode": {
+    "type": "on-save",
+    "runAllTestsOnStartup": true,
+    "testFileOnly": true,
+    "coverage": true,
+    "showInlineError": true
+  },
+  "jest.outputConfig": {
+    "clearOnRun": "terminal"
+  },
+  "jest.jestCommandLine": "node_modules\\.bin\\jest.cmd",
 }

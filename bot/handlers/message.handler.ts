@@ -5,9 +5,10 @@ import InjectionTypes from '../../dependency-management/types';
 import { ICommandHandler } from '../commands';
 import { CommandTimeout } from '../types/CommandTimeout';
 import Broadcaster from '../utilities/broadcaster';
+import StreamStateService from '../utilities/stream-state.service';
 
 type ParsedCommand = {
-    commandHandler: ICommandHandler,
+    commandHandler: ICommandHandler | undefined,
     commandArguments: string[]
 }
 
@@ -21,6 +22,7 @@ export class MessageHandler {
         @inject(ChatClient) private chatClient: ChatClient,
         @multiInject(InjectionTypes.CommandHandlers) private commandHandlers: ICommandHandler[],
         @inject(Broadcaster) private broadcaster: Broadcaster,
+        @inject(StreamStateService) private streamStateService: StreamStateService,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
@@ -34,10 +36,7 @@ export class MessageHandler {
         const instruction = commandHandler.constructor.name;
         const broadcaster = await this.broadcaster.getBroadcaster();
 
-        // The returned stream will be `null|undefined` for offline broadcaster
-        const isLive = !!(await broadcaster.getStream());
-
-        if (!this.canExecute(commandHandler, isLive)) {
+        if (!this.canExecute(commandHandler, this.streamStateService.isOnline)) {
             return;
         }
 
@@ -89,7 +88,7 @@ export class MessageHandler {
     }
 
     private parseCommand(message: string): ParsedCommand {
-        let commandArguments: string[];
+        let commandArguments: string[] = [];
 
         const commandHandler = this.commandHandlers.find(x => {
             const result = message.trim().match(x.exp);
@@ -126,11 +125,11 @@ export class MessageHandler {
             return true;
         }
 
-        if (user.isMod && command.mod) {
+        if (command.mod && user.isMod) {
             return true;
         }
 
-        if (user.isVip && command.vip) {
+        if (command.vip && user.isVip) {
             return true;
         }
 
@@ -142,7 +141,7 @@ export class MessageHandler {
             return true;
         }
 
-        if (user.isSubscriber && command.subscriber) {
+        if (command.subscriber && user.isSubscriber) {
             return true;
         }
 

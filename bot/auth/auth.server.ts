@@ -11,13 +11,13 @@ import { addUserFromToken, getAuthFailureReason, isUserAuthenticated, removeUser
 import ChatBot, { IChatBot } from '../chat-bot';
 
 export interface IAuthenticationServer {
-    configure(): IAuthenticationServer;
+    configure(): Promise<IAuthenticationServer>;
     listen(): IAuthenticationServer;
 }
 
 @injectable()
 export default class AuthenticationServer implements IAuthenticationServer {
-    private app: Express;
+    private app: Express | null = null;
     private host: string;
     private port: number;
 
@@ -29,7 +29,7 @@ export default class AuthenticationServer implements IAuthenticationServer {
         this.port = environment.twitchBot.auth.port;
     }
 
-    configure(): IAuthenticationServer {
+    async configure(): Promise<IAuthenticationServer> {
         const app = express();
         app.use(express.json());
 
@@ -76,7 +76,7 @@ export default class AuthenticationServer implements IAuthenticationServer {
                 writeUserTokenToFile(environment.twitchBot.broadcaster.id!, accessToken);
                 addUserFromToken(environment.twitchBot.broadcaster.id!, accessToken, ['chat', 'events']);
 
-                this.chatBot.start();
+                await this.chatBot.start();
 
                 const localRevokeUrl = `http://localhost:${this.port}/revoke`
                     + `?userId=${environment.twitchBot.broadcaster.id}`
@@ -160,13 +160,13 @@ export default class AuthenticationServer implements IAuthenticationServer {
             res.sendFile('index.html', { root: __dirname });
         });
 
-        this.app = app;
+        this.app = app!;
 
         return this;
     }
 
     listen(): IAuthenticationServer {
-        this.app.listen(this.port, this.host, () => {
+        this.app?.listen(this.port, this.host, () => {
             this.logger.info(`** Auth Web Server is running on http://${this.host}:${this.port}`);
 
             if (!isUserAuthenticated()) {

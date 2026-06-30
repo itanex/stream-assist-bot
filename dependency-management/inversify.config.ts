@@ -66,12 +66,15 @@ import Scheduler from '../bot/scheduler';
 import SocketServer, { ISocketServer } from '../bot/overlay/socket.server';
 import OverlayServer, { IOverlayServer } from '../bot/overlay/overlay.server';
 import AuthenticationServer, { IAuthenticationServer } from '../bot/auth/auth.server';
+import StreamStateService from '../bot/utilities/stream-state.service';
+import JoinGreetingHandler from '../bot/handlers/join-greeting.handler';
 
 const SAContainer = new Container();
 
 SAContainer.bind<Database>(Database).toSelf().inSingletonScope();
 
 SAContainer.bind<Broadcaster>(Broadcaster).toSelf().inSingletonScope();
+SAContainer.bind<StreamStateService>(StreamStateService).toSelf().inSingletonScope();
 
 SAContainer.bind<IChatBot>(ChatBot).toSelf().inSingletonScope();
 
@@ -83,6 +86,7 @@ SAContainer.bind<IAuthenticationServer>(AuthenticationServer).toSelf().inSinglet
 // Bot Stream Event Handler bindings
 // SAContainer.bind<IFollowStreamEvent>(FollowHandler).toSelf();
 SAContainer.bind(MessageHandler).toSelf();
+SAContainer.bind(JoinGreetingHandler).toSelf().inSingletonScope();
 SAContainer.bind<IRaidStreamEvent>(RaidHandler).toSelf();
 SAContainer.bind<ISubscriptionHandler>(SubscriptionHandler).toSelf();
 
@@ -133,7 +137,7 @@ SAContainer
     .toConstantValue(
         new ChatClient({
             authProvider,
-            channels: [environment.twitchBot.channel],
+            channels: [environment.twitchBot.channel!],
             botLevel: 'none',
             isAlwaysMod: true,
             requestMembershipEvents: true,
