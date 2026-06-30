@@ -5,6 +5,7 @@ import InjectionTypes from '../../dependency-management/types';
 import { ICommandHandler } from '../commands';
 import { CommandTimeout } from '../types/CommandTimeout';
 import Broadcaster from '../utilities/broadcaster';
+import StreamStateService from '../utilities/stream-state.service';
 
 type ParsedCommand = {
     commandHandler: ICommandHandler | undefined,
@@ -21,6 +22,7 @@ export class MessageHandler {
         @inject(ChatClient) private chatClient: ChatClient,
         @multiInject(InjectionTypes.CommandHandlers) private commandHandlers: ICommandHandler[],
         @inject(Broadcaster) private broadcaster: Broadcaster,
+        @inject(StreamStateService) private streamStateService: StreamStateService,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
@@ -33,9 +35,8 @@ export class MessageHandler {
 
         const instruction = commandHandler.constructor.name;
         const broadcaster = await this.broadcaster.getBroadcaster();
-        const isLive = await this.broadcaster.isOnline();
 
-        if (!this.canExecute(commandHandler, isLive)) {
+        if (!this.canExecute(commandHandler, this.streamStateService.isOnline)) {
             return;
         }
 

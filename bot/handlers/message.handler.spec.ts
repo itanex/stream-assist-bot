@@ -4,6 +4,7 @@ import winston from 'winston';
 import { MessageHandler } from './message.handler';
 import Broadcaster from '../utilities/broadcaster';
 import { ICommandHandler } from '../commands';
+import StreamStateService from '../utilities/stream-state.service';
 
 const mockSay = jest.fn();
 const mockGetBroadcaster = jest.fn();
@@ -209,6 +210,10 @@ const mockBroadcaster = {
     isOnline: mockIsOnline,
 } as unknown as Broadcaster;
 
+const mockStreamStateService = {
+    isOnline: false
+} as unknown as StreamStateService;
+
 const mockLogger = {
     info: jest.fn(),
     error: jest.fn(),
@@ -230,6 +235,7 @@ describe('Message.Handler', () => {
             mockChatClient,
             mockCommandHandlers,
             mockBroadcaster,
+            mockStreamStateService,
             mockLogger
         );
     });
@@ -311,6 +317,7 @@ describe('Message.Handler', () => {
                 const broadcasterUser: ChatUser = {
                     isBroadcaster: true,
                 } as unknown as ChatUser;
+                (mockStreamStateService.isOnline as any) = true
                 const command = '!broadcaster';
 
                 // Act
