@@ -1,3 +1,5 @@
+.claude/plans/
+.claude/tmp/
 node_modules/
 logs/
 .env

@@ -14,6 +14,17 @@ import { FollowAgeCommand } from './followAgeCommand';
 import Timespan, { getAgeReport } from '../utilities/timeSpan';
 import environment from '../../configurations/environment';
 
+jest.mock('../../configurations/environment', () => ({
+    __esModule: true,
+    default: {
+        twitchBot: {
+            broadcaster: {
+                id: 'test-broadcaster-id',
+            },
+        },
+    },
+}));
+
 describe('Follow Age Command Tests', () => {
     const channel = 'TestChannel';
     const command = 'TestCommand';
@@ -84,7 +95,7 @@ describe('Follow Age Command Tests', () => {
             const age = getAgeReport(Timespan.fromNow(followUser.followDate));
 
             // Act
-            await subject.handle(channel, command, chatUser, message, args);
+            await subject?.handle(channel, command, chatUser, message, args);
 
             // Assert
             if (args[1]) {
