@@ -21,7 +21,10 @@ description: Generate a commit message to be used in GitKraken. Will have a titl
    * Body:
       * (Optional)
       * Bullet points are '*' not '-'
-      * Explains motivation/contrast with prior behavior, imperative tense
+      * Terse
+         * One relevant fact per bullet
+         * Imperative tense
+         * No padding or editorializing (e.g. no noting consistency with other files)
       * Footer-style trailers (issue refs, `BREAKING CHANGE:`,
         co-authorship) go at the end, separated by a blank line
 * References:
