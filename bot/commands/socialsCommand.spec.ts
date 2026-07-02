@@ -12,6 +12,19 @@ import { ICommandHandler } from './iCommandHandler';
 import { SocialsCommand } from './socialsCommand';
 import environment from '../../configurations/environment';
 
+jest.mock('../../configurations/environment', () => ({
+    __esModule: true,
+    default: {
+        discordInvite: 'test-discord-invite',
+        twitter: {
+            link: 'test-twitter-link',
+        },
+        youtube: {
+            link: 'test-youtube-link',
+        },
+    },
+}));
+
 describe('Socials Command Tests', () => {
     const channel = 'TestChannel';
     const command = 'TestCommand';
@@ -51,17 +64,17 @@ describe('Socials Command Tests', () => {
             .find(x => x.constructor.name === `${SocialsCommand.name}`);
 
         // Act
-        await subject.handle(channel, command, user, message, []);
+        await subject?.handle(channel, command, user, message, []);
 
         // Assert
         expect(expectedChatClient.say)
             .toHaveBeenCalledTimes(1);
         expect(expectedChatClient.say)
-            .toHaveBeenCalledWith(channel, expect.stringContaining(environment.discordInvite));
+            .toHaveBeenCalledWith(channel, expect.stringContaining(environment.discordInvite!));
         expect(expectedChatClient.say)
-            .toHaveBeenCalledWith(channel, expect.stringContaining(environment.twitter.link));
+            .toHaveBeenCalledWith(channel, expect.stringContaining(environment.twitter.link!));
         expect(expectedChatClient.say)
-            .toHaveBeenCalledWith(channel, expect.stringContaining(environment.youtube.link));
+            .toHaveBeenCalledWith(channel, expect.stringContaining(environment.youtube.link!));
 
         expect(expectedLogger.info)
             .toHaveBeenCalledWith(expect
