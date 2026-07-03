@@ -57,7 +57,7 @@ const mockEventSubWsListener = <unknown>{
 
 const mockInitialize = jest.fn();
 const mockStreamStateService = {
-    initialize: mockInitialize
+    initialize: mockInitialize,
 } as unknown as StreamStateService;
 
 const mockLogger: winston.Logger = <unknown>{
@@ -115,7 +115,6 @@ describe('ChatBot start() guard', () => {
     it('connects chat client and starts EventSub listener when user is authenticated', async () => {
         // Arrange
         (isUserAuthenticated as jest.Mock).mockReturnValue(true);
-
 
         // Act
         await chatBot.start();

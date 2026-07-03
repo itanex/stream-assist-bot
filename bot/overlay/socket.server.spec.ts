@@ -116,12 +116,12 @@ describe('SocketServer', () => {
 
             const mockWs1 = createMockWebSocket();
             const mockWs2 = createMockWebSocket();
-            serverHandlers['connection'](mockWs1);
-            serverHandlers['connection'](mockWs2);
+            serverHandlers.connection(mockWs1);
+            serverHandlers.connection(mockWs2);
 
             // Act
             const msg = Buffer.from(JSON.stringify({ sender: 'test', body: 'hello' }));
-            mockWs1.handlers['message'](msg, false);
+            mockWs1.handlers.message(msg, false);
 
             // Assert
             expect(mockWs2.send).toHaveBeenCalledWith(expect.stringContaining('hello'));
@@ -134,15 +134,15 @@ describe('SocketServer', () => {
 
             const mockWs1 = createMockWebSocket();
             const mockWs2 = createMockWebSocket();
-            serverHandlers['connection'](mockWs1);
-            serverHandlers['connection'](mockWs2);
+            serverHandlers.connection(mockWs1);
+            serverHandlers.connection(mockWs2);
 
             // Act
-            mockWs1.handlers['close'](1000, Buffer.from('normal'));
+            mockWs1.handlers.close(1000, Buffer.from('normal'));
 
             // Assert - probe with a message; mockWs1 should not receive it
             const msg = Buffer.from(JSON.stringify({ sender: 'test', body: 'hello' }));
-            mockWs2.handlers['message'](msg, false);
+            mockWs2.handlers.message(msg, false);
 
             expect(mockWs1.send).not.toHaveBeenCalled();
         });
@@ -153,10 +153,10 @@ describe('SocketServer', () => {
             subject.startServer();
 
             const mockWs = createMockWebSocket();
-            serverHandlers['connection'](mockWs);
+            serverHandlers.connection(mockWs);
 
             // Act
-            mockWs.handlers['close'](1000, Buffer.from('normal'));
+            mockWs.handlers.close(1000, Buffer.from('normal'));
 
             // Assert
             expect(mockLogger.info).toHaveBeenCalledWith(
@@ -173,12 +173,12 @@ describe('SocketServer', () => {
 
             const mockWs1 = createMockWebSocket();
             const mockWs2 = createMockWebSocket();
-            serverHandlers['connection'](mockWs1);
-            serverHandlers['connection'](mockWs2);
+            serverHandlers.connection(mockWs1);
+            serverHandlers.connection(mockWs2);
 
             // Act
             const msg = Buffer.from(JSON.stringify({ sender: 'TestSender', body: 'TestBody' }));
-            mockWs1.handlers['message'](msg, false);
+            mockWs1.handlers.message(msg, false);
 
             // Assert
             expect(mockWs1.send).toHaveBeenCalledWith(expect.stringContaining('TestBody'));
@@ -191,11 +191,11 @@ describe('SocketServer', () => {
             subject.startServer();
 
             const mockWs = createMockWebSocket();
-            serverHandlers['connection'](mockWs);
+            serverHandlers.connection(mockWs);
 
             // Act
             const msg = Buffer.from(JSON.stringify({ foo: 'bar' }));
-            mockWs.handlers['message'](msg, false);
+            mockWs.handlers.message(msg, false);
 
             // Assert
             expect(mockLogger.error).toHaveBeenCalledWith(
@@ -210,11 +210,11 @@ describe('SocketServer', () => {
             subject.startServer();
 
             const mockWs = createMockWebSocket();
-            serverHandlers['connection'](mockWs);
+            serverHandlers.connection(mockWs);
 
             // Act
             const msg = Buffer.from('not valid json {');
-            mockWs.handlers['message'](msg, false);
+            mockWs.handlers.message(msg, false);
 
             // Assert
             expect(mockLogger.error).toHaveBeenCalledWith(
@@ -233,7 +233,7 @@ describe('SocketServer', () => {
             const error = new Error('Server error');
 
             // Act
-            serverHandlers['error'](error);
+            serverHandlers.error(error);
 
             // Assert
             expect(mockLogger.error).toHaveBeenCalledWith(
@@ -248,12 +248,12 @@ describe('SocketServer', () => {
             subject.startServer();
 
             const mockWs = createMockWebSocket();
-            serverHandlers['connection'](mockWs);
+            serverHandlers.connection(mockWs);
 
             const error = new Error('WebSocket error');
 
             // Act
-            mockWs.handlers['error'](error);
+            mockWs.handlers.error(error);
 
             // Assert
             expect(mockLogger.error).toHaveBeenCalledWith(

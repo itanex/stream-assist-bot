@@ -25,15 +25,14 @@ const mockApiClient = {
     },
 } as unknown as ApiClient;
 
-
 describe('Broadcaster', () => {
     let broadcaster: Broadcaster;
 
     beforeEach(() => {
         jest.clearAllMocks();
         jest.useFakeTimers();
-        
-        mockGetAuthenticatedUser.mockResolvedValue({ getStream: mockGetStream })
+
+        mockGetAuthenticatedUser.mockResolvedValue({ getStream: mockGetStream });
         broadcaster = new Broadcaster(mockApiClient);
     });
 

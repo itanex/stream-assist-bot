@@ -1,3 +1,4 @@
+/* eslint-disable global-require */
 import 'reflect-metadata';
 import fs from 'fs';
 
@@ -43,7 +44,7 @@ const validToken = {
     obtainmentTimestamp: Date.now(),
 };
 
-const waitForIO = () => new Promise(resolve => setTimeout(resolve, IO_SETTLE_MS));
+const waitForIO = () => new Promise(resolve => { setTimeout(resolve, IO_SETTLE_MS); });
 
 describe('authProvider', () => {
     let addUserFromTokenFile: (userId: string, intents: string[]) => boolean;
@@ -163,9 +164,7 @@ describe('authProvider', () => {
             // Assert
             expect(isUserAuthenticated()).toBe(true);
             expect(getAuthFailureReason()).toBeNull();
-            expect(mockProviderAddUser).toHaveBeenCalledWith(
-                TEST_USER_ID, validToken, ['chat', 'events'],
-            );
+            expect(mockProviderAddUser).toHaveBeenCalledWith(TEST_USER_ID, validToken, ['chat', 'events']);
         });
     });
 

@@ -55,6 +55,7 @@
     "start": "ts-node app.ts",
     "dev": "ts-node app.ts",
     "lint": "eslint . --ext .ts",
+    "lint-fix": "eslint . --ext .ts --fix",
     "test": "jest --no-cache --detectOpenHandles",
     "test-coverage": "jest  --no-cache --coverage=true --detectOpenHandles",
     "test-specific": "jest --no-cache --detectOpenHandles --watch ./bot/commands/eightballcommand.spec.ts",

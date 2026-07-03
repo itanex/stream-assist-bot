@@ -38,4 +38,4 @@ export default class JoinGreetingHandler {
 export {
     MOD_GREETING,
     VIP_GREETING,
-}
+};

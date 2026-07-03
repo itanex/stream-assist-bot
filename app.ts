@@ -43,10 +43,12 @@ class App {
         this.authServer.listen();
         this.overlayServer.listen();
 
+        /* eslint-disable no-console */
         console.log(`\n${name} v${version}`);
         console.log(`  Overlay:   http://${environment.twitchBot.overlay.host}:${environment.twitchBot.overlay.port}`);
         console.log(`  WebSocket: ws://${environment.twitchBot.websocket.host}:${environment.twitchBot.websocket.port}`);
         console.log(`  Auth:      http://${environment.twitchBot.auth.host}:${environment.twitchBot.auth.port}\n`);
+        /* eslint-enable no-console */
 
         if (isUserAuthenticated()) {
             this.chatBot.start();
