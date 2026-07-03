@@ -54,14 +54,12 @@ describe('Dice Command Tests', () => {
                 .find(x => x.constructor.name === `${DiceCommand.name}`);
 
             // override private method so we can have a consistent assertion
-            // eslint-disable-next-line dot-notation
             subject['rollDice'] = jest.fn().mockReturnValue(rollDiceResult);
 
             // Act
             await subject.handle(channel, command, user, message, args);
 
             // Assert
-            // eslint-disable-next-line dot-notation
             expect(subject['rollDice'])
                 .toHaveBeenCalledWith(call[0], call[1]);
 
@@ -84,7 +82,6 @@ describe('Dice Command Tests', () => {
             .find(x => x.constructor.name === `${DiceCommand.name}`);
 
         // Act
-        // eslint-disable-next-line dot-notation
         const actual: RollResult = subject['rollDice'](2, 6);
 
         // Assert

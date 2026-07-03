@@ -11,7 +11,7 @@ const mockGetBroadcaster = jest.fn();
 const mockIsOnline = jest.fn();
 
 const mockChatClient = {
-    say: mockSay
+    say: mockSay,
 } as unknown as ChatClient;
 
 const mockOnlineHandler = jest.fn();
@@ -203,7 +203,7 @@ const mockCommandHandlers = [
     new MockViewerCommand(),
     new MockFollowerCommand(),
     mockCooldownCommand,
-] as unknown as ICommandHandler[]
+] as unknown as ICommandHandler[];
 
 const mockBroadcaster = {
     getBroadcaster: mockGetBroadcaster,
@@ -211,7 +211,7 @@ const mockBroadcaster = {
 } as unknown as Broadcaster;
 
 const mockStreamStateService = {
-    isOnline: false
+    isOnline: false,
 } as unknown as StreamStateService;
 
 const mockLogger = {
@@ -219,7 +219,6 @@ const mockLogger = {
     error: jest.fn(),
     warn: jest.fn(),
 } as unknown as winston.Logger;
-
 
 describe('Message.Handler', () => {
     let messageHandler: MessageHandler;
@@ -236,7 +235,7 @@ describe('Message.Handler', () => {
             mockCommandHandlers,
             mockBroadcaster,
             mockStreamStateService,
-            mockLogger
+            mockLogger,
         );
     });
     afterEach(() => {
@@ -317,7 +316,7 @@ describe('Message.Handler', () => {
                 const broadcasterUser: ChatUser = {
                     isBroadcaster: true,
                 } as unknown as ChatUser;
-                (mockStreamStateService.isOnline as any) = true
+                (mockStreamStateService.isOnline as any) = true;
                 const command = '!broadcaster';
 
                 // Act
@@ -423,6 +422,5 @@ describe('Message.Handler', () => {
             // Assert
             expect(mockCooldownHandler).toHaveBeenCalledTimes(2);
         });
-
     });
 });

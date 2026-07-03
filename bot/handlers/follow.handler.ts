@@ -12,7 +12,7 @@ export class FollowHandler implements IFollowStreamEvent {
      *
      */
     constructor(
-        @inject(InjectionTypes.Logger) private logger: winston.Logger
+        @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 

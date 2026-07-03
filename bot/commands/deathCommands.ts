@@ -4,12 +4,12 @@ import localizedFormat from 'dayjs/plugin/localizedFormat';
 import isToday from 'dayjs/plugin/isToday';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
+import { ApiClient } from '@twurple/api';
 import { ICommandHandler, OnlineState } from './iCommandHandler';
 import InjectionTypes from '../../dependency-management/types';
 import { CommandTimeout } from '../types/CommandTimeout';
 import Broadcaster from '../utilities/broadcaster';
 import { DeathCounts } from '../../database';
-import { ApiClient } from '@twurple/api';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(isToday);
@@ -103,7 +103,7 @@ export class DeathCountCommand implements ICommandHandler {
     }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        const stream = await this.apiClient.streams.getStreamByUserName(channel.replace('#', ''));;
+        const stream = await this.apiClient.streams.getStreamByUserName(channel.replace('#', ''));
 
         await DeathCounts
             .getCurrentStreamDeathCount(stream)
@@ -140,7 +140,7 @@ export class LastDeathCountCommmand implements ICommandHandler {
     }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        const stream = await this.apiClient.streams.getStreamByUserName(channel.replace('#', ''));;
+        const stream = await this.apiClient.streams.getStreamByUserName(channel.replace('#', ''));
 
         await DeathCounts
             .getLastStreamDeathCount(stream.id)

@@ -11,15 +11,15 @@ const authProvider = new RefreshingAuthProvider({
     clientSecret: environment.twitchBot.clientSecret!,
 });
 
-let _userAuthenticated = false;
-let _authFailureReason: string | null = null;
+let userAuthenticated = false;
+let authFailureReason: string | null = null;
 
 export function isUserAuthenticated(): boolean {
-    return _userAuthenticated;
+    return userAuthenticated;
 }
 
 export function getAuthFailureReason(): string | null {
-    return _authFailureReason;
+    return authFailureReason;
 }
 
 /**
@@ -31,7 +31,7 @@ export function addUserFromTokenFile(userId: string, intents: string[]): boolean
     const tokenFilePath = `./local-cache/auth-tokens.${userId}.json`;
 
     if (!fs.existsSync(tokenFilePath)) {
-        _authFailureReason = 'No token file found - authorization required';
+        authFailureReason = 'No token file found - authorization required';
         logger.error(`Unable to find token file for user: ${userId}`);
         return false;
     }
@@ -40,12 +40,12 @@ export function addUserFromTokenFile(userId: string, intents: string[]): boolean
 
     const missingScopes = requiredScopes.filter(scope => !tokenData.scope.includes(scope));
     if (missingScopes.length > 0) {
-        _authFailureReason = `Token is missing required scopes: ${missingScopes.join(', ')}`;
+        authFailureReason = `Token is missing required scopes: ${missingScopes.join(', ')}`;
         logger.warn(`Token for user ${userId} is missing required scopes: ${missingScopes.join(', ')} - re-authorization required`);
         return false;
     }
 
-    _authFailureReason = null;
+    authFailureReason = null;
     authProvider.addUser(userId, tokenData, intents);
     return true;
 }
@@ -56,8 +56,8 @@ export function addUserFromTokenFile(userId: string, intents: string[]): boolean
  */
 export function addUserFromToken(userId: string, tokenData: AccessToken, intents: string[]): void {
     authProvider.addUser(userId, tokenData, intents);
-    _userAuthenticated = true;
-    _authFailureReason = null;
+    userAuthenticated = true;
+    authFailureReason = null;
 }
 
 export function writeUserTokenToFile(userId: string, tokenData: AccessToken): void {
@@ -65,7 +65,7 @@ export function writeUserTokenToFile(userId: string, tokenData: AccessToken): vo
         `./local-cache/auth-tokens.${userId}.json`,
         JSON.stringify(tokenData, null, 4),
         { encoding: 'utf-8' },
-        (err) => {
+        err => {
             if (err) {
                 logger.error(`Failed to write token file for user ${userId}: ${err.message}`);
             }
@@ -78,7 +78,7 @@ export function removeUserTokenFile(userId: string): void {
 
     fs.rm(
         `./local-cache/auth-tokens.${userId}.json`,
-        (err) => {
+        err => {
             if (err) {
                 logger.error(`Failed to remove token file for user ${userId}: ${err.message}`);
             }
@@ -86,7 +86,7 @@ export function removeUserTokenFile(userId: string): void {
     );
 }
 
-_userAuthenticated = addUserFromTokenFile(environment.twitchBot.broadcaster.id!, ['chat', 'events']);
+userAuthenticated = addUserFromTokenFile(environment.twitchBot.broadcaster.id!, ['chat', 'events']);
 
 authProvider.onRefresh(async (userId, newTokenData) => writeUserTokenToFile(userId, newTokenData));
 

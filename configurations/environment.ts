@@ -25,11 +25,11 @@ const environment = {
             id: process.env.TWITCH_BROADCASTER_ID,
         },
         /** twitch bot information/identity */
-        bot:{
+        bot: {
             /** Bot Account Username */
             username: process.env.TWITCH_BOT_USERNAME,
             /** Bot Account twitch UserId */
-            userId: process.env.TWITCH_BOT_USER_ID
+            userId: process.env.TWITCH_BOT_USER_ID,
         },
         /** OBS Overlay Web server */
         overlay: {

@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { Container } from 'inversify';
 import request from 'supertest';
 import winston from 'winston';
+import axios from 'axios';
 import InjectionTypes from '../../dependency-management/types';
 import ChatBot from '../chat-bot';
 import AuthenticationServer from './auth.server';
@@ -65,7 +66,7 @@ describe('AuthenticationServer', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         // Retrieve the post mock after the factory has run
-        mockAxiosPost = require('axios').default.post;
+        mockAxiosPost = axios.post;
 
         const container = new Container();
         container.bind(ChatBot).toConstantValue(mockChatBot as unknown as ChatBot);

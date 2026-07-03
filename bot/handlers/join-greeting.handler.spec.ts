@@ -1,12 +1,12 @@
 import 'reflect-metadata';
-import JoinGreetingHandler, { MOD_GREETING, VIP_GREETING } from './join-greeting.handler';
-import StreamStateService from '../utilities/stream-state.service';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import winston from 'winston';
+import JoinGreetingHandler, { MOD_GREETING, VIP_GREETING } from './join-greeting.handler';
+import StreamStateService from '../utilities/stream-state.service';
 
 const mockSay = jest.fn();
 const mockChatClient = {
-    say: mockSay
+    say: mockSay,
 } as unknown as ChatClient;
 
 const mockOnOffline = jest.fn();
@@ -37,12 +37,12 @@ describe('JoinGreetingHandler', () => {
     const modUser = {
         userId: 1236,
         displayName: 'mod',
-        isMod: true
+        isMod: true,
     } as unknown as ChatUser;
     const vipUser = {
         userId: 1237,
         displayName: 'vip',
-        isVip: true
+        isVip: true,
     } as unknown as ChatUser;
 
     beforeEach(() => {
@@ -51,11 +51,8 @@ describe('JoinGreetingHandler', () => {
         joinGreetingHandler = new JoinGreetingHandler(
             mockChatClient,
             mockStreamingStateService,
-            mockLogger
+            mockLogger,
         );
-    });
-    afterEach(() => {
-
     });
 
     describe('greetIfEligible', () => {

@@ -11,6 +11,14 @@
     "sourceType": "module"
   },
   "plugins": ["@typescript-eslint"],
+  "overrides": [
+    {
+      "files": ["**/*.spec.ts"],
+      "rules": {
+        "dot-notation": "off"
+      }
+    }
+  ],
   "rules": {
     "arrow-parens": ["error", "as-needed"],
     "class-methods-use-this": "off",
@@ -32,6 +40,7 @@
     "max-classes-per-file": "off",
     "max-len": "off",
     "no-continue": "off",
+    "no-undef": "off",
     "no-empty-function": ["error", { "allow": ["constructors"] }],
     "no-plusplus": "off",
     "no-restricted-syntax": "off",

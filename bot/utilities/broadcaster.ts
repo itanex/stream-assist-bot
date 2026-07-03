@@ -27,7 +27,7 @@ export default class Broadcaster {
 
             this.resetBroadcasterTimer = setTimeout(() => {
                 this.resetBroadcasterTimer = null;
-            }, cachingTimeout)
+            }, cachingTimeout);
         }
 
         return this.broadcaster!;

@@ -155,7 +155,7 @@ describe('Eight Ball Command Tests', () => {
             const audioBase64 = 'SGVsbG8gV29ybGQ=';
             const innerPayload = JSON.stringify([audioBase64]);
             const outerData = JSON.stringify([[null, null, innerPayload]]);
-            const mockResponse = { data: ")]}'\n" + outerData };
+            const mockResponse = { data: `)]}'\n${outerData}` };
 
             const postSpy = jest.spyOn(axios, 'post').mockResolvedValue(mockResponse);
 
@@ -176,7 +176,7 @@ describe('Eight Ball Command Tests', () => {
             const subject = getSubject();
             const innerPayload = JSON.stringify([null]);
             const outerData = JSON.stringify([[null, null, innerPayload]]);
-            const mockResponse = { data: ")]}'\n" + outerData };
+            const mockResponse = { data: `)]}'\n${outerData}` };
 
             jest.spyOn(axios, 'post').mockResolvedValue(mockResponse);
 
@@ -226,16 +226,14 @@ describe('Eight Ball Command Tests', () => {
         it(`should connect to websocket and send a play message`, () => {
             const subject = getSubject();
             const mockSend = jest.fn();
-            let capturedOnOpen: (() => void) | null = null;
 
-            jest.mocked(MockWebSocket).mockImplementation(() => ({
-                get onopen() { return capturedOnOpen; },
-                set onopen(handler: () => void) {
-                    capturedOnOpen = handler;
-                    handler();
-                },
-                send: mockSend,
-            }) as any);
+            jest.mocked(MockWebSocket)
+                .mockImplementation(() => ({
+                    set onopen(handler: () => void) {
+                        handler();
+                    },
+                    send: mockSend,
+                }) as any);
 
             subject['broadcastAudio']('TestCommand', 'abc123', 'en');
 
