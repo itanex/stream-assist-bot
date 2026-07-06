@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "editorconfig.editorconfig",
+        "dbaeumer.vscode-eslint",
+        "anthropic.claude-code",
+        "orta.vscode-jest",
+        "github.vscode-github-actions"
+    ]
+}
