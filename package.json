@@ -34,6 +34,7 @@
     "ws": "8.20.1"
   },
   "devDependencies": {
+    "@release-it/bumper": "^7.0.6",
     "@types/express": "^5.0.6",
     "@types/jest": "30.0.0",
     "@types/md5": "2.3.5",
@@ -47,6 +48,7 @@
     "eslint-plugin-import": "2.29.1",
     "jest": "30.4.2",
     "jest-mock": "30.4.1",
+    "release-it": "^20.2.1",
     "sequelize-cli": "6.6.5",
     "supertest": "^7.2.2",
     "ts-jest": "29.4.11"
@@ -59,7 +61,8 @@
     "test": "jest --no-cache --detectOpenHandles",
     "test-coverage": "jest  --no-cache --coverage=true --detectOpenHandles",
     "test-specific": "jest --no-cache --detectOpenHandles --watch ./bot/commands/eightballcommand.spec.ts",
-    "test-dev": "jest  --no-cache --coverage=true --detectOpenHandles --watch"
+    "test-dev": "jest  --no-cache --coverage=true --detectOpenHandles --watch",
+    "release": "release-it"
   },
   "keywords": [
     "twitch",
