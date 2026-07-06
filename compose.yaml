@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   app:
-    image: itanex/stream-assist-bot:1.4.3
+    image: itanex/stream-assist-bot:${IMAGE_TAG:-latest}
     build:
       context: . # Context should only operate on a File System context based on the root directory
       target: prod
@@ -29,7 +29,7 @@ services:
       # - D:\\DataWorkspaces\\stream-assist-bot\\database:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: stream-assist-bot
-      POSTGRES_PASSWORD: Vsnyi&FN^oLXUVqdjm9v4
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - 6432:5432 # Expose the default postgres port
     healthcheck:

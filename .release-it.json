@@ -1,0 +1,18 @@
+{
+  "git": {
+    "commitMessage": "chore(version): bump to ${version}",
+    "tagName": "${version}",
+    "push": false
+  },
+  "npm": {
+    "publish": false
+  },
+  "plugins": {
+    "@release-it/bumper": {
+      "out": {
+        "file": ".env.release",
+        "type": "text/plain"
+      }
+    }
+  }
+}
