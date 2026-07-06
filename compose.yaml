@@ -29,7 +29,7 @@ services:
       # - D:\\DataWorkspaces\\stream-assist-bot\\database:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: stream-assist-bot
-      POSTGRES_PASSWORD: Vsnyi&FN^oLXUVqdjm9v4
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - 6432:5432 # Expose the default postgres port
     healthcheck:
