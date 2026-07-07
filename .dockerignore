@@ -1,12 +1,14 @@
-.git/
+# Folders
 .claude/
+.git/
 .vscode/
-node_modules/
+coverage/
 logs/
 local-cache/
-coverage/
-Dockerfile
+node_modules/
+
+# Files
 .dockerignore
-Dockerfile
-compose.yaml
 .gitignore
+compose.yaml
+Dockerfile
