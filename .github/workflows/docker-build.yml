@@ -1,12 +1,27 @@
 name: Docker Build and Deploy
 
 on:
+    workflow_call:
+        inputs:
+            dry_run:
+                type: boolean
+                description: "Skip the push step"
+                default: false
+            ref:
+                type: string
+                description: "Git ref (tag, branch, SHA) to build. Defaults to the triggering ref."
+                default: ""
+
     workflow_dispatch:
         inputs:
             dry_run:
                 type: boolean
                 description: "Skip the push step"
                 default: false
+            ref:
+                type: string
+                description: "Git ref (tag, branch, SHA) to build. Defaults to the triggering ref."
+                default: ""
 
 permissions:
     contents: read
@@ -25,7 +40,10 @@ jobs:
         timeout-minutes: 10
         steps:
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@v7
+              with:
+                  # Empty ref falls back to default checkout behavior
+                  ref: ${{ inputs.ref }}
 
             - name: Load release environment
               run: |

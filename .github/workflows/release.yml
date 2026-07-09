@@ -1,0 +1,72 @@
+name: Full Release
+
+on:
+    workflow_dispatch:
+        inputs:
+            version_bump:
+                required: true
+                type: choice
+                description: "Which version fragment to bump."
+                default: "patch"
+                options:
+                    - patch
+                    - minor
+                    - major
+            no_increment:
+                type: boolean
+                description: "Rerun current version. No version increment."
+                default: false
+            github_release:
+                type: boolean
+                description: "Create a GitHub Release for the new tag."
+                default: true
+
+permissions:
+    contents: read
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    ci:
+        name: CI Gate
+        uses: ./.github/workflows/ci.yml
+
+    tag_version:
+        name: Tag Version
+        needs: ci
+        uses: ./.github/workflows/tag-version.yml
+        permissions:
+            contents: write
+        with:
+            version_bump: ${{ inputs.version_bump }}
+            no_increment: ${{ inputs.no_increment }}
+
+    docker:
+        name: Docker Build and Deploy
+        needs: [ci, tag_version]
+        uses: ./.github/workflows/docker-build.yml
+        secrets: inherit
+        with:
+            ref: ${{ needs.tag_version.outputs.tag }}
+
+    github_release:
+        name: GitHub Release
+        needs: [tag_version, docker]
+        if: ${{ inputs.github_release }}
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        permissions:
+            contents: write
+        steps:
+            - name: Create GitHub Release
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  TAG: ${{ needs.tag_version.outputs.tag }}
+              run: |
+                  gh release create "$TAG" \
+                    --repo "$GITHUB_REPOSITORY" \
+                    --title "$TAG" \
+                    --verify-tag \
+                    --generate-notes
