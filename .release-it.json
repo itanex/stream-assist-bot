@@ -2,7 +2,7 @@
   "git": {
     "commitMessage": "chore(version): bump to ${version}",
     "tagName": "${version}",
-    "push": false
+    "push": true
   },
   "npm": {
     "publish": false

@@ -1,0 +1,100 @@
+name: Tag Version
+
+on:
+    workflow_call:
+        inputs:
+            version_bump:
+                required: true
+                type: string
+                description: "Which version fragment to bump."
+            no_increment:
+                type: boolean
+                description: "Rerun current version. No version increment."
+                default: false
+        outputs:
+            tag:
+                description: "The git tag created for this version."
+                value: ${{ jobs.tag_version.outputs.tag }}
+    workflow_dispatch:
+        inputs:
+            version_bump:
+                required: true
+                type: choice
+                description: "Which version fragment to bump."
+                default: "patch"
+                options:
+                    - patch
+                    - minor
+                    - major
+            no_increment:
+                type: boolean
+                description: "Rerun current version. No version increment."
+                default: false
+            dry_run:
+                type: boolean
+                description: "Do not modify, just validate."
+                default: false
+
+permissions:
+    contents: write
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    tag_version:
+        name: Tag Version
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        outputs:
+            tag: ${{ steps.version.outputs.tag }}
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v7
+              with:
+                  fetch-depth: 0
+
+            - name: Setup Node
+              uses: actions/setup-node@v6
+              with:
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            # Identity must be set before release-it runs,
+            # as release-it creates the version commit and tag
+            - name: Setup git config
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "430586+itanex@users.noreply.github.com"
+
+            # ----------------------------------------------------
+            # Runs release-it
+            # * (Required) Configures version_bump (workflow input)
+            # * (Optional) Inlcudes no-increment option (workflow input)
+            # * (Optional) Includes dry-run option (workflow input)
+            # NOTE:
+            # > Updates .env.release
+            # > Updates package.json
+            # > Creates Tag for target branch
+            # > Pushes commit and tag to origin
+            # ----------------------------------------------------
+            - name: Update Version
+              run: |
+                  CMD="npm run release -- --ci --increment=${{ inputs.version_bump }}"
+                  if [ "${{ inputs.no_increment }}" = "true" ]; then
+                      CMD="$CMD --no-increment"
+                  fi
+                  if [ "${{ inputs.dry_run }}" = "true" ]; then
+                      CMD="$CMD --dry-run"
+                  fi
+                  echo "Running: $CMD"
+                  $CMD
+
+            # release-it owns commit, tag, and push (git.push: true)
+            # This step only surfaces the new tag for workflow_call consumers
+            - name: Capture version tag
+              id: version
+              run: echo "tag=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
