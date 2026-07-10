@@ -1,10 +1,11 @@
 import dotenv from 'dotenv';
+import { IDatabaseConfiguration } from '../database/database';
 
 dotenv.config();
 
 const environment = {
     /** Setting for postgres database */
-    postgresDB: {
+    databaseConfig: {
         /** Database name to connect to */
         database: process.env.POSTGRES_DB,
         /** Database username */
@@ -15,7 +16,7 @@ const environment = {
         host: process.env.POSTGRES_HOST,
         /** Port number of database on host */
         port: Number(process.env.POSTGRES_PORT),
-    },
+    } as IDatabaseConfiguration,
     twitchBot: {
         /** broadcaster information */
         broadcaster: {

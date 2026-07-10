@@ -22,7 +22,7 @@ jest.mock('./authProvider', () => ({
 jest.mock('../../configurations/environment', () => ({
     __esModule: true,
     default: {
-        postgresDB: {
+        databaseConfig: {
             database: 'test',
             username: 'test',
             password: 'test',

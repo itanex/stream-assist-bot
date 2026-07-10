@@ -14,6 +14,7 @@ const mockApiClient: ApiClient = <unknown>{
 
 const mockLogger: winston.Logger = <unknown>{
     info: jest.fn(),
+    warn: jest.fn(),
     error: jest.fn(),
 } as winston.Logger;
 

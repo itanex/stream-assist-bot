@@ -60,7 +60,7 @@ import {
 } from '../bot/event-sub-handlers';
 import Broadcaster from '../bot/utilities/broadcaster';
 import InjectionTypes from './types';
-import Database from '../database/database';
+import Database, { IDatabaseConfiguration } from '../database/database';
 import authProvider from '../bot/auth/authProvider';
 import Scheduler from '../bot/scheduler';
 import SocketServer, { ISocketServer } from '../bot/overlay/socket.server';
@@ -128,6 +128,10 @@ SAContainer.bind(RaidEventHandler).toSelf();
 SAContainer.bind(StreamEventHandler).toSelf();
 
 // Bind dependencies to container
+SAContainer
+    .bind<IDatabaseConfiguration>(InjectionTypes.DatabaseConfiguration)
+    .toConstantValue(environment.databaseConfig);
+
 SAContainer
     .bind<winston.Logger>(InjectionTypes.Logger)
     .toConstantValue(logger);
