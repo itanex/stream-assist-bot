@@ -1,15 +1,9 @@
-// reflect-metadata should be imported
-// before any interface or other imports
-// also it should be imported only once
-// so that a singleton is created.
 import 'reflect-metadata';
-import { ChatClient, ChatUser } from '@twurple/chat';
-import { Container } from 'inversify';
-import winston from 'winston';
+import { ChatUser } from '@twurple/chat';
 import { mockChatClient, mockLogger } from '../../tests/common.mocks';
-import InjectionTypes from '../../dependency-management/types';
-import { ICommandHandler } from './iCommandHandler';
 import { AboutCommand } from './aboutCommand';
+import PhraseService from '../utilities/phrase.service';
+import { defaultPhrases } from '../utilities/default-phrases';
 
 describe('About Command Tests', () => {
     const channel = 'TestChannel';
@@ -17,45 +11,46 @@ describe('About Command Tests', () => {
     const user = <ChatUser>{ displayName: 'TestUser' };
     const message = 'TestMessage';
 
-    const container: Container = new Container();
-    let expectedChatClient: ChatClient;
-    let expectedLogger: winston.Logger;
+    const configuredPhrase = 'About Me';
+    const mockGetCommand = jest.fn();
+    const mockPhraseService = <unknown>{
+        getCommandTemplate: mockGetCommand,
+    } as PhraseService;
+
+    let subject: AboutCommand;
 
     beforeEach(() => {
         jest.resetAllMocks();
-        container.unbindAll();
-        container
-            .bind<ChatClient>(ChatClient)
-            .toConstantValue(mockChatClient);
 
-        container
-            .bind<winston.Logger>(InjectionTypes.Logger)
-            .toConstantValue(mockLogger);
-
-        container
-            .bind<ICommandHandler>(InjectionTypes.CommandHandlers)
-            .to(AboutCommand);
-
-        expectedChatClient = container
-            .get(ChatClient);
-
-        expectedLogger = container
-            .get<winston.Logger>(InjectionTypes.Logger);
+        subject = new AboutCommand(
+            mockChatClient,
+            mockPhraseService,
+            mockLogger,
+        );
     });
 
-    it('should say something in chat about bot', () => {
-        // arrange
-        const subject = container
-            .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
-            .find(x => x.constructor.name === `${AboutCommand.name}`);
+    it('should say something in chat about bot', async () => {
+        // Arrange
+        mockGetCommand.mockReturnValue(configuredPhrase);
 
-        // act
-        subject.handle(channel, command, user, message);
+        // Act
+        await subject.handle(channel, command, user, message);
 
-        // assert
-        expect(expectedChatClient.say).toHaveBeenCalledWith(channel, expect.anything());
-        expect(expectedLogger.info)
-            .toHaveBeenCalledWith(expect
-                .stringMatching(`(?=.*\\b${command}\\b)(?=.*\\b${channel}\\b)(?=.*\\b${user.displayName}\\b)(?=.*\\b${message}\\b)`));
+        // Assert
+        expect(mockChatClient.say).toHaveBeenCalledWith(channel, configuredPhrase);
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
+    });
+
+    it('should create a warn log when the command is not-found (undefined)', async () => {
+        // Arrange
+        mockGetCommand.mockReturnValue(undefined);
+
+        // Act
+        await subject.handle(channel, command, user, message);
+
+        // Assert
+        expect(mockChatClient.say).toHaveBeenCalledWith(channel, defaultPhrases.about);
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.anything());
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
     });
 });

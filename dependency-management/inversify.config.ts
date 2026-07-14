@@ -68,6 +68,7 @@ import OverlayServer, { IOverlayServer } from '../bot/overlay/overlay.server';
 import AuthenticationServer, { IAuthenticationServer } from '../bot/auth/auth.server';
 import StreamStateService from '../bot/utilities/stream-state.service';
 import JoinGreetingHandler from '../bot/handlers/join-greeting.handler';
+import PhraseService from '../bot/utilities/phrase.service';
 
 const SAContainer = new Container();
 
@@ -75,6 +76,7 @@ SAContainer.bind<Database>(Database).toSelf().inSingletonScope();
 
 SAContainer.bind<Broadcaster>(Broadcaster).toSelf().inSingletonScope();
 SAContainer.bind<StreamStateService>(StreamStateService).toSelf().inSingletonScope();
+SAContainer.bind<PhraseService>(PhraseService).toSelf().inSingletonScope();
 
 SAContainer.bind<IChatBot>(ChatBot).toSelf().inSingletonScope();
 

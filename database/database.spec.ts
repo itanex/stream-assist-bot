@@ -136,10 +136,8 @@ describe('Database (postgres)', () => {
         describe('connect()', () => {
             it('fails to connect and logs connection error', async () => {
                 // Arrange - beforeAll()
-                // Act
-                await badDatabase.connect();
-
-                // Assert
+                // Act & Assert
+                await expect(badDatabase.connect()).rejects.toThrow();
                 expect(mockLogger.info).not.toHaveBeenCalled();
                 expect(mockLogger.error).toHaveBeenCalledWith('**Unable to connect to the database**:', expect.anything());
             }, 30_000);
@@ -148,10 +146,8 @@ describe('Database (postgres)', () => {
         describe('sync()', () => {
             it('fails to syncronizes the database', async () => {
                 // Arrange - beforeAll()
-                // Act
-                await badDatabase.sync();
-
-                // Assert
+                // Act & Assert
+                await expect(badDatabase.sync()).rejects.toThrow();
                 expect(mockLogger.info).not.toHaveBeenCalled();
                 expect(mockLogger.error).toHaveBeenCalledWith('**DB Sync Failed**:', expect.anything());
             }, 30_000);
