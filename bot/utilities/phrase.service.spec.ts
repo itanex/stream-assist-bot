@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import Database, { IDatabaseConfiguration } from '../../database/database';
-import PhraseService from './phrase.service';
+import PhraseService, { PhraseUpdateResult } from './phrase.service';
 import { mockLogger } from '../../tests/common.mocks';
 import { defaultPhrases } from './default-phrases';
 import { CommandPhrase } from '../../database';
@@ -52,7 +52,7 @@ describe('Phrase.Service (postgres)', () => {
         beforeAll(async () => {
             database = new Database(databaseConfiguration, mockLogger);
             await database.initialize();
-            subject = new PhraseService();
+            subject = new PhraseService(mockLogger);
         });
 
         afterAll(async () => {
@@ -123,7 +123,7 @@ describe('Phrase.Service (postgres)', () => {
                 const result = await subject.setCommandTemplate('', 'Valid template...');
 
                 // Assert
-                expect(result).toBe(false);
+                expect(result).toBe<PhraseUpdateResult>('invalidInput');
             });
             it('should return false with empty template', async () => {
                 // Arrange - beforeEach()
@@ -131,7 +131,7 @@ describe('Phrase.Service (postgres)', () => {
                 const result = await subject.setCommandTemplate('ValidKey', '');
 
                 // Assert
-                expect(result).toBe(false);
+                expect(result).toBe<PhraseUpdateResult>('invalidInput');
             });
             it('row updated and gets new template', async () => {
                 // Arrange
@@ -143,7 +143,7 @@ describe('Phrase.Service (postgres)', () => {
                 const rows = await CommandPhrase.findAll({ where: { commandName: 'about' } });
 
                 // Assert
-                expect(result).toBe(true);
+                expect(result).toBe<PhraseUpdateResult>('updated');
                 expect(cached).toBe(editedTemplate);
                 expect(rows.length).toBe(1);
                 expect(rows[0].template).toBe(editedTemplate);
@@ -154,7 +154,7 @@ describe('Phrase.Service (postgres)', () => {
                 const template = 'edited template...';
 
                 // Act & Assert
-                expect(await subject.setCommandTemplate(key, template)).toBe(false);
+                expect(await subject.setCommandTemplate(key, template)).toBe<PhraseUpdateResult>('notEditable');
                 expect(subject.getCommandTemplate(key)).toBe(undefined);
             });
             it('invalid template (too short) rejected', async () => {
@@ -165,7 +165,7 @@ describe('Phrase.Service (postgres)', () => {
                 const result = await subject.setCommandTemplate('about', badtemplate);
 
                 // Assert
-                expect(result).toBe(false);
+                expect(result).toBe<PhraseUpdateResult>('invalidTemplate');
                 expect(subject.getCommandTemplate('about')).toBe(defaultPhrases.about);
             });
             it('non-validation error propagates', async () => {

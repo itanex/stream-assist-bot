@@ -30,6 +30,7 @@ import {
     LurkCommand,
     UnLurkCommand,
     WhoIsLurkingCommand,
+    ManageCommand,
     ShoutOutCommand,
     SocialsCommand,
     UpTimeCommand,
@@ -114,6 +115,7 @@ SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(LastSubComm
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(LurkCommand);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(UnLurkCommand);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(WhoIsLurkingCommand);
+SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(ManageCommand);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(ShoutOutCommand);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(SocialsCommand);
 SAContainer.bind<ICommandHandler>(InjectionTypes.CommandHandlers).to(ThrowCommand);

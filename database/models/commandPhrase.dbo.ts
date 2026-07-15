@@ -1,5 +1,4 @@
 import { Column, DataType, Table, Model } from 'sequelize-typescript';
-import { defaultPhrases, PhraseKey } from '../../bot/utilities/default-phrases';
 
 @Table({
     tableName: 'CommandPhrase',
