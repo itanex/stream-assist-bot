@@ -29,13 +29,13 @@ export class AboutCommand implements ICommandHandler {
     }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        const command = this.phraseService.getCommandTemplate(this.phraseKey);
+        const commandTemplate = this.phraseService.getCommandTemplate(this.phraseKey);
 
-        if (!command) {
+        if (!commandTemplate) {
             this.logger.warn(`* Command Phrase not found for ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
         }
 
-        this.chatClient.say(channel, command ?? defaultPhrases.about);
+        this.chatClient.say(channel, commandTemplate ?? defaultPhrases.about);
         this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }

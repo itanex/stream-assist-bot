@@ -1,65 +1,55 @@
-// reflect-metadata should be imported
-// before any interface or other imports
-// also it should be imported only once
-// so that a singleton is created.
 import 'reflect-metadata';
-import { ChatClient, ChatUser } from '@twurple/chat';
-import { Container } from 'inversify';
-import winston from 'winston';
-import { mockChatClient, mockLogger } from '../../tests/common.mocks';
-import InjectionTypes from '../../dependency-management/types';
-import { ICommandHandler } from './iCommandHandler';
+import { ChatUser } from '@twurple/chat';
+import { mockChatClient, mockLogger, mockPhraseService } from '../../tests/common.mocks';
 import { DrinkCommand } from './drinkCommand';
+import { defaultPhrases } from '../utilities/default-phrases';
 
 describe('Drink Command Tests', () => {
     const channel = 'TestChannel';
     const command = 'TestCommand';
-    const message = 'TestMessage';
     const user = <ChatUser>{ displayName: 'TestUser' };
+    const message = 'TestMessage';
 
-    const container: Container = new Container();
-    let expectedChatClient: ChatClient;
-    let expectedLogger: winston.Logger;
+    const configuredPhrase = 'Drink me!';
+
+    let subject: DrinkCommand;
 
     beforeEach(() => {
         jest.resetAllMocks();
-        container.unbindAll();
-        container
-            .bind<ChatClient>(ChatClient)
-            .toConstantValue(mockChatClient);
 
-        container
-            .bind<winston.Logger>(InjectionTypes.Logger)
-            .toConstantValue(mockLogger);
-
-        container
-            .bind<ICommandHandler>(InjectionTypes.CommandHandlers)
-            .to(DrinkCommand);
-
-        expectedChatClient = container
-            .get(ChatClient);
-
-        expectedLogger = container
-            .get<winston.Logger>(InjectionTypes.Logger);
+        subject = new DrinkCommand(
+            mockChatClient,
+            mockPhraseService,
+            mockLogger,
+        );
     });
 
-    it('should say something in chat', async () => {
+    it('says the configured phrase in chat', async () => {
         // Arrange
-        const subject = container
-            .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
-            .find(x => x.constructor.name === `${DrinkCommand.name}`);
+        mockPhraseService
+            .getCommandTemplate
+            .mockReturnValue(configuredPhrase);
 
         // Act
         await subject.handle(channel, command, user, message, []);
 
         // Assert
-        expect(expectedChatClient.say)
-            .toHaveBeenCalledTimes(1);
-        expect(expectedChatClient.say)
-            .toHaveBeenCalledWith(channel, expect.anything());
+        expect(mockChatClient.say).toHaveBeenNthCalledWith(1, channel, expect.anything());
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
+    });
 
-        expect(expectedLogger.info)
-            .toHaveBeenCalledWith(expect
-                .stringMatching(`(?=.*\\b${command}\\b)(?=.*\\b${channel}\\b)(?=.*\\b${user.displayName}\\b)(?=.*\\b${message}\\b)`));
+    it('says the default phrase and logs a warning when no phrase is configured', async () => {
+        // Arrange
+        mockPhraseService
+            .getCommandTemplate
+            .mockReturnValue(undefined);
+
+        // Act
+        await subject.handle(channel, command, user, message);
+
+        // Assert
+        expect(mockChatClient.say).toHaveBeenNthCalledWith(1, channel, defaultPhrases.drink);
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.anything());
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
     });
 });

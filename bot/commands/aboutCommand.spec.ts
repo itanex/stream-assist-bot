@@ -1,8 +1,7 @@
 import 'reflect-metadata';
 import { ChatUser } from '@twurple/chat';
-import { mockChatClient, mockLogger } from '../../tests/common.mocks';
+import { mockChatClient, mockLogger, mockPhraseService } from '../../tests/common.mocks';
 import { AboutCommand } from './aboutCommand';
-import PhraseService from '../utilities/phrase.service';
 import { defaultPhrases } from '../utilities/default-phrases';
 
 describe('About Command Tests', () => {
@@ -12,10 +11,6 @@ describe('About Command Tests', () => {
     const message = 'TestMessage';
 
     const configuredPhrase = 'About Me';
-    const mockGetCommand = jest.fn();
-    const mockPhraseService = <unknown>{
-        getCommandTemplate: mockGetCommand,
-    } as PhraseService;
 
     let subject: AboutCommand;
 
@@ -29,27 +24,31 @@ describe('About Command Tests', () => {
         );
     });
 
-    it('should say something in chat about bot', async () => {
+    it('says the configured phrase in chat', async () => {
         // Arrange
-        mockGetCommand.mockReturnValue(configuredPhrase);
+        mockPhraseService
+            .getCommandTemplate
+            .mockReturnValue(configuredPhrase);
 
         // Act
         await subject.handle(channel, command, user, message);
 
         // Assert
-        expect(mockChatClient.say).toHaveBeenCalledWith(channel, configuredPhrase);
+        expect(mockChatClient.say).toHaveBeenNthCalledWith(1, channel, configuredPhrase);
         expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
     });
 
-    it('should create a warn log when the command is not-found (undefined)', async () => {
+    it('says the default phrase and logs a warning when no phrase is configured', async () => {
         // Arrange
-        mockGetCommand.mockReturnValue(undefined);
+        mockPhraseService
+            .getCommandTemplate
+            .mockReturnValue(undefined);
 
         // Act
         await subject.handle(channel, command, user, message);
 
         // Assert
-        expect(mockChatClient.say).toHaveBeenCalledWith(channel, defaultPhrases.about);
+        expect(mockChatClient.say).toHaveBeenNthCalledWith(1, channel, defaultPhrases.about);
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.anything());
         expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
     });
