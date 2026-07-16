@@ -11,6 +11,7 @@ import AuthenticationServer, { IAuthenticationServer } from './bot/auth/auth.ser
 import { isUserAuthenticated } from './bot/auth/authProvider';
 import environment from './configurations/environment';
 import { name, version } from './package.json';
+import PhraseService from './bot/utilities/phrase.service';
 
 @injectable()
 class App {
@@ -21,6 +22,7 @@ class App {
         @inject(SocketServer) private socketServer: ISocketServer,
         @inject(OverlayServer) private overlayServer: IOverlayServer,
         @inject(AuthenticationServer) private authServer: IAuthenticationServer,
+        @inject(PhraseService) private phraseService: PhraseService,
         @inject(InjectionTypes.Logger) public logger: winston.Logger,
     ) {
         this.logger.info(`** Application initialized **`);
@@ -32,13 +34,14 @@ class App {
         this.chatBot.configure();
 
         await Promise.all([
-            this.database.connect(),
-            this.database.sync(),
+            this.database.initialize(),
             this.socketServer.startServer(),
             this.overlayServer.configure(),
             this.authServer.configure(),
             this.scheduler.scheduleChatEvents(),
         ]);
+
+        await this.phraseService.initialize();
 
         this.authServer.listen();
         this.overlayServer.listen();
@@ -76,7 +79,8 @@ const application = SAContainer.get<App>(App);
 
 application.main()
     .catch(reason => {
-        application.logger.error(`Process Terminated (-1): ${reason}`);
+        const detail = reason instanceof Error ? reason.stack : String(reason);
+        application.logger.error(`Process Terminated (-1): ${detail}`);
         process.exit(1);
     });
 

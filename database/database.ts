@@ -7,6 +7,7 @@ import {
     BanEvent,
     ChannelPointRedeem,
     CheerEvent,
+    CommandPhrase,
     DeathCounts,
     FollowEvent,
     LurkingUsers,
@@ -55,6 +56,7 @@ function buildPostgresqlConfig(config: IDatabaseConfiguration): SequelizeOptions
             BanEvent,
             ChannelPointRedeem,
             CheerEvent,
+            CommandPhrase,
             DeathCounts,
             FollowEvent,
             LurkingUsers,
@@ -87,7 +89,10 @@ export default class Database {
     async connect(): Promise<void> {
         await this.validate()
             .then(() => this.logger.info('DB Connection has been established successfully.'))
-            .catch((error: any) => this.logger.error('**Unable to connect to the database**:', error));
+            .catch((error: any) => {
+                this.logger.error('**Unable to connect to the database**:', error);
+                throw error;
+            });
     }
 
     async sync(): Promise<void> {
@@ -95,7 +100,15 @@ export default class Database {
             // sync logging has no diagnostic value
             .sync({ logging: false })
             .then(obj => this.logger.info('DB Sync completed successfully'))
-            .catch((error: any) => this.logger.error('**DB Sync Failed**:', error));
+            .catch((error: any) => {
+                this.logger.error('**DB Sync Failed**:', error);
+                throw error;
+            });
+    }
+
+    async initialize(): Promise<void> {
+        await this.connect();
+        await this.sync();
     }
 
     async validate(): Promise<void> {
@@ -108,8 +121,6 @@ export default class Database {
             .then(() => {
                 this.logger.info('All DB connections have been successfully closed.');
             })
-            .catch((err: any) => {
-                this.logger.error('There were issues disconnecting from the database:', err);
-            });
+            .catch((error: any) => this.logger.error('There were issues disconnecting from the database:', error));
     }
 }

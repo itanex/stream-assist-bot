@@ -16,6 +16,7 @@ import { ICommandHandler, OnlineState } from './iCommandHandler';
 import { LastRaidCommand } from './lastRaidCommand';
 import { LastSubCommand } from './lastSubCommand';
 import { LurkCommand, UnLurkCommand, WhoIsLurkingCommand } from './lurkCommands';
+import ManageCommand from './manage.command';
 import { ShoutOutCommand } from './shoutOutCommand';
 import { SocialsCommand } from './socialsCommand';
 import ThrowCommand from './throwCommand';
@@ -44,6 +45,7 @@ export {
     LurkCommand,
     UnLurkCommand,
     WhoIsLurkingCommand,
+    ManageCommand,
     ShoutOutCommand,
     SocialsCommand,
     ThrowCommand,

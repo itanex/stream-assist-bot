@@ -17,6 +17,7 @@ Commands are discrete units of chat functionality. Each command is a class imple
 ```typescript
 export interface ICommandHandler {
     exp: RegExp;
+    phraseKey?: PhraseKey;
     timeout: number;
     mod: boolean;
     vip: boolean;
@@ -36,6 +37,7 @@ export interface ICommandHandler {
 | Property | Type | Description |
 |---|---|---|
 | `exp` | `RegExp` | Pattern matched against the raw chat message. The first capture group is the command name; subsequent groups become `args`. |
+| `phraseKey` | `PhraseKey?` | Key into the phrase table for commands with database-backed response text. Omit for commands with computed or fixed responses. |
 | `timeout` | `number` | Cooldown period in seconds. Privileged users (mod, VIP, subscriber, etc.) receive half this duration. |
 | `mod` | `boolean` | Allow channel moderators. |
 | `vip` | `boolean` | Allow VIPs. |
@@ -93,6 +95,38 @@ otherwise            -> denied
 The `timeout` value is the base cooldown in seconds. Privileged users (founder, mod, subscriber, VIP, artist) receive `timeout / 2`. The broadcaster has no cooldown.
 
 Global cooldowns (`isGlobalCommand: true`) are shared - once any user triggers the cooldown, the command is unavailable to everyone until the period expires.
+
+---
+
+## Database-Backed Phrases
+
+Command response text can live in the database (`CommandPhrase` table) instead of the class, making it editable at runtime without a redeploy.
+
+* Default text is declared in `bot/utilities/default-phrases.ts`. The `PhraseKey` type is derived from its keys, so a command's `phraseKey` must have a matching entry or the build fails.
+* On startup, `PhraseService.initialize()` seeds any missing rows from the defaults. Existing rows are never overwritten - edits survive restarts.
+* Phrases are cached in memory at startup and kept in sync on writes. Reads never hit the database per-message. Rows edited directly in the database are not visible until restart.
+* A command reads its phrase via `PhraseService.getCommandTemplate(this.phraseKey)`, falling back to its `defaultPhrases` entry if the lookup misses.
+
+### Making a command's phrase editable
+
+1. Add an entry to `defaultPhrases` with the command's trigger word as the key
+2. Declare `phraseKey` on the command class referencing that key
+3. Inject `PhraseService` and read the template in `handle`
+
+---
+
+## Editing Phrases from Chat
+
+`ManageCommand` (`bot/commands/manage.command.ts`) provides runtime phrase editing. Moderator or broadcaster only.
+
+    !command edit <name> <template>
+    !cmd edit <name> <template>
+
+* `<name>` is the phrase key (e.g. `about`); `<template>` is free text to end of line
+* Only commands with an existing phrase row are editable - anything else replies "does not have an editable phrase"
+* Templates are trimmed and validated (length bounds); invalid templates are rejected with a chat reply and the stored phrase is unchanged
+* Known behavior: a message missing the template entirely (`!command edit about`) does not match the pattern and is silently ignored
+* Add/remove verbs are not yet implemented - the phrase set is defined by `default-phrases.ts`
 
 ---
 
