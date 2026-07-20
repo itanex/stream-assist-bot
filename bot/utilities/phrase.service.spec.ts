@@ -10,7 +10,25 @@ describe('Phrase.Service (postgres)', () => {
     let container: StartedPostgreSqlContainer;
     let databaseConfiguration: IDatabaseConfiguration;
 
+    const defaultVariant = '';
+    const editedTemplate = 'Edited Template';
+    const testCommand = 'testcommand';
+    const testVariants = [
+        'variant1',
+        'variant2',
+    ];
+
     let subject: PhraseService;
+
+    /** Utility to generate variant based template for testing */
+    const templateFn = (cmd: string, variant: string = defaultVariant) => `test-template: ${cmd}.${variant}`;
+
+    /** Utility to seed database with testing commands with variants */
+    const seedVariants = async (cmd: string, variants: string[] = [defaultVariant]) => {
+        await Promise.all(variants.map(async variant => CommandPhrase.setCommandTemplate(cmd, templateFn(cmd, variant), variant)));
+
+        await subject.initialize();
+    };
 
     beforeAll(async () => {
         try {
@@ -75,9 +93,7 @@ describe('Phrase.Service (postgres)', () => {
                 expect(result).toBe(defaultPhrases.about);
             });
             it('should not seed twice', async () => {
-                // Arrange
-                const editedTemplate = 'edited template';
-
+                // Arrange - beforeEach()
                 // Act
                 await subject.initialize();
                 await subject.setCommandTemplate('about', editedTemplate);
@@ -90,16 +106,50 @@ describe('Phrase.Service (postgres)', () => {
                 expect(rowCount).toBe(1);
             });
         });
-        describe('getCommandTemplate', () => {
-            it('should return the command (cache)', () => {
-                // Arrange - beforeEach()
+        describe('getCommandTemplate()', () => {
+            it('should return the command (cache, variant)', async () => {
+                // Arrange
+                await seedVariants(testCommand, testVariants);
+
                 // Act
-                const result = subject.getCommandTemplate('about');
+                const result = subject.getCommandTemplate(testCommand, testVariants[1]);
 
                 // Assert
-                expect(result).toBe(defaultPhrases.about);
+                expect(result).toBe(templateFn(testCommand, testVariants[1]));
             });
-            it('should return undefined for invalid commandName', () => {
+            it('should return the command (cache, no-variant)', async () => {
+                // Arrange - beforeEach()
+                await seedVariants(testCommand);
+
+                // Act
+                const result = subject.getCommandTemplate(testCommand);
+
+                // Assert
+                expect(result).toBe(templateFn(testCommand));
+            });
+
+            it('should return undefined for no default variant name (variant)', async () => {
+                // Arrange
+                await seedVariants(testCommand, testVariants);
+
+                // Act
+                const result = subject.getCommandTemplate(testCommand, '');
+
+                // Assert
+                expect(result).toBe(undefined);
+            });
+            it('should return undefined for unknown variant (variant)', async () => {
+                // Arrange
+                await seedVariants(testCommand, testVariants);
+
+                // Act
+                const result = subject.getCommandTemplate(testCommand, 'unknown');
+
+                // Assert
+                expect(result).toBe(undefined);
+            });
+
+            it('should return undefined for invalid commandName (no-variant)', () => {
                 // Arrange - beforeEach()
                 // Act
                 const result = subject.getCommandTemplate('');
@@ -107,13 +157,66 @@ describe('Phrase.Service (postgres)', () => {
                 // Assert
                 expect(result).toBe(undefined);
             });
-            it('should return undefined for unknown command', () => {
+            it('should return undefined for unknown command (no-variant)', () => {
                 // Arrange - beforeEach()
                 // Act
                 const result = subject.getCommandTemplate('unknown');
 
                 // Assert
                 expect(result).toBe(undefined);
+            });
+        });
+        describe('getCommandVariants()', () => {
+            it('should return the command variants (cache)', async () => {
+                // Arrange
+                await seedVariants(testCommand, testVariants);
+
+                // Act
+                const result = subject.getCommandVariants(testCommand);
+
+                // Assert
+                expect(result.length).toBe(testVariants.length);
+                expect(result).toEqual(expect.arrayContaining(testVariants));
+            });
+            it('should return the command variants (cache) (no-variant)', async () => {
+                // Arrange - beforeEach()
+                await seedVariants(testCommand);
+
+                // Act
+                const result = subject.getCommandVariants(testCommand);
+
+                // Assert
+                expect(result).toStrictEqual<string[]>([defaultVariant]);
+            });
+            it('should return empty collection for invalid commandName (empty string)', () => {
+                // Arrange - beforeEach()
+                // Act
+                const result = subject.getCommandVariants('');
+
+                // Assert
+                expect(result).toEqual<string[]>([]);
+            });
+            it('should return empty collection for unknown command', () => {
+                // Arrange - beforeEach()
+                // Act
+                const result = subject.getCommandVariants('unknown');
+
+                // Assert
+                expect(result).toEqual<string[]>([]);
+            });
+            it('does not include variants from a command name that is a prefix match', async () => {
+                // Arrange
+                const similarCommand = `${testCommand}Similar`;
+                const similarVariants = testVariants.map(x => `${x}Similar`);
+                await seedVariants(testCommand, testVariants);
+                await seedVariants(similarCommand, similarVariants);
+
+                // Act
+                const result = subject.getCommandVariants(testCommand);
+
+                // Assert
+                expect(result.length).toBe(testVariants.length);
+                expect(result).toEqual(expect.arrayContaining(testVariants));
             });
         });
         describe('setCommandTemplate()', () => {
@@ -133,14 +236,33 @@ describe('Phrase.Service (postgres)', () => {
                 // Assert
                 expect(result).toBe<PhraseUpdateResult>('invalidInput');
             });
-            it('row updated and gets new template', async () => {
+            it('row updated and gets new template (variant)', async () => {
                 // Arrange
-                const editedTemplate = 'edited template';
+                await seedVariants(testCommand, testVariants);
 
                 // Act
-                const result = await subject.setCommandTemplate('about', editedTemplate);
-                const cached = subject.getCommandTemplate('about');
-                const rows = await CommandPhrase.findAll({ where: { commandName: 'about' } });
+                const result = await subject.setCommandTemplate(testCommand, editedTemplate, testVariants[0]);
+                const cached = subject.getCommandTemplate(testCommand, testVariants[0]);
+                const rows = await CommandPhrase.findAll({ where: { commandName: testCommand } });
+
+                const updated = rows.find(r => r.variant === testVariants[0]);
+                const untouched = rows.find(r => r.variant === testVariants[1]);
+
+                // Assert
+                expect(result).toBe<PhraseUpdateResult>('updated');
+                expect(cached).toBe(editedTemplate);
+                expect(rows.length).toBe(2);
+                expect(updated?.template).toBe(editedTemplate);
+                expect(untouched?.template).toBe(templateFn(testCommand, testVariants[1]));
+            });
+            it('row updated and gets new template (no-variant)', async () => {
+                // Arrange
+                await seedVariants(testCommand);
+
+                // Act
+                const result = await subject.setCommandTemplate(testCommand, editedTemplate);
+                const cached = subject.getCommandTemplate(testCommand);
+                const rows = await CommandPhrase.findAll({ where: { commandName: testCommand } });
 
                 // Assert
                 expect(result).toBe<PhraseUpdateResult>('updated');
@@ -157,24 +279,36 @@ describe('Phrase.Service (postgres)', () => {
                 expect(await subject.setCommandTemplate(key, template)).toBe<PhraseUpdateResult>('notEditable');
                 expect(subject.getCommandTemplate(key)).toBe(undefined);
             });
+            it('known family with unrecognized variant returns notEditable', async () => {
+                // Arrange
+                await seedVariants(testCommand, testVariants);
+
+                // Act
+                const result = await subject.setCommandTemplate(testCommand, editedTemplate, 'unknown');
+
+                // Assert
+                expect(result).toBe<PhraseUpdateResult>('notEditable');
+            });
             it('invalid template (too short) rejected', async () => {
                 // Arrange
                 const badtemplate = 'BAD!';
+                await seedVariants(testCommand);
 
                 // Act
-                const result = await subject.setCommandTemplate('about', badtemplate);
+                const result = await subject.setCommandTemplate(testCommand, badtemplate);
 
                 // Assert
                 expect(result).toBe<PhraseUpdateResult>('invalidTemplate');
-                expect(subject.getCommandTemplate('about')).toBe(defaultPhrases.about);
+                expect(subject.getCommandTemplate(testCommand)).toBe(templateFn(testCommand));
             });
             it('non-validation error propagates', async () => {
                 // Arrange
+                await seedVariants(testCommand);
                 const spy = jest.spyOn(CommandPhrase, 'updateCommandTemplate')
                     .mockRejectedValueOnce(new Error('connection lost'));
 
                 // Act & Assert
-                await expect(subject.setCommandTemplate('about', 'valid template text'))
+                await expect(subject.setCommandTemplate(testCommand, 'valid template text'))
                     .rejects.toThrow('connection lost');
 
                 spy.mockRestore();
