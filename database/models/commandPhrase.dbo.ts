@@ -84,13 +84,13 @@ export default class CommandPhrase extends Model {
     }
 
     /**
-     *
+     * Inserts the provided command with variant and template
      * @param commandName The command name to fetch
      * @param template new template value for the Command
      * @param variant The command name variant to fetch
      * @returns The created command if successful, rejected error otherwise
      */
-    static async setCommandTemplate(commandName: string, template: string, variant?: string): Promise<CommandPhrase> {
+    static async addCommandTemplate(commandName: string, template: string, variant: string = ''): Promise<CommandPhrase> {
         return CommandPhrase.create({
             commandName,
             variant,

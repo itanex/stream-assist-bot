@@ -3,21 +3,21 @@ import { ChatClient } from '@twurple/chat';
 import winston from 'winston';
 import PhraseService from '../bot/utilities/phrase.service';
 
-export const mockChatClient: ChatClient = <unknown>{
+export const mockChatClient = <unknown>{
     say: jest.fn(),
-} as ChatClient;
+} as jest.Mocked<ChatClient>;
 
-export const mockApiClient: ApiClient = <unknown>{
+export const mockApiClient = <unknown>{
     streams: {
         getStreamByUserName: jest.fn(),
     },
-} as ApiClient;
+} as jest.Mocked<ApiClient>;
 
-export const mockLogger: winston.Logger = <unknown>{
+export const mockLogger = <unknown>{
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
-} as winston.Logger;
+} as jest.Mocked<winston.Logger>;
 
 export const mockPhraseService = <unknown>{
     initialize: jest.fn(),

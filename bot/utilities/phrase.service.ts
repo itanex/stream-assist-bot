@@ -1,16 +1,23 @@
 import { inject, injectable } from 'inversify';
-import { ValidationError } from 'sequelize';
+import { UniqueConstraintError, ValidationError } from 'sequelize';
 import winston from 'winston';
 import { CommandPhrase } from '../../database';
-import { defaultPhrases } from './default-phrases';
+import { defaultPhrases, phraseFamilies } from './default-phrases';
 import InjectionTypes from '../../dependency-management/types';
 
-export type PhraseUpdateResult =
-    'updated' |
+export type PhraseGenericResult =
     'invalidInput' |
+    'invalidTemplate';
+
+export type PhraseUpdateResult = PhraseGenericResult |
     'notEditable' |
-    'invalidTemplate' |
+    'updated' |
     'updateFailed';
+
+export type PhraseInsertResult = PhraseGenericResult |
+    'alreadyExists' |
+    'invalidCommandName' |
+    'inserted';
 
 type PhraseEntry = { variant: string; template: string };
 
@@ -35,6 +42,10 @@ export default class PhraseService {
             ]));
     }
 
+    isValidCommandName(commandName: string): boolean {
+        return Object.keys(phraseFamilies).some(x => x === commandName);
+    }
+
     getCommandVariants(commandName: string): string[] {
         if (!commandName) {
             return [];
@@ -51,6 +62,36 @@ export default class PhraseService {
         }
 
         return this.phraseCache.get(cacheKey(commandName, variant))?.template;
+    }
+
+    async addCommandTemplate(commandName: string, template: string, variant: string = ''): Promise<PhraseInsertResult> {
+        if (!commandName || !template || !variant) {
+            return 'invalidInput';
+        }
+
+        if (!this.isValidCommandName(commandName)) {
+            return 'invalidCommandName';
+        }
+
+        if (this.phraseCache.has(cacheKey(commandName, variant))) {
+            return 'alreadyExists';
+        }
+
+        try {
+            await CommandPhrase.addCommandTemplate(commandName, template, variant);
+
+            this.phraseCache.set(cacheKey(commandName, variant), { variant, template });
+
+            return 'inserted';
+        } catch (error) {
+            if (error instanceof UniqueConstraintError) {
+                return 'alreadyExists';
+            }
+            if (error instanceof ValidationError) {
+                return 'invalidTemplate';
+            }
+            throw error;
+        }
     }
 
     /**

@@ -5,3 +5,9 @@ export const defaultPhrases = {
 } as const;
 
 export type PhraseKey = keyof typeof defaultPhrases;
+
+export const phraseFamilies = {
+    socials: 'socials',
+} as const;
+
+export type PhraseFamily = keyof typeof phraseFamilies;
