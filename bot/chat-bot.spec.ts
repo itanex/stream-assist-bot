@@ -73,7 +73,7 @@ describe('ChatBot start() guard', () => {
     let chatBot: ChatBot;
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        jest.resetAllMocks();
         container.unbindAll();
 
         container.bind<ChatClient>(ChatClient).toConstantValue(mockChatClient);

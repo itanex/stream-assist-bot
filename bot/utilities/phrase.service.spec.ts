@@ -68,7 +68,7 @@ describe('Phrase.Service (postgres)', () => {
     });
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        jest.resetAllMocks();
     });
 
     describe('Valid Database object', () => {
@@ -85,7 +85,7 @@ describe('Phrase.Service (postgres)', () => {
         });
 
         beforeEach(async () => {
-            jest.clearAllMocks();
+            jest.resetAllMocks();
             await CommandPhrase.destroy({ where: {}, force: true });
             await subject.initialize();
         });

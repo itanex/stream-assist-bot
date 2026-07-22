@@ -18,6 +18,7 @@ Commands are discrete units of chat functionality. Each command is a class imple
 export interface ICommandHandler {
     exp: RegExp;
     phraseKey?: PhraseKey;
+    phraseFamily?: PhraseFamily;
     timeout: number;
     mod: boolean;
     vip: boolean;
@@ -28,6 +29,7 @@ export interface ICommandHandler {
     viewer: boolean;
     isGlobalCommand: boolean;
     restriction: OnlineState;
+    cooldownKey?(args: string[]): string;
     handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void>;
 }
 ```
@@ -37,7 +39,8 @@ export interface ICommandHandler {
 | Property | Type | Description |
 |---|---|---|
 | `exp` | `RegExp` | Pattern matched against the raw chat message. The first capture group is the command name; subsequent groups become `args`. |
-| `phraseKey` | `PhraseKey?` | Key into the phrase table for commands with database-backed response text. Omit for commands with computed or fixed responses. |
+| `phraseKey` | `PhraseKey?` | Key into the phrase table for commands with database-backed response text. Omit for commands with computed or fixed responses. Mutually exclusive with `phraseFamily`. |
+| `phraseFamily` | `PhraseFamily?` | Registers the command against a family of variant-based phrases (see [Phrase Families and Variants](#phrase-families-and-variants)). Mutually exclusive with `phraseKey`. |
 | `timeout` | `number` | Cooldown period in seconds. Privileged users (mod, VIP, subscriber, etc.) receive half this duration. |
 | `mod` | `boolean` | Allow channel moderators. |
 | `vip` | `boolean` | Allow VIPs. |
@@ -48,6 +51,7 @@ export interface ICommandHandler {
 | `viewer` | `boolean` | Allow anyone in chat, including non-followers. |
 | `isGlobalCommand` | `boolean` | When `true`, the cooldown is shared across all users. Per-user cooldown is not yet implemented. |
 | `restriction` | `OnlineState` | `'always'` - runs any time. `'online'` - only while stream is live. `'offline'` - only while stream is offline. |
+| `cooldownKey` | `(args: string[]) => string` (optional method) | Overrides the default cooldown bucket. When implemented, `MessageHandler` buckets the cooldown timer on this method's return value instead of the class name. When absent, falls back to today's behavior (bucketed by class name). |
 
 ---
 
@@ -96,6 +100,12 @@ The `timeout` value is the base cooldown in seconds. Privileged users (founder, 
 
 Global cooldowns (`isGlobalCommand: true`) are shared - once any user triggers the cooldown, the command is unavailable to everyone until the period expires.
 
+### Custom Cooldown Buckets
+
+By default, the cooldown timer is bucketed by the command's class name - one shared timer per command. A command can override this by implementing `cooldownKey(args)`, returning a different bucket key per invocation (e.g. bucketing by variant, so `!socials discord` and `!socials twitter` don't share a cooldown). When `cooldownKey` is absent, `MessageHandler` falls back to the class name, matching today's behavior.
+
+The cooldown chat message always names the command (its class name), regardless of which bucket key was actually used internally - the bucket key is bookkeeping only, never displayed.
+
 ---
 
 ## Database-Backed Phrases
@@ -113,20 +123,48 @@ Command response text can live in the database (`CommandPhrase` table) instead o
 2. Declare `phraseKey` on the command class referencing that key
 3. Inject `PhraseService` and read the template in `handle`
 
+### Phrase Families and Variants
+
+Some commands respond with one of several named variants rather than a single template (e.g. `!socials discord` vs `!socials twitter`). These register a `phraseFamily` instead of a `phraseKey`.
+
+* Families are declared in the `phraseFamilies` registry (`bot/utilities/default-phrases.ts`) and typed as `PhraseFamily`. A command sets `phraseFamily` to one of these registered names.
+* Unlike single-phrase commands, family variants are never seeded from `defaultPhrases` - that seed path only populates single-phrase (`phraseKey`) commands. Family variant rows exist only once created via the `add` verb (see [Editing Phrases from Chat](#editing-phrases-from-chat)).
+* `PhraseService.getCommandTemplate(commandName, variant?)` takes an optional `variant`. Omitting it looks up the base/empty-variant entry for that name.
+* A command reads its variant template via `PhraseService.getCommandTemplate(this.phraseFamily, variant)`, where `variant` comes from its own capture group in `exp`.
+
+`phraseKey` and `phraseFamily` are mutually exclusive - a command is either a single fixed-key phrase or a family of variants, not both.
+
 ---
 
 ## Editing Phrases from Chat
 
 `ManageCommand` (`bot/commands/manage.command.ts`) provides runtime phrase editing. Moderator or broadcaster only.
 
-    !command edit <name> <template>
-    !cmd edit <name> <template>
+    !command add <name>[.<variant>] <template>
+    !command edit <name>[.<variant>] <template>
+    !cmd add <name>[.<variant>] <template>
+    !cmd edit <name>[.<variant>] <template>
 
-* `<name>` is the phrase key (e.g. `about`); `<template>` is free text to end of line
-* Only commands with an existing phrase row are editable - anything else replies "does not have an editable phrase"
+* `<name>` is a phrase key or a phrase family name; `<name>.<variant>` targets a specific family variant (e.g. `socials.discord`). The dot-compound form is chat-input only - `name` and `variant` are split apart before reaching `PhraseService`, storage never holds dotted keys.
+* `add` creates a new phrase row. `<name>` must be a registered phrase family, and `<variant>` is required and cannot be empty - `add` cannot create a base/single-phrase entry.
+* `edit` updates an existing row - a family variant or a single-phrase command. Only commands with an existing phrase row are editable - anything else replies "does not have an editable phrase"
 * Templates are trimmed and validated (length bounds); invalid templates are rejected with a chat reply and the stored phrase is unchanged
+* A compound name with more than one dot (e.g. `a.b.c`) is rejected as an invalid command
 * Known behavior: a message missing the template entirely (`!command edit about`) does not match the pattern and is silently ignored
-* Add/remove verbs are not yet implemented - the phrase set is defined by `default-phrases.ts`
+* `remove` is not yet implemented - phrases can be added and edited, not deleted, from chat
+
+### Reply Messages
+
+| Result | Verb | Reply |
+|---|---|---|
+| `invalidInput` | add, edit | Invalid input: both [name] and [template] are required |
+| `invalidTemplate` | add, edit | Invalid template for command '\<name\>' |
+| `invalidCommandName` | add | Command \<name\> phrase family is not recognized |
+| `alreadyExists` | add | Command \<name\> phrase already exists |
+| `inserted` | add | Command \<name\> phrase was inserted |
+| `notEditable` | edit | Command \<name\> does not have an editable phrase |
+| `updated` | edit | Command \<name\> phrase was updated |
+| `updateFailed` | edit | Command \<name\> phrase failed to update |
 
 ---
 

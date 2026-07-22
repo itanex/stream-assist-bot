@@ -63,7 +63,7 @@ describe('authProvider', () => {
         }
 
         jest.resetModules();
-        jest.clearAllMocks();
+        jest.resetAllMocks();
 
         const module = require('./authProvider');
         addUserFromTokenFile = module.addUserFromTokenFile;

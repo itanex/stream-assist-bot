@@ -28,6 +28,13 @@ export class SocialsCommand implements ICommandHandler {
     ) {
     }
 
+    cooldownKey(args: string[]): string {
+        const [variant] = args as string[];
+        const isKnown = !!this.phraseService.getCommandTemplate(this.phraseFamily, variant);
+
+        return !!variant && isKnown ? `${SocialsCommand.name}:${variant}` : SocialsCommand.name;
+    }
+
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         const [variant] = args as string[];
 
