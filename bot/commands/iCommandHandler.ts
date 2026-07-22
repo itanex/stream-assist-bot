@@ -1,7 +1,7 @@
 /* eslint-disable no-extra-semi */
 /* eslint-disable semi */
 import { ChatUser } from '@twurple/chat';
-import { PhraseKey } from '../utilities/default-phrases';
+import { PhraseFamily, PhraseKey } from '../utilities/default-phrases';
 
 /** Represents the restriction state */
 export type OnlineState = 'always' | 'online' | 'offline';
@@ -11,6 +11,7 @@ export interface ICommandHandler {
     exp: RegExp;
     /** Used to identify command in database */
     phraseKey?: PhraseKey;
+    phraseFamily?: PhraseFamily;
     /** The timeout in seconds for this command */
     timeout: number;
     mod: boolean;

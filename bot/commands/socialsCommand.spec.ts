@@ -1,83 +1,74 @@
-// reflect-metadata should be imported
-// before any interface or other imports
-// also it should be imported only once
-// so that a singleton is created.
 import 'reflect-metadata';
-import { ChatClient, ChatUser } from '@twurple/chat';
-import { Container } from 'inversify';
-import winston from 'winston';
-import { mockChatClient, mockLogger } from '../../tests/common.mocks';
-import InjectionTypes from '../../dependency-management/types';
-import { ICommandHandler } from './iCommandHandler';
+import { ChatUser } from '@twurple/chat';
+import { mockChatClient, mockLogger, mockPhraseService } from '../../tests/common.mocks';
 import { SocialsCommand } from './socialsCommand';
-import environment from '../../configurations/environment';
 
-jest.mock('../../configurations/environment', () => ({
-    __esModule: true,
-    default: {
-        discordInvite: 'test-discord-invite',
-        twitter: {
-            link: 'test-twitter-link',
-        },
-        youtube: {
-            link: 'test-youtube-link',
-        },
-    },
-}));
+const messageFn = (
+    command: string,
+    subcommand: string,
+    body: string = '',
+) => `!${command} ${subcommand} ${body}`.trim();
 
 describe('Socials Command Tests', () => {
     const channel = 'TestChannel';
     const command = 'TestCommand';
-    const message = 'TestMessage';
-    const user = <ChatUser>{ displayName: 'TestUser' };
+    const user = <ChatUser>{
+        displayName: 'TestUser',
+    };
 
-    const container: Container = new Container();
-    let expectedChatClient: ChatClient;
-    let expectedLogger: winston.Logger;
+    let subject: SocialsCommand;
 
     beforeEach(() => {
         jest.resetAllMocks();
-        container.unbindAll();
-        container
-            .bind<ChatClient>(ChatClient)
-            .toConstantValue(mockChatClient);
 
-        container
-            .bind<winston.Logger>(InjectionTypes.Logger)
-            .toConstantValue(mockLogger);
-
-        container
-            .bind<ICommandHandler>(InjectionTypes.CommandHandlers)
-            .to(SocialsCommand);
-
-        expectedChatClient = container
-            .get(ChatClient);
-
-        expectedLogger = container
-            .get<winston.Logger>(InjectionTypes.Logger);
+        subject = new SocialsCommand(
+            mockChatClient,
+            mockPhraseService,
+            mockLogger,
+        );
     });
 
-    it('should say to chat the discord, youtube and twitter accounts', async () => {
+    it('should say the variant template', async () => {
         // Arrange
-        const subject = container
-            .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
-            .find(x => x.constructor.name === `${SocialsCommand.name}`);
+        const subcommand = `Variant`;
+        const message = messageFn(subject.phraseFamily, subcommand);
+        const response = `Test Response Message`;
+        const args: any[] = [
+            subcommand,
+        ];
+
+        mockPhraseService.getCommandTemplate
+            .mockReturnValue(response);
 
         // Act
-        await subject?.handle(channel, command, user, message, []);
+        await subject.handle(channel, command, user, message, args);
 
         // Assert
-        expect(expectedChatClient.say)
-            .toHaveBeenCalledTimes(1);
-        expect(expectedChatClient.say)
-            .toHaveBeenCalledWith(channel, expect.stringContaining(environment.discordInvite!));
-        expect(expectedChatClient.say)
-            .toHaveBeenCalledWith(channel, expect.stringContaining(environment.twitter.link!));
-        expect(expectedChatClient.say)
-            .toHaveBeenCalledWith(channel, expect.stringContaining(environment.youtube.link!));
+        expect(mockPhraseService.getCommandTemplate).toHaveBeenCalledWith(subject.phraseFamily, args[0]);
+        expect(mockChatClient.say).toHaveBeenCalledWith(channel, response);
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
+    });
 
-        expect(expectedLogger.info)
-            .toHaveBeenCalledWith(expect
-                .stringMatching(`(?=.*\\b${command}\\b)(?=.*\\b${channel}\\b)(?=.*\\b${user.displayName}\\b)(?=.*\\b${message}\\b)`));
+    it('should say nothing and log a warning', async () => {
+        // Arrange
+        const warnMessage = 'Unknown Variant';
+        const subcommand = `Variant`;
+        const message = messageFn(subject.phraseFamily, subcommand);
+        const response = ``;
+        const args: any[] = [
+            subcommand,
+        ];
+
+        mockPhraseService.getCommandTemplate
+            .mockReturnValue(response);
+
+        // Act
+        await subject.handle(channel, command, user, message, args);
+
+        // Assert
+        expect(mockPhraseService.getCommandTemplate).toHaveBeenCalledWith(subject.phraseFamily, args[0]);
+        expect(mockChatClient.say).not.toHaveBeenCalled();
+        expect(mockLogger.warn).toHaveBeenCalledWith(warnMessage, expect.anything());
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
     });
 });
