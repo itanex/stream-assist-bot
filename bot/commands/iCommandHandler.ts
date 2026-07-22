@@ -23,6 +23,8 @@ export interface ICommandHandler {
     isGlobalCommand: boolean;
     /** Command execution restricted by online state */
     restriction: OnlineState;
+    /** CooldownKey */
+    cooldownKey?(args: string[]): string;
 
     handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void>;
 }
