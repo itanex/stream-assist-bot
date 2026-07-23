@@ -207,9 +207,9 @@ const mockBroadcaster = <unknown>{
     isOnline: jest.fn(),
 } as jest.Mocked<Broadcaster>;
 
-const mockStreamStateService = {
-    isOnline: false,
-} as unknown as StreamStateService;
+const mockIsOnline = jest.fn<boolean, []>();
+const mockStreamStateService = <unknown>{} as jest.Mocked<StreamStateService>;
+Object.defineProperty(mockStreamStateService, 'isOnline', { get: mockIsOnline });
 
 describe('Message.Handler', () => {
     let messageHandler: MessageHandler;
@@ -248,8 +248,8 @@ describe('Message.Handler', () => {
         it('skip online command execution when offline', async () => {
             // Arrange
             const command = '!online';
-            mockBroadcaster.isOnline
-                .mockResolvedValue(false);
+
+            mockIsOnline.mockReturnValue(false);
 
             // Act
             await messageHandler.handle('#channel', 'user', command, unknownUser);
@@ -260,8 +260,8 @@ describe('Message.Handler', () => {
         it('skip offline command execution when online', async () => {
             // Arrange
             const command = '!offline';
-            mockBroadcaster.isOnline
-                .mockResolvedValue(true);
+
+            mockIsOnline.mockReturnValue(true);
 
             // Act
             await messageHandler.handle('#channel', 'user', command, unknownUser);
@@ -271,9 +271,9 @@ describe('Message.Handler', () => {
         });
         describe('IsAuthorized', () => {
             beforeEach(() => {
-                mockBroadcaster.isOnline
-                    .mockResolvedValue(true);
+                mockIsOnline.mockReturnValue(true);
             });
+
             it.each`
                 role           | command          | userFlags                   | handler
                 ${'mod'}       | ${'!mod'}        | ${{ isMod: true }}          | ${mockModHandler}
@@ -315,7 +315,6 @@ describe('Message.Handler', () => {
                 const broadcasterUser: ChatUser = {
                     isBroadcaster: true,
                 } as unknown as ChatUser;
-                (mockStreamStateService.isOnline as any) = true;
                 const command = '!broadcaster';
 
                 mockBroadcasterHandler.mockResolvedValue(undefined);
@@ -405,16 +404,16 @@ describe('Message.Handler', () => {
             const command = '!cooldown';
 
             beforeEach(() => {
-                (mockStreamStateService.isOnline as any) = true;
+                mockIsOnline.mockReturnValue(true);
             });
 
             it('Uses cooldownKey to bucket cooldown when implemented', async () => {
                 // Arrange
                 const cooldownKey = 'TestBucketKey';
-                mockBroadcaster.isOnline
-                    .mockResolvedValue(true);
+
                 mockCooldownCommand.cooldownKey
                     .mockReturnValue(cooldownKey);
+
                 mockCooldownCommand.handle
                     .mockResolvedValue(undefined);
 
@@ -431,11 +430,11 @@ describe('Message.Handler', () => {
             it('Does not apply cooldown across different cooldownKey buckets', async () => {
                 // Arrange
                 const cooldownKey = 'TestBucketKey';
-                mockBroadcaster.isOnline
-                    .mockResolvedValue(true);
+
                 mockCooldownCommand.cooldownKey
                     .mockReturnValueOnce(`${cooldownKey}-1`)
                     .mockReturnValueOnce(`${cooldownKey}-2`);
+
                 mockCooldownCommand.handle
                     .mockResolvedValue(undefined);
 
@@ -454,10 +453,10 @@ describe('Message.Handler', () => {
             it('Displays instruction, not the cooldownKey bucket, in the cooldown message', async () => {
                 // Arrange
                 const cooldownKey: any = undefined;
-                mockBroadcaster.isOnline
-                    .mockResolvedValue(true);
+
                 mockCooldownCommand.cooldownKey
                     .mockReturnValue(cooldownKey);
+
                 mockCooldownCommand.handle
                     .mockResolvedValue(undefined);
 
@@ -470,8 +469,6 @@ describe('Message.Handler', () => {
             });
             it('Skips execution when command is on cooldown', async () => {
                 // Arrange
-                mockBroadcaster.isOnline
-                    .mockResolvedValue(true);
                 mockBroadcaster.getBroadcaster
                     .mockResolvedValue(<unknown>{
                         isFollowedBy: jest.fn().mockResolvedValue(false),
@@ -492,8 +489,7 @@ describe('Message.Handler', () => {
                 const broadcasterUser: ChatUser = {
                     isBroadcaster: true,
                 } as unknown as ChatUser;
-                mockBroadcaster.isOnline
-                    .mockResolvedValue(true);
+
                 mockBroadcaster.getBroadcaster
                     .mockResolvedValue(<unknown>{
                         isFollowedBy: jest.fn().mockResolvedValue(true),
@@ -520,8 +516,7 @@ describe('Message.Handler', () => {
             `('User Role ($role) applies $expectedCooldown second cooldown', async ({ userFlags, expectedCooldown }) => {
                 // Arrange
                 const user = userFlags as unknown as ChatUser;
-                mockBroadcaster.isOnline
-                    .mockResolvedValue(true);
+
                 mockBroadcaster.getBroadcaster
                     .mockResolvedValue(<unknown>{
                         isFollowedBy: jest.fn().mockResolvedValue(true),
