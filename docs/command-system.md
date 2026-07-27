@@ -17,8 +17,7 @@ Commands are discrete units of chat functionality. Each command is a class imple
 ```typescript
 export interface ICommandHandler {
     exp: RegExp;
-    phraseKey?: PhraseKey;
-    phraseFamily?: PhraseFamily;
+    commandName?: CommandName;
     timeout: number;
     mod: boolean;
     vip: boolean;
@@ -30,7 +29,7 @@ export interface ICommandHandler {
     isGlobalCommand: boolean;
     restriction: OnlineState;
     cooldownKey?(args: string[]): string;
-    handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void>;
+    handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void>;
 }
 ```
 
@@ -39,8 +38,7 @@ export interface ICommandHandler {
 | Property | Type | Description |
 |---|---|---|
 | `exp` | `RegExp` | Pattern matched against the raw chat message. The first capture group is the command name; subsequent groups become `args`. |
-| `phraseKey` | `PhraseKey?` | Key into the phrase table for commands with database-backed response text. Omit for commands with computed or fixed responses. Mutually exclusive with `phraseFamily`. |
-| `phraseFamily` | `PhraseFamily?` | Registers the command against a family of variant-based phrases (see [Phrase Families and Variants](#phrase-families-and-variants)). Mutually exclusive with `phraseKey`. |
+| `commandName` | `CommandName?` | Key into the database-backed response text - either a `defaultResponses` key (single fixed text) or a `CommandFamilies` key (multiple variants). Omit for commands with computed or fixed responses. |
 | `timeout` | `number` | Cooldown period in seconds. Privileged users (mod, VIP, subscriber, etc.) receive half this duration. |
 | `mod` | `boolean` | Allow channel moderators. |
 | `vip` | `boolean` | Allow VIPs. |
@@ -108,50 +106,50 @@ The cooldown chat message always names the command (its class name), regardless 
 
 ---
 
-## Database-Backed Phrases
+## Database-Backed Responses
 
 Command response text can live in the database (`CommandResponse` table) instead of the class, making it editable at runtime without a redeploy.
 
-* Default text is declared in `bot/utilities/default-phrases.ts`. The `PhraseKey` type is derived from its keys, so a command's `phraseKey` must have a matching entry or the build fails.
+* Default text is declared in `bot/utilities/default-responses.ts`. `CommandName` is derived from its keys plus `CommandFamilies`' keys, so a command's `commandName` must have a matching entry in one of the two or the build fails.
 * On startup, `CommandResponseService.initialize()` seeds any missing rows from the defaults. Existing rows are never overwritten - edits survive restarts.
-* Phrases are cached in memory at startup and kept in sync on writes. Reads never hit the database per-message. Rows edited directly in the database are not visible until restart.
-* A command reads its phrase via `CommandResponseService.getCommandText(this.phraseKey)`, falling back to its `defaultPhrases` entry if the lookup misses.
+* Responses are cached in memory at startup and kept in sync on writes. Reads never hit the database per-message. Rows edited directly in the database are not visible until restart.
+* A command reads its response via `CommandResponseService.getCommandText(this.commandName)`, falling back to its `defaultResponses` entry if the lookup misses.
 
-### Making a command's phrase editable
+### Making a command's response editable
 
-1. Add an entry to `defaultPhrases` with the command's trigger word as the key
-2. Declare `phraseKey` on the command class referencing that key
+1. Add an entry to `defaultResponses` with the command's trigger word as the key
+2. Declare `commandName` on the command class referencing that key
 3. Inject `CommandResponseService` and read the text in `handle`
 
-### Phrase Families and Variants
+### Command Families and Variants
 
-Some commands respond with one of several named variants rather than a single template (e.g. `!socials discord` vs `!socials twitter`). These register a `phraseFamily` instead of a `phraseKey`.
+Some commands respond with one of several named variants rather than a single text response (e.g. `!socials discord` vs `!socials twitter`). These set `commandName` to a `CommandFamilies` key instead of a `defaultResponses` key - the same field serves both cases.
 
-* Families are declared in the `phraseFamilies` registry (`bot/utilities/default-phrases.ts`) and typed as `PhraseFamily`. A command sets `phraseFamily` to one of these registered names.
-* Unlike single-phrase commands, family variants are never seeded from `defaultPhrases` - that seed path only populates single-phrase (`phraseKey`) commands. Family variant rows exist only once created via the `add` verb (see [Editing Phrases from Chat](#editing-phrases-from-chat)).
+* Families are declared in the `CommandFamilies` registry (`bot/utilities/default-responses.ts`). A command sets `commandName` to one of these registered names.
+* Unlike single-reponse commands, family variants are never seeded from `defaultResponses` - that seed path only populates single-reponse commands. Family variant rows exist only once created via the `add` verb (see [Editing Reponses from Chat](#editing-reponses-from-chat)).
 * `CommandResponseService.getCommandText(commandName, variant?)` takes an optional `variant`. Omitting it looks up the base/empty-variant entry for that name.
-* A command reads its variant text via `CommandResponseService.getCommandText(this.phraseFamily, variant)`, where `variant` comes from its own capture group in `exp`.
+* A command reads its variant text via `CommandResponseService.getCommandText(this.commandName, variant)`, where `variant` comes from its own capture group in `exp`.
 
-`phraseKey` and `phraseFamily` are mutually exclusive - a command is either a single fixed-key phrase or a family of variants, not both.
+Whether a `commandName` value resolves to a single fixed reponse or a family of reponses depends only on which registry it's drawn from - `defaultResponses` or `CommandFamilies` - not on a separate field.
 
 ---
 
-## Editing Phrases from Chat
+## Editing Reponses from Chat
 
-`ManageCommand` (`bot/commands/manage.command.ts`) provides runtime phrase editing. Moderator or broadcaster only.
+`ManageCommand` (`bot/commands/manage.command.ts`) provides runtime response editing. Moderator or broadcaster only.
 
     !command add <name>[.<variant>] <text>
     !command edit <name>[.<variant>] <text>
     !cmd add <name>[.<variant>] <text>
     !cmd edit <name>[.<variant>] <text>
 
-* `<name>` is a phrase key or a phrase family name; `<name>.<variant>` targets a specific family variant (e.g. `socials.discord`). The dot-compound form is chat-input only - `name` and `variant` are split apart before reaching `CommandResponseService`, storage never holds dotted keys.
-* `add` creates a new phrase row. `<name>` must be a registered phrase family, and `<variant>` is required and cannot be empty - `add` cannot create a base/single-phrase entry.
-* `edit` updates an existing row - a family variant or a single-phrase command. Only commands with an existing phrase row are editable - anything else replies "does not have an editable text"
+* `<name>` is a `commandName` value - either a `defaultResponses` key or a `CommandFamilies` key; `<name>.<variant>` targets a specific family variant (e.g. `socials.discord`). The dot-compound form is chat-input only - `name` and `variant` are split apart before reaching `CommandResponseService`, storage never holds dotted keys.
+* `add` creates a new response row. `<name>` must be a registered `CommandFamilies` name, and `<variant>` is required and cannot be empty - `add` cannot create a base/single-reponse entry.
+* `edit` updates an existing row - a family variant or a single-response command. Only commands with an existing reponse row are editable - anything else replies "does not have an editable text"
 * Text is trimmed and validated (length bounds); invalid text is rejected with a chat reply and the stored text is unchanged
 * A compound name with more than one dot (e.g. `a.b.c`) is rejected as an invalid command
 * Known behavior: a message missing the text entirely (`!command edit about`) does not match the pattern and is silently ignored
-* `remove` is not yet implemented - phrases can be added and edited, not deleted, from chat
+* `remove` is not yet implemented - reponses can be added and edited, not deleted, from chat
 
 ### Reply Messages
 
@@ -199,9 +197,9 @@ export class MyCommand implements ICommandHandler {
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {}
 
-    async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
+    async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         this.chatClient.say(channel, 'Hello!');
-        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
+        this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }
 ```
