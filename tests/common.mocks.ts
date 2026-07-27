@@ -1,7 +1,7 @@
 import { ApiClient } from '@twurple/api';
 import { ChatClient } from '@twurple/chat';
 import winston from 'winston';
-import PhraseService from '../bot/utilities/phrase.service';
+import CommandResponseService from '../bot/utilities/command-response.service';
 
 export const mockChatClient = <unknown>{
     say: jest.fn(),
@@ -19,8 +19,9 @@ export const mockLogger = <unknown>{
     error: jest.fn(),
 } as jest.Mocked<winston.Logger>;
 
-export const mockPhraseService = <unknown>{
+export const mockCommandResponseService = <unknown>{
     initialize: jest.fn(),
-    getCommandTemplate: jest.fn(),
-    setCommandTemplate: jest.fn(),
-} as jest.Mocked<PhraseService>;
+    addCommandText: jest.fn(),
+    getCommandText: jest.fn(),
+    setCommandText: jest.fn(),
+} as jest.Mocked<CommandResponseService>;

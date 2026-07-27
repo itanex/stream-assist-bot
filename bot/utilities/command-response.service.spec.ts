@@ -2,22 +2,26 @@ import 'reflect-metadata';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { UniqueConstraintError } from 'sequelize';
 import Database, { IDatabaseConfiguration } from '../../database/database';
-import PhraseService, { PhraseGenericResult, PhraseInsertResult, PhraseUpdateResult } from './phrase.service';
+import CommandResponseService, {
+    CommandTextValidationResult,
+    CommandTextInsertResult,
+    CommandTextUpdateResult,
+} from './command-response.service';
 import { mockLogger } from '../../tests/common.mocks';
 import { defaultPhrases } from './default-phrases';
-import { CommandPhrase } from '../../database';
+import { CommandResponse } from '../../database';
 
 jest.mock('./default-phrases', () => ({
     ...jest.requireActual('./default-phrases'),
     phraseFamilies: { testcommand: 'testcommand' },
 }));
 
-describe('Phrase.Service (postgres)', () => {
+describe('CommandResponse.Service (postgres)', () => {
     let container: StartedPostgreSqlContainer;
     let databaseConfiguration: IDatabaseConfiguration;
 
     const defaultVariant = '';
-    const validTemplate = 'Edited Template';
+    const validText = 'Edited Text';
     const validName = 'ValidName';
     const testCommand = 'testcommand';
     const testVariants = [
@@ -25,14 +29,14 @@ describe('Phrase.Service (postgres)', () => {
         'variant2',
     ];
 
-    let subject: PhraseService;
+    let subject: CommandResponseService;
 
-    /** Utility to generate variant based template for testing */
-    const templateFn = (cmd: string, variant: string = defaultVariant) => `test-template: ${cmd}.${variant}`;
+    /** Utility to generate variant based text for testing */
+    const textFn = (cmd: string, variant: string = defaultVariant) => `test-text: ${cmd}.${variant}`;
 
     /** Utility to seed database with testing commands with variants */
     const seedVariants = async (cmd: string, variants: string[] = [defaultVariant]) => {
-        await Promise.all(variants.map(async variant => CommandPhrase.addCommandTemplate(cmd, templateFn(cmd, variant), variant)));
+        await Promise.all(variants.map(async variant => CommandResponse.addCommandText(cmd, textFn(cmd, variant), variant)));
 
         await subject.initialize();
     };
@@ -77,7 +81,7 @@ describe('Phrase.Service (postgres)', () => {
         beforeAll(async () => {
             database = new Database(databaseConfiguration, mockLogger);
             await database.initialize();
-            subject = new PhraseService(mockLogger);
+            subject = new CommandResponseService(mockLogger);
         });
 
         afterAll(async () => {
@@ -86,7 +90,7 @@ describe('Phrase.Service (postgres)', () => {
 
         beforeEach(async () => {
             jest.resetAllMocks();
-            await CommandPhrase.destroy({ where: {}, force: true });
+            await CommandResponse.destroy({ where: {}, force: true });
             await subject.initialize();
         });
 
@@ -94,7 +98,7 @@ describe('Phrase.Service (postgres)', () => {
             it('seeds row, gets installed default', async () => {
                 // Arrange - beforeEach()
                 // Act
-                const result = subject.getCommandTemplate('about');
+                const result = subject.getCommandText('about');
 
                 // Assert
                 expect(result).toBe(defaultPhrases.about);
@@ -103,36 +107,36 @@ describe('Phrase.Service (postgres)', () => {
                 // Arrange - beforeEach()
                 // Act
                 await subject.initialize();
-                await subject.setCommandTemplate('about', validTemplate);
+                await subject.setCommandText('about', validText);
                 await subject.initialize();
-                const result = subject.getCommandTemplate('about');
-                const rowCount = await CommandPhrase.count({ where: { commandName: 'about' } });
+                const result = subject.getCommandText('about');
+                const rowCount = await CommandResponse.count({ where: { commandName: 'about' } });
 
                 // Assert
-                expect(result).toBe(validTemplate);
+                expect(result).toBe(validText);
                 expect(rowCount).toBe(1);
             });
         });
-        describe('getCommandTemplate()', () => {
+        describe('getCommandText()', () => {
             it('should return the command (cache, variant)', async () => {
                 // Arrange
                 await seedVariants(testCommand, testVariants);
 
                 // Act
-                const result = subject.getCommandTemplate(testCommand, testVariants[1]);
+                const result = subject.getCommandText(testCommand, testVariants[1]);
 
                 // Assert
-                expect(result).toBe(templateFn(testCommand, testVariants[1]));
+                expect(result).toBe(textFn(testCommand, testVariants[1]));
             });
             it('should return the command (cache, no-variant)', async () => {
                 // Arrange - beforeEach()
                 await seedVariants(testCommand);
 
                 // Act
-                const result = subject.getCommandTemplate(testCommand);
+                const result = subject.getCommandText(testCommand);
 
                 // Assert
-                expect(result).toBe(templateFn(testCommand));
+                expect(result).toBe(textFn(testCommand));
             });
 
             it('should return undefined for no default variant name (variant)', async () => {
@@ -140,7 +144,7 @@ describe('Phrase.Service (postgres)', () => {
                 await seedVariants(testCommand, testVariants);
 
                 // Act
-                const result = subject.getCommandTemplate(testCommand, '');
+                const result = subject.getCommandText(testCommand, '');
 
                 // Assert
                 expect(result).toBe(undefined);
@@ -150,7 +154,7 @@ describe('Phrase.Service (postgres)', () => {
                 await seedVariants(testCommand, testVariants);
 
                 // Act
-                const result = subject.getCommandTemplate(testCommand, 'unknown');
+                const result = subject.getCommandText(testCommand, 'unknown');
 
                 // Assert
                 expect(result).toBe(undefined);
@@ -159,7 +163,7 @@ describe('Phrase.Service (postgres)', () => {
             it('should return undefined for invalid commandName (no-variant)', () => {
                 // Arrange - beforeEach()
                 // Act
-                const result = subject.getCommandTemplate('');
+                const result = subject.getCommandText('');
 
                 // Assert
                 expect(result).toBe(undefined);
@@ -167,7 +171,7 @@ describe('Phrase.Service (postgres)', () => {
             it('should return undefined for unknown command (no-variant)', () => {
                 // Arrange - beforeEach()
                 // Act
-                const result = subject.getCommandTemplate('unknown');
+                const result = subject.getCommandText('unknown');
 
                 // Assert
                 expect(result).toBe(undefined);
@@ -226,110 +230,110 @@ describe('Phrase.Service (postgres)', () => {
                 expect(result).toEqual(expect.arrayContaining(testVariants));
             });
         });
-        describe('setCommandTemplate()', () => {
+        describe('setCommandText()', () => {
             it('should return false with empty commandName', async () => {
                 // Arrange - beforeEach()
                 // Act
-                const result = await subject.setCommandTemplate('', 'Valid template...');
+                const result = await subject.setCommandText('', 'Valid text...');
 
                 // Assert
-                expect(result).toBe<PhraseGenericResult>('invalidInput');
+                expect(result).toBe<CommandTextValidationResult>('invalidInput');
             });
-            it('should return false with empty template', async () => {
+            it('should return false with empty text', async () => {
                 // Arrange - beforeEach()
                 // Act
-                const result = await subject.setCommandTemplate(validName, '');
+                const result = await subject.setCommandText(validName, '');
 
                 // Assert
-                expect(result).toBe<PhraseGenericResult>('invalidInput');
+                expect(result).toBe<CommandTextValidationResult>('invalidInput');
             });
-            it('row updated and gets new template (variant)', async () => {
+            it('row updated and gets new text (variant)', async () => {
                 // Arrange
                 await seedVariants(testCommand, testVariants);
 
                 // Act
-                const result = await subject.setCommandTemplate(testCommand, validTemplate, testVariants[0]);
-                const cached = subject.getCommandTemplate(testCommand, testVariants[0]);
-                const rows = await CommandPhrase.findAll({ where: { commandName: testCommand } });
+                const result = await subject.setCommandText(testCommand, validText, testVariants[0]);
+                const cached = subject.getCommandText(testCommand, testVariants[0]);
+                const rows = await CommandResponse.findAll({ where: { commandName: testCommand } });
 
                 const updated = rows.find(r => r.variant === testVariants[0]);
                 const untouched = rows.find(r => r.variant === testVariants[1]);
 
                 // Assert
-                expect(result).toBe<PhraseUpdateResult>('updated');
-                expect(cached).toBe(validTemplate);
+                expect(result).toBe<CommandTextUpdateResult>('updated');
+                expect(cached).toBe(validText);
                 expect(rows.length).toBe(2);
-                expect(updated?.template).toBe(validTemplate);
-                expect(untouched?.template).toBe(templateFn(testCommand, testVariants[1]));
+                expect(updated?.text).toBe(validText);
+                expect(untouched?.text).toBe(textFn(testCommand, testVariants[1]));
             });
-            it('row updated and gets new template (no-variant)', async () => {
+            it('row updated and gets new text (no-variant)', async () => {
                 // Arrange
                 await seedVariants(testCommand);
 
                 // Act
-                const result = await subject.setCommandTemplate(testCommand, validTemplate);
-                const cached = subject.getCommandTemplate(testCommand);
-                const rows = await CommandPhrase.findAll({ where: { commandName: testCommand } });
+                const result = await subject.setCommandText(testCommand, validText);
+                const cached = subject.getCommandText(testCommand);
+                const rows = await CommandResponse.findAll({ where: { commandName: testCommand } });
 
                 // Assert
-                expect(result).toBe<PhraseUpdateResult>('updated');
-                expect(cached).toBe(validTemplate);
+                expect(result).toBe<CommandTextUpdateResult>('updated');
+                expect(cached).toBe(validText);
                 expect(rows.length).toBe(1);
-                expect(rows[0].template).toBe(validTemplate);
+                expect(rows[0].text).toBe(validText);
             });
             it(`row update fails returning 'updateFailed'`, async () => {
                 // Arrange
                 await seedVariants(testCommand, testVariants);
-                const spy = jest.spyOn(CommandPhrase, 'updateCommandTemplate')
+                const spy = jest.spyOn(CommandResponse, 'updateCommandText')
                     .mockResolvedValueOnce(false);
 
                 // Act
-                const result = await subject.setCommandTemplate(testCommand, validTemplate, testVariants[0]);
+                const result = await subject.setCommandText(testCommand, validText, testVariants[0]);
 
                 // Assert
-                expect(result).toBe<PhraseUpdateResult>('updateFailed');
+                expect(result).toBe<CommandTextUpdateResult>('updateFailed');
 
                 spy.mockRestore();
             });
             it('unknown key returns false, cache preserved', async () => {
                 // Arrange
                 const key = 'Unknown';
-                const template = 'edited template...';
+                const text = 'edited text...';
 
                 // Act & Assert
-                expect(await subject.setCommandTemplate(key, template)).toBe<PhraseUpdateResult>('notEditable');
-                expect(subject.getCommandTemplate(key)).toBe(undefined);
+                expect(await subject.setCommandText(key, text)).toBe<CommandTextUpdateResult>('notEditable');
+                expect(subject.getCommandText(key)).toBe(undefined);
             });
             it('known family with unrecognized variant returns notEditable', async () => {
                 // Arrange
                 await seedVariants(testCommand, testVariants);
 
                 // Act
-                const result = await subject.setCommandTemplate(testCommand, validTemplate, 'unknown');
+                const result = await subject.setCommandText(testCommand, validText, 'unknown');
 
                 // Assert
-                expect(result).toBe<PhraseUpdateResult>('notEditable');
+                expect(result).toBe<CommandTextUpdateResult>('notEditable');
             });
-            it('invalid template (too short) rejected', async () => {
+            it('invalid text (too short) rejected', async () => {
                 // Arrange
-                const badtemplate = 'BAD!';
+                const badtext = 'BAD!';
                 await seedVariants(testCommand);
 
                 // Act
-                const result = await subject.setCommandTemplate(testCommand, badtemplate);
+                const result = await subject.setCommandText(testCommand, badtext);
 
                 // Assert
-                expect(result).toBe<PhraseUpdateResult>('invalidTemplate');
-                expect(subject.getCommandTemplate(testCommand)).toBe(templateFn(testCommand));
+                expect(result).toBe<CommandTextUpdateResult>('invalidText');
+                expect(subject.getCommandText(testCommand)).toBe(textFn(testCommand));
             });
             it('non-validation error propagates', async () => {
                 // Arrange
                 await seedVariants(testCommand);
-                const spy = jest.spyOn(CommandPhrase, 'updateCommandTemplate')
+                const spy = jest.spyOn(CommandResponse, 'updateCommandText')
                     .mockRejectedValueOnce(new Error('connection lost'));
 
                 // Act & Assert
-                await expect(subject.setCommandTemplate(testCommand, 'valid template text'))
+                await expect(subject.setCommandText(testCommand, 'valid text...'))
                     .rejects.toThrow('connection lost');
 
                 spy.mockRestore();
@@ -351,103 +355,103 @@ describe('Phrase.Service (postgres)', () => {
                 expect(result).toBe(false);
             });
         });
-        describe('addCommandTemplate()', () => {
+        describe('addCommandText()', () => {
             it(`should return 'invalidInput' with empty commandName`, async () => {
                 // Arrange - beforeEach()
                 // Act
-                const result = await subject.addCommandTemplate('', validTemplate);
+                const result = await subject.addCommandText('', validText);
 
                 // Assert
-                expect(result).toBe<PhraseGenericResult>('invalidInput');
+                expect(result).toBe<CommandTextValidationResult>('invalidInput');
             });
-            it(`should return 'invalidInput' with empty template`, async () => {
+            it(`should return 'invalidInput' with empty text`, async () => {
                 // Arrange - beforeEach()
                 // Act
-                const result = await subject.addCommandTemplate(validName, '');
+                const result = await subject.addCommandText(validName, '');
 
                 // Assert
-                expect(result).toBe<PhraseGenericResult>('invalidInput');
+                expect(result).toBe<CommandTextValidationResult>('invalidInput');
             });
             it(`should return 'invalidInput' with empty variant`, async () => {
                 // Arrange - beforeEach()
                 // Act
-                const result = await subject.addCommandTemplate(validName, validTemplate, '');
+                const result = await subject.addCommandText(validName, validText, '');
 
                 // Assert
-                expect(result).toBe<PhraseGenericResult>('invalidInput');
+                expect(result).toBe<CommandTextValidationResult>('invalidInput');
             });
             it(`should return 'invalidCommandName' with an invalid command name`, async () => {
                 // Arrange - beforeEach()
                 // Act
                 const unknownCommandName = 'UnknownCommandName';
-                const result = await subject.addCommandTemplate(unknownCommandName, validTemplate, testVariants[0]);
+                const result = await subject.addCommandText(unknownCommandName, validText, testVariants[0]);
 
                 // Assert
-                expect(result).toBe<PhraseInsertResult>('invalidCommandName');
+                expect(result).toBe<CommandTextInsertResult>('invalidCommandName');
             });
             it(`should return 'alreadyExists' for an existing command name`, async () => {
                 // Arrange - beforeEach()
                 await seedVariants(testCommand, testVariants);
 
                 // Act
-                const result = await subject.addCommandTemplate(testCommand, validTemplate, testVariants[0]);
+                const result = await subject.addCommandText(testCommand, validText, testVariants[0]);
 
                 // Assert
-                expect(result).toBe<PhraseInsertResult>('alreadyExists');
+                expect(result).toBe<CommandTextInsertResult>('alreadyExists');
             });
-            it(`row 'inserted' and gets new template`, async () => {
+            it(`row 'inserted' and gets new text`, async () => {
                 // Arrange - beforeEach()
                 await seedVariants(testCommand, [testVariants[0]]);
 
                 // Act
-                const initial = subject.getCommandTemplate(testCommand, testVariants[1]);
-                const result = await subject.addCommandTemplate(testCommand, validTemplate, testVariants[1]);
-                const cached = subject.getCommandTemplate(testCommand, testVariants[1]);
-                const rows = await CommandPhrase.findAll({ where: { commandName: testCommand } });
+                const initial = subject.getCommandText(testCommand, testVariants[1]);
+                const result = await subject.addCommandText(testCommand, validText, testVariants[1]);
+                const cached = subject.getCommandText(testCommand, testVariants[1]);
+                const rows = await CommandResponse.findAll({ where: { commandName: testCommand } });
 
                 const inserted = rows.find(r => r.variant === testVariants[1]);
                 const untouched = rows.filter(r => r.variant !== testVariants[1]);
 
                 // Assert
-                expect(result).toBe<PhraseInsertResult>('inserted');
+                expect(result).toBe<CommandTextInsertResult>('inserted');
                 expect(initial).toBe(undefined);
-                expect(cached).toBe(validTemplate);
+                expect(cached).toBe(validText);
                 expect(rows.length).toBe(2);
-                expect(inserted?.template).toBe(validTemplate);
+                expect(inserted?.text).toBe(validText);
                 expect(untouched.length).toBe(1);
                 expect(untouched.map(x => x.variant)).not.toContain(testVariants[1]);
             });
-            it('invalid template (already exists) rejected', async () => {
+            it('invalid text (already exists) rejected', async () => {
                 // Arrange
-                const spy = jest.spyOn(CommandPhrase, 'addCommandTemplate')
+                const spy = jest.spyOn(CommandResponse, 'addCommandText')
                     .mockRejectedValueOnce(new UniqueConstraintError({} as any));
 
                 // Act
-                const result = await subject.addCommandTemplate(testCommand, templateFn(testCommand, testVariants[0]), testVariants[0]);
+                const result = await subject.addCommandText(testCommand, textFn(testCommand, testVariants[0]), testVariants[0]);
 
                 // Assert
-                expect(result).toBe<PhraseInsertResult>('alreadyExists');
+                expect(result).toBe<CommandTextInsertResult>('alreadyExists');
 
                 spy.mockRestore();
             });
-            it('invalid template (dbo validation failed) rejected', async () => {
+            it('invalid text (dbo validation failed) rejected', async () => {
                 // Arrange
-                const badtemplate = 'BAD!';
+                const badtext = 'BAD!';
 
                 // Act
-                const result = await subject.addCommandTemplate(testCommand, badtemplate, testVariants[0]);
+                const result = await subject.addCommandText(testCommand, badtext, testVariants[0]);
 
                 // Assert
-                expect(result).toBe<PhraseInsertResult>('invalidTemplate');
+                expect(result).toBe<CommandTextInsertResult>('invalidText');
             });
             it('non-validation error propagates', async () => {
                 // Arrange
                 await seedVariants(testCommand);
-                const spy = jest.spyOn(CommandPhrase, 'addCommandTemplate')
+                const spy = jest.spyOn(CommandResponse, 'addCommandText')
                     .mockRejectedValueOnce(new Error('connection lost'));
 
                 // Act & Assert
-                await expect(subject.addCommandTemplate(testCommand, validTemplate, testVariants[0]))
+                await expect(subject.addCommandText(testCommand, validText, testVariants[0]))
                     .rejects.toThrow('connection lost');
 
                 spy.mockRestore();

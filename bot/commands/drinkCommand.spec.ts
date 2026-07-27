@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { ChatUser } from '@twurple/chat';
-import { mockChatClient, mockLogger, mockPhraseService } from '../../tests/common.mocks';
+import { mockChatClient, mockLogger, mockCommandResponseService } from '../../tests/common.mocks';
 import { DrinkCommand } from './drinkCommand';
 import { defaultPhrases } from '../utilities/default-phrases';
 
@@ -10,7 +10,7 @@ describe('Drink Command Tests', () => {
     const user = <ChatUser>{ displayName: 'TestUser' };
     const message = 'TestMessage';
 
-    const configuredPhrase = 'Drink me!';
+    const configuredText = 'Drink me!';
 
     let subject: DrinkCommand;
 
@@ -19,16 +19,16 @@ describe('Drink Command Tests', () => {
 
         subject = new DrinkCommand(
             mockChatClient,
-            mockPhraseService,
+            mockCommandResponseService,
             mockLogger,
         );
     });
 
-    it('says the configured phrase in chat', async () => {
+    it('says the configured text in chat', async () => {
         // Arrange
-        mockPhraseService
-            .getCommandTemplate
-            .mockReturnValue(configuredPhrase);
+        mockCommandResponseService
+            .getCommandText
+            .mockReturnValue(configuredText);
 
         // Act
         await subject.handle(channel, command, user, message, []);
@@ -38,10 +38,10 @@ describe('Drink Command Tests', () => {
         expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
     });
 
-    it('says the default phrase and logs a warning when no phrase is configured', async () => {
+    it('says the default text and logs a warning when no text is configured', async () => {
         // Arrange
-        mockPhraseService
-            .getCommandTemplate
+        mockCommandResponseService
+            .getCommandText
             .mockReturnValue(undefined);
 
         // Act

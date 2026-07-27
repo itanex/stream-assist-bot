@@ -1,44 +1,44 @@
 import { inject, injectable } from 'inversify';
 import { UniqueConstraintError, ValidationError } from 'sequelize';
 import winston from 'winston';
-import { CommandPhrase } from '../../database';
+import { CommandResponse } from '../../database';
 import { defaultPhrases, phraseFamilies } from './default-phrases';
 import InjectionTypes from '../../dependency-management/types';
 
-export type PhraseGenericResult =
+export type CommandTextValidationResult =
     'invalidInput' |
-    'invalidTemplate';
+    'invalidText';
 
-export type PhraseUpdateResult = PhraseGenericResult |
+export type CommandTextUpdateResult = CommandTextValidationResult |
     'notEditable' |
     'updated' |
     'updateFailed';
 
-export type PhraseInsertResult = PhraseGenericResult |
+export type CommandTextInsertResult = CommandTextValidationResult |
     'alreadyExists' |
     'invalidCommandName' |
     'inserted';
 
-type PhraseEntry = { variant: string; template: string };
+type ResponseEntry = { variant: string; text: string };
 
 const cacheKey = (name: string, variant: string = ''): string => (variant ? `${name}.${variant}` : name);
 
 @injectable()
-export default class PhraseService {
-    private phraseCache = new Map<string, PhraseEntry>();
+export default class CommandResponseService {
+    private responseCache = new Map<string, ResponseEntry>();
 
     constructor(
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) { }
 
     async initialize(): Promise<void> {
-        await CommandPhrase.seed(defaultPhrases);
+        await CommandResponse.seed(defaultPhrases);
 
-        const rows = await CommandPhrase.findAll();
-        this.phraseCache = new Map(rows
-            .map((row): [string, PhraseEntry] => [
+        const rows = await CommandResponse.findAll();
+        this.responseCache = new Map(rows
+            .map((row): [string, ResponseEntry] => [
                 cacheKey(row.commandName, row.variant),
-                { variant: row.variant, template: row.template },
+                { variant: row.variant, text: row.text },
             ]));
     }
 
@@ -51,21 +51,21 @@ export default class PhraseService {
             return [];
         }
 
-        return [...this.phraseCache.entries()]
+        return [...this.responseCache.entries()]
             .filter(([key]) => key === commandName || key.startsWith(`${commandName}.`))
             .map(([, entry]) => entry.variant);
     }
 
-    getCommandTemplate(commandName: string, variant: string = ''): string | undefined {
+    getCommandText(commandName: string, variant: string = ''): string | undefined {
         if (!commandName) {
             return undefined;
         }
 
-        return this.phraseCache.get(cacheKey(commandName, variant))?.template;
+        return this.responseCache.get(cacheKey(commandName, variant))?.text;
     }
 
-    async addCommandTemplate(commandName: string, template: string, variant: string = ''): Promise<PhraseInsertResult> {
-        if (!commandName || !template || !variant) {
+    async addCommandText(commandName: string, text: string, variant: string = ''): Promise<CommandTextInsertResult> {
+        if (!commandName || !text || !variant) {
             return 'invalidInput';
         }
 
@@ -73,14 +73,14 @@ export default class PhraseService {
             return 'invalidCommandName';
         }
 
-        if (this.phraseCache.has(cacheKey(commandName, variant))) {
+        if (this.responseCache.has(cacheKey(commandName, variant))) {
             return 'alreadyExists';
         }
 
         try {
-            await CommandPhrase.addCommandTemplate(commandName, template, variant);
+            await CommandResponse.addCommandText(commandName, text, variant);
 
-            this.phraseCache.set(cacheKey(commandName, variant), { variant, template });
+            this.responseCache.set(cacheKey(commandName, variant), { variant, text });
 
             return 'inserted';
         } catch (error) {
@@ -88,33 +88,33 @@ export default class PhraseService {
                 return 'alreadyExists';
             }
             if (error instanceof ValidationError) {
-                return 'invalidTemplate';
+                return 'invalidText';
             }
             throw error;
         }
     }
 
     /**
-     * Update the command with the provided template
+     * Update the command with the provided text
      * @param commandName Command to update
-     * @param template new template value for the Command
+     * @param text new text value for the Command
      * @param variant The command name variant to update
      * @returns boolean flag denoting if the provided command was updated
      */
-    async setCommandTemplate(commandName: string, template: string, variant: string = ''): Promise<PhraseUpdateResult> {
-        if (!commandName || !template) {
+    async setCommandText(commandName: string, text: string, variant: string = ''): Promise<CommandTextUpdateResult> {
+        if (!commandName || !text) {
             return 'invalidInput';
         }
 
-        if (!this.phraseCache.has(cacheKey(commandName, variant))) {
+        if (!this.responseCache.has(cacheKey(commandName, variant))) {
             return 'notEditable';
         }
 
         try {
-            const command = await CommandPhrase.updateCommandTemplate(commandName, template, variant);
+            const command = await CommandResponse.updateCommandText(commandName, text, variant);
 
             if (command) {
-                this.phraseCache.set(cacheKey(commandName, variant), { variant, template });
+                this.responseCache.set(cacheKey(commandName, variant), { variant, text });
 
                 return 'updated';
             }
@@ -122,7 +122,7 @@ export default class PhraseService {
             this.logger.warn(` Valid command (${cacheKey(commandName, variant)}) database update attempt failed.`);
         } catch (error) {
             if (error instanceof ValidationError) {
-                return 'invalidTemplate';
+                return 'invalidText';
             }
             throw error;
         }

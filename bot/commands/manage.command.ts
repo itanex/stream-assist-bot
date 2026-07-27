@@ -3,25 +3,29 @@ import { ChatClient, ChatUser } from '@twurple/chat';
 import winston from 'winston';
 import { ICommandHandler, OnlineState } from './iCommandHandler';
 import InjectionTypes from '../../dependency-management/types';
-import PhraseService, { PhraseGenericResult, PhraseInsertResult, PhraseUpdateResult } from '../utilities/phrase.service';
+import CommandResponseService, {
+    CommandTextValidationResult,
+    CommandTextInsertResult,
+    CommandTextUpdateResult,
+} from '../utilities/command-response.service';
 
-export const GenericReplies: Record<PhraseGenericResult, (name: string) => string> = {
-    invalidInput: () => 'Invalid input: both [name] and [template] are required',
-    invalidTemplate: name => `Invalid template for command '${name}'`,
+export const GenericReplies: Record<CommandTextValidationResult, (name: string) => string> = {
+    invalidInput: () => 'Invalid input: both [name] and [text] are required',
+    invalidText: name => `Invalid text for command '${name}'`,
 };
 
-export const InsertReplies: Record<PhraseInsertResult, (name: string) => string> = {
+export const InsertReplies: Record<CommandTextInsertResult, (name: string) => string> = {
     ...GenericReplies,
-    alreadyExists: name => `Command ${name} phrase already exists`,
-    invalidCommandName: name => `Command ${name} phrase family is not recognized`,
-    inserted: name => `Command ${name} phrase was inserted`,
+    alreadyExists: name => `Command ${name} text already exists`,
+    invalidCommandName: name => `Command ${name} text family is not recognized`,
+    inserted: name => `Command ${name} text was inserted`,
 };
 
-export const UpdateReplies: Record<PhraseUpdateResult, (name: string) => string> = {
+export const UpdateReplies: Record<CommandTextUpdateResult, (name: string) => string> = {
     ...GenericReplies,
-    notEditable: name => `Command ${name} does not have an editable phrase`,
-    updated: name => `Command ${name} phrase was updated`,
-    updateFailed: name => `Command ${name} phrase failed to update`,
+    notEditable: name => `Command ${name} does not have an editable text`,
+    updated: name => `Command ${name} text was updated`,
+    updateFailed: name => `Command ${name} text failed to update`,
 };
 
 export const UnsupportedMessage = (name: string) => `${name} is not a valid command`;
@@ -45,12 +49,12 @@ export default class ManageCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(PhraseService) private phraseService: PhraseService,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) { }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        const [subCommand, compoundName, template] = args as string[];
+        const [subCommand, compoundName, text] = args as string[];
         const [name, variant, ...rest] = compoundName.split('.');
 
         if (rest.length > 0) {
@@ -60,12 +64,12 @@ export default class ManageCommand implements ICommandHandler {
             // eslint-disable-next-line default-case
             switch (subCommand.toLowerCase()) {
                 case 'add': {
-                    const result = await this.phraseService.addCommandTemplate(name, template, variant);
+                    const result = await this.commandResponseService.addCommandText(name, text, variant);
                     this.chatClient.say(channel, InsertReplies[result](compoundName));
                     break;
                 }
                 case 'edit': {
-                    const result = await this.phraseService.setCommandTemplate(name, template, variant);
+                    const result = await this.commandResponseService.setCommandText(name, text, variant);
                     this.chatClient.say(channel, UpdateReplies[result](compoundName));
                     break;
                 }

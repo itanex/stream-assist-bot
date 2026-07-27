@@ -4,7 +4,7 @@ import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types';
 import { ICommandHandler, OnlineState } from './iCommandHandler';
 import { defaultPhrases, PhraseKey } from '../utilities/default-phrases';
-import PhraseService from '../utilities/phrase.service';
+import CommandResponseService from '../utilities/command-response.service';
 
 @injectable()
 export class DivideByZeroCommand implements ICommandHandler {
@@ -23,19 +23,19 @@ export class DivideByZeroCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(PhraseService) private phraseService: PhraseService,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        const commandTemplate = this.phraseService.getCommandTemplate(this.phraseKey);
+        const commandText = this.commandResponseService.getCommandText(this.phraseKey);
 
-        if (!commandTemplate) {
-            this.logger.warn(`* Command Phrase not found for ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
+        if (!commandText) {
+            this.logger.warn(`* Command Text not found for ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
         }
 
-        this.chatClient.say(channel, commandTemplate ?? defaultPhrases.dividebyzero);
+        this.chatClient.say(channel, commandText ?? defaultPhrases.dividebyzero);
         this.logger.info(`* Executed ${commandName} in ${channel} :: ${userstate.displayName} > ${message}`);
     }
 }

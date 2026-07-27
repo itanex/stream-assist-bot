@@ -110,18 +110,18 @@ The cooldown chat message always names the command (its class name), regardless 
 
 ## Database-Backed Phrases
 
-Command response text can live in the database (`CommandPhrase` table) instead of the class, making it editable at runtime without a redeploy.
+Command response text can live in the database (`CommandResponse` table) instead of the class, making it editable at runtime without a redeploy.
 
 * Default text is declared in `bot/utilities/default-phrases.ts`. The `PhraseKey` type is derived from its keys, so a command's `phraseKey` must have a matching entry or the build fails.
-* On startup, `PhraseService.initialize()` seeds any missing rows from the defaults. Existing rows are never overwritten - edits survive restarts.
+* On startup, `CommandResponseService.initialize()` seeds any missing rows from the defaults. Existing rows are never overwritten - edits survive restarts.
 * Phrases are cached in memory at startup and kept in sync on writes. Reads never hit the database per-message. Rows edited directly in the database are not visible until restart.
-* A command reads its phrase via `PhraseService.getCommandTemplate(this.phraseKey)`, falling back to its `defaultPhrases` entry if the lookup misses.
+* A command reads its phrase via `CommandResponseService.getCommandText(this.phraseKey)`, falling back to its `defaultPhrases` entry if the lookup misses.
 
 ### Making a command's phrase editable
 
 1. Add an entry to `defaultPhrases` with the command's trigger word as the key
 2. Declare `phraseKey` on the command class referencing that key
-3. Inject `PhraseService` and read the template in `handle`
+3. Inject `CommandResponseService` and read the text in `handle`
 
 ### Phrase Families and Variants
 
@@ -129,8 +129,8 @@ Some commands respond with one of several named variants rather than a single te
 
 * Families are declared in the `phraseFamilies` registry (`bot/utilities/default-phrases.ts`) and typed as `PhraseFamily`. A command sets `phraseFamily` to one of these registered names.
 * Unlike single-phrase commands, family variants are never seeded from `defaultPhrases` - that seed path only populates single-phrase (`phraseKey`) commands. Family variant rows exist only once created via the `add` verb (see [Editing Phrases from Chat](#editing-phrases-from-chat)).
-* `PhraseService.getCommandTemplate(commandName, variant?)` takes an optional `variant`. Omitting it looks up the base/empty-variant entry for that name.
-* A command reads its variant template via `PhraseService.getCommandTemplate(this.phraseFamily, variant)`, where `variant` comes from its own capture group in `exp`.
+* `CommandResponseService.getCommandText(commandName, variant?)` takes an optional `variant`. Omitting it looks up the base/empty-variant entry for that name.
+* A command reads its variant text via `CommandResponseService.getCommandText(this.phraseFamily, variant)`, where `variant` comes from its own capture group in `exp`.
 
 `phraseKey` and `phraseFamily` are mutually exclusive - a command is either a single fixed-key phrase or a family of variants, not both.
 
@@ -140,31 +140,31 @@ Some commands respond with one of several named variants rather than a single te
 
 `ManageCommand` (`bot/commands/manage.command.ts`) provides runtime phrase editing. Moderator or broadcaster only.
 
-    !command add <name>[.<variant>] <template>
-    !command edit <name>[.<variant>] <template>
-    !cmd add <name>[.<variant>] <template>
-    !cmd edit <name>[.<variant>] <template>
+    !command add <name>[.<variant>] <text>
+    !command edit <name>[.<variant>] <text>
+    !cmd add <name>[.<variant>] <text>
+    !cmd edit <name>[.<variant>] <text>
 
-* `<name>` is a phrase key or a phrase family name; `<name>.<variant>` targets a specific family variant (e.g. `socials.discord`). The dot-compound form is chat-input only - `name` and `variant` are split apart before reaching `PhraseService`, storage never holds dotted keys.
+* `<name>` is a phrase key or a phrase family name; `<name>.<variant>` targets a specific family variant (e.g. `socials.discord`). The dot-compound form is chat-input only - `name` and `variant` are split apart before reaching `CommandResponseService`, storage never holds dotted keys.
 * `add` creates a new phrase row. `<name>` must be a registered phrase family, and `<variant>` is required and cannot be empty - `add` cannot create a base/single-phrase entry.
-* `edit` updates an existing row - a family variant or a single-phrase command. Only commands with an existing phrase row are editable - anything else replies "does not have an editable phrase"
-* Templates are trimmed and validated (length bounds); invalid templates are rejected with a chat reply and the stored phrase is unchanged
+* `edit` updates an existing row - a family variant or a single-phrase command. Only commands with an existing phrase row are editable - anything else replies "does not have an editable text"
+* Text is trimmed and validated (length bounds); invalid text is rejected with a chat reply and the stored text is unchanged
 * A compound name with more than one dot (e.g. `a.b.c`) is rejected as an invalid command
-* Known behavior: a message missing the template entirely (`!command edit about`) does not match the pattern and is silently ignored
+* Known behavior: a message missing the text entirely (`!command edit about`) does not match the pattern and is silently ignored
 * `remove` is not yet implemented - phrases can be added and edited, not deleted, from chat
 
 ### Reply Messages
 
 | Result | Verb | Reply |
 |---|---|---|
-| `invalidInput` | add, edit | Invalid input: both [name] and [template] are required |
-| `invalidTemplate` | add, edit | Invalid template for command '\<name\>' |
-| `invalidCommandName` | add | Command \<name\> phrase family is not recognized |
-| `alreadyExists` | add | Command \<name\> phrase already exists |
-| `inserted` | add | Command \<name\> phrase was inserted |
-| `notEditable` | edit | Command \<name\> does not have an editable phrase |
-| `updated` | edit | Command \<name\> phrase was updated |
-| `updateFailed` | edit | Command \<name\> phrase failed to update |
+| `invalidInput` | add, edit | Invalid input: both [name] and [text] are required |
+| `invalidText` | add, edit | Invalid text for command '\<name\>' |
+| `invalidCommandName` | add | Command \<name\> text family is not recognized |
+| `alreadyExists` | add | Command \<name\> text already exists |
+| `inserted` | add | Command \<name\> text was inserted |
+| `notEditable` | edit | Command \<name\> does not have an editable text |
+| `updated` | edit | Command \<name\> text was updated |
+| `updateFailed` | edit | Command \<name\> text failed to update |
 
 ---
 

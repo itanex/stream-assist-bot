@@ -6,7 +6,7 @@ const COMMAND_VARIANT_UNIQUE_INDEX = 'commandName-variant';
     tableName: 'CommandPhrase',
     paranoid: true,
 })
-export default class CommandPhrase extends Model {
+export default class CommandResponse extends Model {
     @Column({
         allowNull: false,
         type: DataType.STRING(32),
@@ -29,21 +29,21 @@ export default class CommandPhrase extends Model {
             notEmpty: true,
             len: {
                 args: [10, 400],
-                msg: 'template must be 10-400 characters',
+                msg: 'command text must be 10-400 characters',
             },
         },
         set(value: string) {
-            this.setDataValue('template', value?.trim());
+            this.setDataValue('text', value?.trim());
         },
     })
-    template!: string;
+    text!: string;
 
     static async seed(entries: Record<string, string>): Promise<void> {
         const records = Object
             .entries(entries)
-            .map(([commandName, template]) => ({ commandName, template }));
+            .map(([commandName, text]) => ({ commandName, text }));
 
-        await CommandPhrase.bulkCreate(
+        await CommandResponse.bulkCreate(
             records,
             {
                 ignoreDuplicates: true,
@@ -53,13 +53,13 @@ export default class CommandPhrase extends Model {
     }
 
     /**
-     * Get the command template based on the provided commandName
+     * Get the command text based on the provided commandName
      * @param commandName The command name to fetch
      * @param variant The command name variant to fetch
      * @returns The Command based on the provided commandName or null
      */
-    static async getCommandTemplate(commandName: string, variant?: string): Promise<CommandPhrase | null> {
-        return CommandPhrase
+    static async getCommandText(commandName: string, variant?: string): Promise<CommandResponse | null> {
+        return CommandResponse
             .findOne({
                 where: {
                     commandName,
@@ -74,8 +74,8 @@ export default class CommandPhrase extends Model {
      * @param variant The command name variant to fetch
      * @returns The Command based on the provided commandName or null
      */
-    static async getCommandVariants(commandName: string): Promise<CommandPhrase[]> {
-        return CommandPhrase
+    static async getCommandVariants(commandName: string): Promise<CommandResponse[]> {
+        return CommandResponse
             .findAll({
                 where: {
                     commandName,
@@ -84,17 +84,17 @@ export default class CommandPhrase extends Model {
     }
 
     /**
-     * Inserts the provided command with variant and template
+     * Inserts the provided command with variant and text
      * @param commandName The command name to fetch
-     * @param template new template value for the Command
+     * @param text new text value for the Command
      * @param variant The command name variant to fetch
      * @returns The created command if successful, rejected error otherwise
      */
-    static async addCommandTemplate(commandName: string, template: string, variant: string = ''): Promise<CommandPhrase> {
-        return CommandPhrase.create({
+    static async addCommandText(commandName: string, text: string, variant: string = ''): Promise<CommandResponse> {
+        return CommandResponse.create({
             commandName,
             variant,
-            template,
+            text,
         }, {
             isNewRecord: true,
             validate: true,
@@ -102,15 +102,15 @@ export default class CommandPhrase extends Model {
     }
 
     /**
-     * Update existing command based on the provided template
+     * Update existing command based on the provided text
      * @param commandName The command name to update
-     * @param template new template value for the Command
+     * @param text new text value for the Command
      * @param variant The command name variant to update
      * @returns boolean flag denoting if the provided command was updated
      */
-    static async updateCommandTemplate(commandName: string, template: string, variant: string = ''): Promise<boolean> {
-        const [count] = await CommandPhrase.update(
-            { template },
+    static async updateCommandText(commandName: string, text: string, variant: string = ''): Promise<boolean> {
+        const [count] = await CommandResponse.update(
+            { text },
             {
                 where: {
                     commandName,
