@@ -4,11 +4,12 @@ import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types';
 import { ICommandHandler, OnlineState } from './iCommandHandler';
 import CommandResponseService from '../utilities/command-response.service';
-import { PhraseFamily } from '../utilities/default-phrases';
+import { CommandName } from '../utilities/default-responses';
 
 @injectable()
 export class SocialsCommand implements ICommandHandler {
     exp: RegExp = /^!(socials)(?: (\w+))?(?: .+)?$/i;
+    commandName: CommandName = 'socials';
     timeout: number = 30;
     mod: boolean = true;
     vip: boolean = true;
@@ -19,7 +20,6 @@ export class SocialsCommand implements ICommandHandler {
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'always';
-    phraseFamily: PhraseFamily = 'socials';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
@@ -30,15 +30,15 @@ export class SocialsCommand implements ICommandHandler {
 
     cooldownKey(args: string[]): string {
         const [variant] = args as string[];
-        const isKnown = !!this.commandResponseService.getCommandText(this.phraseFamily, variant);
+        const isKnown = !!this.commandResponseService.getCommandText(this.commandName, variant);
 
         return !!variant && isKnown ? `${SocialsCommand.name}:${variant}` : SocialsCommand.name;
     }
 
-    async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
+    async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         const [variant] = args as string[];
 
-        const response = this.commandResponseService.getCommandText(this.phraseFamily, variant);
+        const response = this.commandResponseService.getCommandText(this.commandName, variant);
 
         if (response) {
             this.chatClient.say(channel, response);
@@ -46,6 +46,6 @@ export class SocialsCommand implements ICommandHandler {
             this.logger.warn(`Unknown Variant`, { variant, args, message });
         }
 
-        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
+        this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }

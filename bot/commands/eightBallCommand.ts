@@ -91,7 +91,7 @@ export class EightBallCommand implements ICommandHandler {
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) { }
 
-    async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
+    async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         if (this.responses.length) {
             const answer = this.responses[Math.floor(Math.random() * this.responses.length)];
             const rootPath = `local-cache/audio/8ball`;
@@ -113,11 +113,11 @@ export class EightBallCommand implements ICommandHandler {
                 return;
             }
 
-            this.broadcastAudio(commandName, fileHash, langCode);
+            this.broadcastAudio(command, fileHash, langCode);
 
             this.chatClient.say(channel, answer);
 
-            this.logger.info(`* Executed ${commandName} in ${channel} :: ${userstate.displayName} > ${message}`);
+            this.logger.info(`* Executed ${command} in ${channel} :: ${userstate.displayName} > ${message}`);
         }
     }
 
@@ -153,11 +153,11 @@ export class EightBallCommand implements ICommandHandler {
         }
     }
 
-    private broadcastAudio(commandName: string, hash: string, lang: string) {
+    private broadcastAudio(command: string, hash: string, lang: string) {
         const ws = new WebSocket(`ws://${environment.twitchBot.websocket.host}:${environment.twitchBot.websocket.port}/`);
 
         const messageToSend = {
-            sender: commandName,
+            sender: command,
             body: `!play ${hash} ${lang}`,
             sentAt: Date.now(),
         };

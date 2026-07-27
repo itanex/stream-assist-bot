@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { ChatUser } from '@twurple/chat';
 import { mockChatClient, mockLogger, mockCommandResponseService } from '../../tests/common.mocks';
 import { DivideByZeroCommand } from './DivideByZeroCommand';
-import { defaultPhrases } from '../utilities/default-phrases';
+import { defaultResponses } from '../utilities/default-responses';
 
 describe(' Divide By Zero Command Tests', () => {
     const channel = 'TestChannel';
@@ -47,7 +47,7 @@ describe(' Divide By Zero Command Tests', () => {
         await subject.handle(channel, command, user, message);
 
         // Assert
-        expect(mockChatClient.say).toHaveBeenNthCalledWith(1, channel, defaultPhrases.dividebyzero);
+        expect(mockChatClient.say).toHaveBeenNthCalledWith(1, channel, defaultResponses.dividebyzero);
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.anything());
         expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
     });

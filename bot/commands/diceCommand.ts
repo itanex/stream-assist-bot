@@ -29,7 +29,7 @@ export class DiceCommand implements ICommandHandler {
     ) {
     }
 
-    async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
+    async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         const amount = args[1]
             ? parseInt(args[1])
             : 1;
@@ -38,7 +38,7 @@ export class DiceCommand implements ICommandHandler {
 
         this.chatClient.say(channel, `You rolled a ${args[1]}d${args[2]} that resulted in [ ${results.rolls.join(', ')} ] in total ${results.total}`);
 
-        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}> ${JSON.stringify(results)}`);
+        this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}> ${JSON.stringify(results)}`);
     }
 
     private rollDice(numberOfDice: number, sides: number): RollResult {

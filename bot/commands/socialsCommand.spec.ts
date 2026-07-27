@@ -37,7 +37,7 @@ describe('Socials Command Tests', () => {
             const result = subject.cooldownKey(args);
 
             // Assert
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.phraseFamily, args[0]);
+            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName, args[0]);
             expect(result).toBe(SocialsCommand.name);
         });
         it(`should present 'commandName' as the key (Unknown Variant)`, () => {
@@ -48,7 +48,7 @@ describe('Socials Command Tests', () => {
             const result = subject.cooldownKey(args);
 
             // Assert
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.phraseFamily, args[0]);
+            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName, args[0]);
             expect(result).toBe(SocialsCommand.name);
         });
         it('should present `commandName.variant` as the key (Known Variant)', () => {
@@ -61,7 +61,7 @@ describe('Socials Command Tests', () => {
             const result = subject.cooldownKey(args);
 
             // Assert
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.phraseFamily, args[0]);
+            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName, args[0]);
             expect(result).toBe(`${SocialsCommand.name}:${args[0]}`);
         });
     });
@@ -69,7 +69,7 @@ describe('Socials Command Tests', () => {
         it('should say the variant text', async () => {
             // Arrange
             const subcommand = `Variant`;
-            const message = messageFn(subject.phraseFamily, subcommand);
+            const message = messageFn(subject.commandName, subcommand);
             const response = `Test Response Message`;
             const args: any[] = [
                 subcommand,
@@ -82,7 +82,7 @@ describe('Socials Command Tests', () => {
             await subject.handle(channel, command, user, message, args);
 
             // Assert
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.phraseFamily, args[0]);
+            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName, args[0]);
             expect(mockChatClient.say).toHaveBeenCalledWith(channel, response);
             expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
         });
@@ -91,7 +91,7 @@ describe('Socials Command Tests', () => {
             // Arrange
             const warnMessage = 'Unknown Variant';
             const subcommand = `Variant`;
-            const message = messageFn(subject.phraseFamily, subcommand);
+            const message = messageFn(subject.commandName, subcommand);
             const response = ``;
             const args: any[] = [
                 subcommand,
@@ -104,7 +104,7 @@ describe('Socials Command Tests', () => {
             await subject.handle(channel, command, user, message, args);
 
             // Assert
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.phraseFamily, args[0]);
+            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName, args[0]);
             expect(mockChatClient.say).not.toHaveBeenCalled();
             expect(mockLogger.warn).toHaveBeenCalledWith(warnMessage, expect.anything());
             expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());

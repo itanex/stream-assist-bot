@@ -53,7 +53,7 @@ export default class ManageCommand implements ICommandHandler {
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) { }
 
-    async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
+    async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         const [subCommand, compoundName, text] = args as string[];
         const [name, variant, ...rest] = compoundName.split('.');
 
@@ -76,6 +76,6 @@ export default class ManageCommand implements ICommandHandler {
             }
         }
 
-        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
+        this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }

@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { ChatUser } from '@twurple/chat';
 import { mockChatClient, mockLogger, mockCommandResponseService } from '../../tests/common.mocks';
 import { DrinkCommand } from './drinkCommand';
-import { defaultPhrases } from '../utilities/default-phrases';
+import { defaultResponses } from '../utilities/default-responses';
 
 describe('Drink Command Tests', () => {
     const channel = 'TestChannel';
@@ -48,7 +48,7 @@ describe('Drink Command Tests', () => {
         await subject.handle(channel, command, user, message);
 
         // Assert
-        expect(mockChatClient.say).toHaveBeenNthCalledWith(1, channel, defaultPhrases.drink);
+        expect(mockChatClient.say).toHaveBeenNthCalledWith(1, channel, defaultResponses.drink);
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.anything());
         expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
     });

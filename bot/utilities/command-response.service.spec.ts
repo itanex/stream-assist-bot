@@ -8,12 +8,12 @@ import CommandResponseService, {
     CommandTextUpdateResult,
 } from './command-response.service';
 import { mockLogger } from '../../tests/common.mocks';
-import { defaultPhrases } from './default-phrases';
+import { defaultResponses } from './default-responses';
 import { CommandResponse } from '../../database';
 
-jest.mock('./default-phrases', () => ({
-    ...jest.requireActual('./default-phrases'),
-    phraseFamilies: { testcommand: 'testcommand' },
+jest.mock('./default-responses', () => ({
+    ...jest.requireActual('./default-responses'),
+    CommandFamilies: { testcommand: 'testcommand' },
 }));
 
 describe('CommandResponse.Service (postgres)', () => {
@@ -101,7 +101,7 @@ describe('CommandResponse.Service (postgres)', () => {
                 const result = subject.getCommandText('about');
 
                 // Assert
-                expect(result).toBe(defaultPhrases.about);
+                expect(result).toBe(defaultResponses.about);
             });
             it('should not seed twice', async () => {
                 // Arrange - beforeEach()

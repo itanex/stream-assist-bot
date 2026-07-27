@@ -3,13 +3,13 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types';
 import { ICommandHandler, OnlineState } from './iCommandHandler';
-import { defaultPhrases, PhraseKey } from '../utilities/default-phrases';
+import { CommandName, defaultResponses } from '../utilities/default-responses';
 import CommandResponseService from '../utilities/command-response.service';
 
 @injectable()
 export class DrinkCommand implements ICommandHandler {
     exp: RegExp = /^!(drink|drinkorperish)$/i;
-    phraseKey: PhraseKey = 'drink';
+    commandName: CommandName = 'drink';
     timeout: number = 5;
     mod: boolean = true;
     vip: boolean = true;
@@ -28,14 +28,14 @@ export class DrinkCommand implements ICommandHandler {
     ) {
     }
 
-    async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        const commandText = this.commandResponseService.getCommandText(this.phraseKey);
+    async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
+        const commandText = this.commandResponseService.getCommandText(this.commandName);
 
         if (!commandText) {
-            this.logger.warn(`* Command Text not found for ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
+            this.logger.warn(`* Command Text not found for ${command} in ${channel} || ${userstate.displayName} > ${message}`);
         }
 
-        this.chatClient.say(channel, commandText ?? defaultPhrases.drink);
-        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
+        this.chatClient.say(channel, commandText ?? defaultResponses.drink);
+        this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }

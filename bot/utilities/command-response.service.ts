@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { UniqueConstraintError, ValidationError } from 'sequelize';
 import winston from 'winston';
 import { CommandResponse } from '../../database';
-import { defaultPhrases, phraseFamilies } from './default-phrases';
+import { defaultResponses, CommandFamilies } from './default-responses';
 import InjectionTypes from '../../dependency-management/types';
 
 export type CommandTextValidationResult =
@@ -32,7 +32,7 @@ export default class CommandResponseService {
     ) { }
 
     async initialize(): Promise<void> {
-        await CommandResponse.seed(defaultPhrases);
+        await CommandResponse.seed(defaultResponses);
 
         const rows = await CommandResponse.findAll();
         this.responseCache = new Map(rows
@@ -43,7 +43,7 @@ export default class CommandResponseService {
     }
 
     isValidCommandName(commandName: string): boolean {
-        return Object.keys(phraseFamilies).some(x => x === commandName);
+        return Object.keys(CommandFamilies).some(x => x === commandName);
     }
 
     getCommandVariants(commandName: string): string[] {
