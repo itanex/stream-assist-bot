@@ -3,7 +3,7 @@ import { Column, DataType, Table, Model } from 'sequelize-typescript';
 const COMMAND_VARIANT_UNIQUE_INDEX = 'commandName-variant';
 
 @Table({
-    tableName: 'CommandPhrase',
+    tableName: 'CommandResponse',
     paranoid: true,
 })
 export default class CommandResponse extends Model {
