@@ -46,7 +46,7 @@ describe('JoinGreetingHandler', () => {
     } as unknown as ChatUser;
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        jest.resetAllMocks();
 
         joinGreetingHandler = new JoinGreetingHandler(
             mockChatClient,
@@ -117,7 +117,7 @@ describe('JoinGreetingHandler', () => {
             offlineCallback();
 
             // Assert - same user is greeted again (set was cleared)
-            jest.clearAllMocks(); // reset say count
+            jest.resetAllMocks(); // reset say count
             await joinGreetingHandler.greetIfEligible('#channel', modUser);
             expect(mockSay).toHaveBeenCalledTimes(1);
         });

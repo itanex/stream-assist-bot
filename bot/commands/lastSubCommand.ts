@@ -37,7 +37,7 @@ export class LastSubCommand implements ICommandHandler {
     ) {
     }
 
-    async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
+    async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         await Subscribers
             .getLastSubscriber()
             .then(record => {
@@ -63,6 +63,6 @@ export class LastSubCommand implements ICommandHandler {
                 }
             });
 
-        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName}`);
+        this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName}`);
     }
 }

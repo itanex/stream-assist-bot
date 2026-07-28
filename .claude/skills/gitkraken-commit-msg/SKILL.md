@@ -25,6 +25,8 @@ description: Generate a commit message to be used in GitKraken. Will have a titl
          * One relevant fact per bullet
          * Imperative tense
          * No padding or editorializing (e.g. no noting consistency with other files)
+      * Wrap every code identifier in backticks - types/classes, functions/
+        methods, variables/fields, file paths, and config/API keys
       * Footer-style trailers (issue refs, `BREAKING CHANGE:`,
         co-authorship) go at the end, separated by a blank line
 * References:

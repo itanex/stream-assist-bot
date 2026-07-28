@@ -1,18 +1,15 @@
 import 'reflect-metadata';
 import { ChatClient, ChatUser } from '@twurple/chat';
-import winston from 'winston';
+import { HelixPrivilegedUser } from '@twurple/api';
 import { MessageHandler } from './message.handler';
 import Broadcaster from '../utilities/broadcaster';
 import { ICommandHandler } from '../commands';
 import StreamStateService from '../utilities/stream-state.service';
+import { mockLogger } from '../../tests/common.mocks';
 
-const mockSay = jest.fn();
-const mockGetBroadcaster = jest.fn();
-const mockIsOnline = jest.fn();
-
-const mockChatClient = {
-    say: mockSay,
-} as unknown as ChatClient;
+const mockChatClient = <unknown>{
+    say: jest.fn(),
+} as jest.Mocked<ChatClient>;
 
 const mockOnlineHandler = jest.fn();
 class MockOnlineCommand implements ICommandHandler {
@@ -174,7 +171,6 @@ class MockFollowerCommand implements ICommandHandler {
     handle = mockFollowerHandler;
 }
 
-const mockCooldownHandler = jest.fn();
 class MockCooldownCommand implements ICommandHandler {
     exp = /!(cooldown)/i;
     timeout = 300;
@@ -187,7 +183,8 @@ class MockCooldownCommand implements ICommandHandler {
     viewer = true;
     isGlobalCommand = false;
     restriction = 'online' as const;
-    handle = mockCooldownHandler;
+    handle = jest.fn<ReturnType<ICommandHandler['handle']>, Parameters<ICommandHandler['handle']>>();
+    cooldownKey = jest.fn<ReturnType<Required<ICommandHandler>['cooldownKey']>, Parameters<Required<ICommandHandler>['cooldownKey']>>();
 }
 
 const mockCooldownCommand = new MockCooldownCommand();
@@ -205,30 +202,27 @@ const mockCommandHandlers = [
     mockCooldownCommand,
 ] as unknown as ICommandHandler[];
 
-const mockBroadcaster = {
-    getBroadcaster: mockGetBroadcaster,
-    isOnline: mockIsOnline,
-} as unknown as Broadcaster;
+const mockBroadcaster = <unknown>{
+    getBroadcaster: jest.fn(),
+    isOnline: jest.fn(),
+} as jest.Mocked<Broadcaster>;
 
-const mockStreamStateService = {
-    isOnline: false,
-} as unknown as StreamStateService;
-
-const mockLogger = {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-} as unknown as winston.Logger;
+const mockIsOnline = jest.fn<boolean, []>();
+const mockStreamStateService = <unknown>{} as jest.Mocked<StreamStateService>;
+Object.defineProperty(mockStreamStateService, 'isOnline', { get: mockIsOnline });
 
 describe('Message.Handler', () => {
     let messageHandler: MessageHandler;
     const unknownUser = {} as unknown as ChatUser;
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        jest.resetAllMocks();
         jest.useFakeTimers();
 
-        mockGetBroadcaster.mockResolvedValue({ isFollowedBy: jest.fn().mockResolvedValue(false) });
+        mockBroadcaster.getBroadcaster
+            .mockResolvedValue(<unknown>{
+                isFollowedBy: jest.fn().mockResolvedValue(false),
+            } as HelixPrivilegedUser);
 
         messageHandler = new MessageHandler(
             mockChatClient,
@@ -249,12 +243,13 @@ describe('Message.Handler', () => {
             await messageHandler.handle('#channel', 'user', '!unknown', unknownUser);
 
             // Assert
-            expect(mockSay).not.toHaveBeenCalled();
+            expect(mockChatClient.say).not.toHaveBeenCalled();
         });
         it('skip online command execution when offline', async () => {
             // Arrange
             const command = '!online';
-            mockIsOnline.mockResolvedValue(false);
+
+            mockIsOnline.mockReturnValue(false);
 
             // Act
             await messageHandler.handle('#channel', 'user', command, unknownUser);
@@ -265,7 +260,8 @@ describe('Message.Handler', () => {
         it('skip offline command execution when online', async () => {
             // Arrange
             const command = '!offline';
-            mockIsOnline.mockResolvedValue(true);
+
+            mockIsOnline.mockReturnValue(true);
 
             // Act
             await messageHandler.handle('#channel', 'user', command, unknownUser);
@@ -275,8 +271,9 @@ describe('Message.Handler', () => {
         });
         describe('IsAuthorized', () => {
             beforeEach(() => {
-                mockIsOnline.mockResolvedValue(true);
+                mockIsOnline.mockReturnValue(true);
             });
+
             it.each`
                 role           | command          | userFlags                   | handler
                 ${'mod'}       | ${'!mod'}        | ${{ isMod: true }}          | ${mockModHandler}
@@ -287,6 +284,8 @@ describe('Message.Handler', () => {
             `('Executes $role command when user has the $role role', async ({ command, userFlags, handler }) => {
                 // Arrange
                 const user = userFlags as unknown as ChatUser;
+
+                handler.mockResolvedValue(undefined);
 
                 // Act
                 await messageHandler.handle('#channel', 'user', command, user);
@@ -316,8 +315,9 @@ describe('Message.Handler', () => {
                 const broadcasterUser: ChatUser = {
                     isBroadcaster: true,
                 } as unknown as ChatUser;
-                (mockStreamStateService.isOnline as any) = true;
                 const command = '!broadcaster';
+
+                mockBroadcasterHandler.mockResolvedValue(undefined);
 
                 // Act
                 await messageHandler.handle('#channel', 'user', command, broadcasterUser);
@@ -342,6 +342,8 @@ describe('Message.Handler', () => {
                 // Arrange
                 const command = '!viewer';
 
+                mockViewerHandler.mockResolvedValue(undefined);
+
                 // Act
                 await messageHandler.handle('#channel', 'user', command, unknownUser);
 
@@ -351,7 +353,12 @@ describe('Message.Handler', () => {
             it('Executes when command allows follower', async () => {
                 // Arrange
                 const command = '!follower';
-                mockGetBroadcaster.mockResolvedValue({ isFollowedBy: jest.fn().mockResolvedValue(true) });
+                mockBroadcaster.getBroadcaster
+                    .mockResolvedValue(<unknown>{
+                        isFollowedBy: jest.fn().mockResolvedValue(true),
+                    } as HelixPrivilegedUser);
+
+                mockFollowerHandler.mockResolvedValue(undefined);
 
                 // Act
                 await messageHandler.handle('#channel', 'user', command, unknownUser);
@@ -369,58 +376,163 @@ describe('Message.Handler', () => {
                 // Assert
                 expect(mockFollowerHandler).not.toHaveBeenCalled();
             });
+            it('command handler logs errors thrown', async () => {
+                // Arrange
+                const command = '!viewer';
+                const errorMessage = 'Error message';
+
+                mockViewerHandler.mockRejectedValue(errorMessage);
+
+                // Act
+                await messageHandler.handle('#channel', 'user', command, unknownUser);
+
+                // Assert
+                expect(mockViewerHandler).toHaveBeenCalled();
+                expect(mockLogger.error)
+                    .toHaveBeenCalledWith(
+                        expect.any(String),
+                        expect.objectContaining({
+                            channel: '#channel',
+                            user: 'user',
+                            chatUser: unknownUser,
+                            reason: errorMessage,
+                        }),
+                    );
+            });
         });
-        it('Skips execution when command is on cooldown', async () => {
-            // Arrange
+        describe('Handle Command Cooldown', () => {
             const command = '!cooldown';
-            mockIsOnline.mockResolvedValue(true);
-            mockGetBroadcaster.mockResolvedValue({ isFollowedBy: jest.fn().mockResolvedValue(true) });
 
-            // Act
-            await messageHandler.handle('#channel', 'user', command, unknownUser);
-            await messageHandler.handle('#channel', 'user', command, unknownUser);
+            beforeEach(() => {
+                mockIsOnline.mockReturnValue(true);
+            });
 
-            // Assert
-            expect(mockCooldownHandler).toHaveBeenCalledTimes(1);
-        });
-        it('Broadcaster does not apply cooldown to commands', async () => {
-            // Arrange
-            const broadcasterUser: ChatUser = {
-                isBroadcaster: true,
-            } as unknown as ChatUser;
-            const command = '!cooldown';
-            mockIsOnline.mockResolvedValue(true);
-            mockGetBroadcaster.mockResolvedValue({ isFollowedBy: jest.fn().mockResolvedValue(true) });
+            it('Uses cooldownKey to bucket cooldown when implemented', async () => {
+                // Arrange
+                const cooldownKey = 'TestBucketKey';
 
-            // Act
-            await messageHandler.handle('#channel', 'user', command, broadcasterUser);
-            await messageHandler.handle('#channel', 'user', command, broadcasterUser);
+                mockCooldownCommand.cooldownKey
+                    .mockReturnValue(cooldownKey);
 
-            // Assert
-            expect(mockCooldownHandler).toHaveBeenCalledTimes(2);
-        });
-        it.each`
-            role           | userFlags                   | expectedCooldown
-            ${'mod'}       | ${{ isMod: true }}          | ${mockCooldownCommand.timeout / 2}
-            ${'vip'}       | ${{ isVip: true }}          | ${mockCooldownCommand.timeout / 2}
-            ${'artist'}    | ${{ isArtist: true }}       | ${mockCooldownCommand.timeout / 2}
-            ${'founder'}   | ${{ isFounder: true }}      | ${mockCooldownCommand.timeout / 2}
-            ${'subscriber'}| ${{ isSubscriber: true }}   | ${mockCooldownCommand.timeout / 2}
-            ${'viewer'}    | ${{}}                       | ${mockCooldownCommand.timeout}
-        `('User Role ($role) applies $expectedCooldown second cooldown', async ({ userFlags, expectedCooldown }) => {
-            // Arrange
-            const user = userFlags as unknown as ChatUser;
-            const command = '!cooldown';
-            mockIsOnline.mockResolvedValue(true);
-            mockGetBroadcaster.mockResolvedValue({ isFollowedBy: jest.fn().mockResolvedValue(true) });
+                mockCooldownCommand.handle
+                    .mockResolvedValue(undefined);
 
-            // Act
-            await messageHandler.handle('#channel', 'user', command, user);
-            jest.advanceTimersByTime(expectedCooldown * 1000);
-            await messageHandler.handle('#channel', 'user', command, user);
+                // Act
+                await messageHandler.handle('#channel', 'user', command, unknownUser);
 
-            // Assert
-            expect(mockCooldownHandler).toHaveBeenCalledTimes(2);
+                // Assert
+                expect(mockCooldownCommand.cooldownKey)
+                    .toHaveBeenCalledWith([]);
+
+                expect((messageHandler as any).globalTimeouts)
+                    .toContainEqual(expect.objectContaining({ name: cooldownKey }));
+            });
+            it('Does not apply cooldown across different cooldownKey buckets', async () => {
+                // Arrange
+                const cooldownKey = 'TestBucketKey';
+
+                mockCooldownCommand.cooldownKey
+                    .mockReturnValueOnce(`${cooldownKey}-1`)
+                    .mockReturnValueOnce(`${cooldownKey}-2`);
+
+                mockCooldownCommand.handle
+                    .mockResolvedValue(undefined);
+
+                // Act
+                await messageHandler.handle('#channel', 'user', command, unknownUser);
+                await messageHandler.handle('#channel', 'user', command, unknownUser);
+
+                // Assert
+                expect(mockCooldownCommand.handle).toHaveBeenCalledTimes(2);
+
+                expect((messageHandler as any).globalTimeouts)
+                    .toContainEqual(expect.objectContaining({ name: `${cooldownKey}-1` }));
+                expect((messageHandler as any).globalTimeouts)
+                    .toContainEqual(expect.objectContaining({ name: `${cooldownKey}-2` }));
+            });
+            it('Displays instruction, not the cooldownKey bucket, in the cooldown message', async () => {
+                // Arrange
+                const cooldownKey: any = undefined;
+
+                mockCooldownCommand.cooldownKey
+                    .mockReturnValue(cooldownKey);
+
+                mockCooldownCommand.handle
+                    .mockResolvedValue(undefined);
+
+                // Act
+                await messageHandler.handle('#channel', 'user', command, unknownUser);
+
+                // Assert
+                expect((messageHandler as any).globalTimeouts)
+                    .toContainEqual(expect.objectContaining({ name: MockCooldownCommand.name }));
+            });
+            it('Skips execution when command is on cooldown', async () => {
+                // Arrange
+                mockBroadcaster.getBroadcaster
+                    .mockResolvedValue(<unknown>{
+                        isFollowedBy: jest.fn().mockResolvedValue(false),
+                    } as HelixPrivilegedUser);
+
+                mockCooldownCommand.handle
+                    .mockResolvedValue(undefined);
+
+                // Act
+                await messageHandler.handle('#channel', 'user', command, unknownUser);
+                await messageHandler.handle('#channel', 'user', command, unknownUser);
+
+                // Assert
+                expect(mockCooldownCommand.handle).toHaveBeenCalledTimes(1);
+            });
+            it('Broadcaster does not apply cooldown to commands', async () => {
+                // Arrange
+                const broadcasterUser: ChatUser = {
+                    isBroadcaster: true,
+                } as unknown as ChatUser;
+
+                mockBroadcaster.getBroadcaster
+                    .mockResolvedValue(<unknown>{
+                        isFollowedBy: jest.fn().mockResolvedValue(true),
+                    } as HelixPrivilegedUser);
+
+                mockCooldownCommand.handle
+                    .mockResolvedValue(undefined);
+
+                // Act
+                await messageHandler.handle('#channel', 'user', command, broadcasterUser);
+                await messageHandler.handle('#channel', 'user', command, broadcasterUser);
+
+                // Assert
+                expect(mockCooldownCommand.handle).toHaveBeenCalledTimes(2);
+            });
+            it.each`
+                role           | userFlags                   | expectedCooldown
+                ${'mod'}       | ${{ isMod: true }}          | ${mockCooldownCommand.timeout / 2}
+                ${'vip'}       | ${{ isVip: true }}          | ${mockCooldownCommand.timeout / 2}
+                ${'artist'}    | ${{ isArtist: true }}       | ${mockCooldownCommand.timeout / 2}
+                ${'founder'}   | ${{ isFounder: true }}      | ${mockCooldownCommand.timeout / 2}
+                ${'subscriber'}| ${{ isSubscriber: true }}   | ${mockCooldownCommand.timeout / 2}
+                ${'viewer'}    | ${{}}                       | ${mockCooldownCommand.timeout}
+            `('User Role ($role) applies $expectedCooldown second cooldown', async ({ userFlags, expectedCooldown }) => {
+                // Arrange
+                const user = userFlags as unknown as ChatUser;
+
+                mockBroadcaster.getBroadcaster
+                    .mockResolvedValue(<unknown>{
+                        isFollowedBy: jest.fn().mockResolvedValue(true),
+                    } as HelixPrivilegedUser);
+
+                mockCooldownCommand.handle
+                    .mockResolvedValue(undefined);
+
+                // Act
+                await messageHandler.handle('#channel', 'user', command, user);
+                jest.advanceTimersByTime(expectedCooldown * 1000);
+                await messageHandler.handle('#channel', 'user', command, user);
+
+                // Assert
+                expect(mockCooldownCommand.handle).toHaveBeenCalledTimes(2);
+            });
         });
     });
 });

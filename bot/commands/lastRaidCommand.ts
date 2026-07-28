@@ -33,7 +33,7 @@ export class LastRaidCommand implements ICommandHandler {
     ) {
     }
 
-    async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
+    async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         await Raiders
             .getLastRaid()
             .then(record => {
@@ -45,7 +45,7 @@ export class LastRaidCommand implements ICommandHandler {
                     this.chatClient.say(channel, `${record.raider}, raided the colony ${lastDate}!!!`);
                 }
 
-                this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName}`);
+                this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName}`);
             });
     }
 }

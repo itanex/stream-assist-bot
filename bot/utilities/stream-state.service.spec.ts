@@ -17,7 +17,7 @@ describe('StreamStateService', () => {
     const offlineCallback2 = jest.fn();
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        jest.resetAllMocks();
         jest.useFakeTimers();
 
         streamStateService = new StreamStateService(mockBroadcaster);

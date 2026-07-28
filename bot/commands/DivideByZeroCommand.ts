@@ -3,13 +3,13 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types';
 import { ICommandHandler, OnlineState } from './iCommandHandler';
-import { defaultPhrases, PhraseKey } from '../utilities/default-phrases';
-import PhraseService from '../utilities/phrase.service';
+import { CommandName, defaultResponses } from '../utilities/default-responses';
+import CommandResponseService from '../utilities/command-response.service';
 
 @injectable()
 export class DivideByZeroCommand implements ICommandHandler {
     exp: RegExp = /^!(DivideByZero)$/i;
-    phraseKey: PhraseKey = 'dividebyzero';
+    commandName: CommandName = 'dividebyzero';
     timeout: number = 20;
     mod: boolean = true;
     vip: boolean = true;
@@ -23,19 +23,19 @@ export class DivideByZeroCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(PhraseService) private phraseService: PhraseService,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
-    async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        const commandTemplate = this.phraseService.getCommandTemplate(this.phraseKey);
+    async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
+        const commandText = this.commandResponseService.getCommandText(this.commandName);
 
-        if (!commandTemplate) {
-            this.logger.warn(`* Command Phrase not found for ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
+        if (!commandText) {
+            this.logger.warn(`* Command Text not found for ${command} in ${channel} || ${userstate.displayName} > ${message}`);
         }
 
-        this.chatClient.say(channel, commandTemplate ?? defaultPhrases.dividebyzero);
-        this.logger.info(`* Executed ${commandName} in ${channel} :: ${userstate.displayName} > ${message}`);
+        this.chatClient.say(channel, commandText ?? defaultResponses.dividebyzero);
+        this.logger.info(`* Executed ${command} in ${channel} :: ${userstate.displayName} > ${message}`);
     }
 }

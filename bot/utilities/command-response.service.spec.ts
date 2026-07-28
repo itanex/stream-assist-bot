@@ -1,0 +1,461 @@
+import 'reflect-metadata';
+import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
+import { UniqueConstraintError } from 'sequelize';
+import Database, { IDatabaseConfiguration } from '../../database/database';
+import CommandResponseService, {
+    CommandTextValidationResult,
+    CommandTextInsertResult,
+    CommandTextUpdateResult,
+} from './command-response.service';
+import { mockLogger } from '../../tests/common.mocks';
+import { defaultResponses } from './default-responses';
+import { CommandResponse } from '../../database';
+
+jest.mock('./default-responses', () => ({
+    ...jest.requireActual('./default-responses'),
+    CommandFamilies: { testcommand: 'testcommand' },
+}));
+
+describe('CommandResponse.Service (postgres)', () => {
+    let container: StartedPostgreSqlContainer;
+    let databaseConfiguration: IDatabaseConfiguration;
+
+    const defaultVariant = '';
+    const validText = 'Edited Text';
+    const validName = 'ValidName';
+    const testCommand = 'testcommand';
+    const testVariants = [
+        'variant1',
+        'variant2',
+    ];
+
+    let subject: CommandResponseService;
+
+    /** Utility to generate variant based text for testing */
+    const textFn = (cmd: string, variant: string = defaultVariant) => `test-text: ${cmd}.${variant}`;
+
+    /** Utility to seed database with testing commands with variants */
+    const seedVariants = async (cmd: string, variants: string[] = [defaultVariant]) => {
+        await Promise.all(variants.map(async variant => CommandResponse.addCommandText(cmd, textFn(cmd, variant), variant)));
+
+        await subject.initialize();
+    };
+
+    beforeAll(async () => {
+        try {
+            container = await new PostgreSqlContainer('postgres:latest').start();
+        } catch (error: any) {
+            const message = error instanceof Error ? error.message : String(error);
+
+            if (message.includes('401') || message.includes('authentication required')) {
+                throw new Error([
+                    'Docker registry authentication failed while pulling the postgres image.',
+                    'Local Docker Hub credentials are stale: run `docker login`, then rerun.',
+                    `Original error: ${message}`,
+                ].join(' '));
+            }
+
+            throw error;
+        }
+
+        databaseConfiguration = {
+            database: container.getDatabase(),
+            host: container.getHost(),
+            username: container.getUsername(),
+            password: container.getPassword(),
+            port: container.getPort(),
+        };
+    }, 120_000);
+
+    afterAll(async () => {
+        await container.stop();
+    });
+
+    beforeEach(() => {
+        jest.resetAllMocks();
+    });
+
+    describe('Valid Database object', () => {
+        let database: Database;
+
+        beforeAll(async () => {
+            database = new Database(databaseConfiguration, mockLogger);
+            await database.initialize();
+            subject = new CommandResponseService(mockLogger);
+        });
+
+        afterAll(async () => {
+            await database.disconnect();
+        });
+
+        beforeEach(async () => {
+            jest.resetAllMocks();
+            await CommandResponse.destroy({ where: {}, force: true });
+            await subject.initialize();
+        });
+
+        describe('initialize()', () => {
+            it('seeds row, gets installed default', async () => {
+                // Arrange - beforeEach()
+                // Act
+                const result = subject.getCommandText('about');
+
+                // Assert
+                expect(result).toBe(defaultResponses.about);
+            });
+            it('should not seed twice', async () => {
+                // Arrange - beforeEach()
+                // Act
+                await subject.initialize();
+                await subject.setCommandText('about', validText);
+                await subject.initialize();
+                const result = subject.getCommandText('about');
+                const rowCount = await CommandResponse.count({ where: { commandName: 'about' } });
+
+                // Assert
+                expect(result).toBe(validText);
+                expect(rowCount).toBe(1);
+            });
+        });
+        describe('getCommandText()', () => {
+            it('should return the command (cache, variant)', async () => {
+                // Arrange
+                await seedVariants(testCommand, testVariants);
+
+                // Act
+                const result = subject.getCommandText(testCommand, testVariants[1]);
+
+                // Assert
+                expect(result).toBe(textFn(testCommand, testVariants[1]));
+            });
+            it('should return the command (cache, no-variant)', async () => {
+                // Arrange - beforeEach()
+                await seedVariants(testCommand);
+
+                // Act
+                const result = subject.getCommandText(testCommand);
+
+                // Assert
+                expect(result).toBe(textFn(testCommand));
+            });
+
+            it('should return undefined for no default variant name (variant)', async () => {
+                // Arrange
+                await seedVariants(testCommand, testVariants);
+
+                // Act
+                const result = subject.getCommandText(testCommand, '');
+
+                // Assert
+                expect(result).toBe(undefined);
+            });
+            it('should return undefined for unknown variant (variant)', async () => {
+                // Arrange
+                await seedVariants(testCommand, testVariants);
+
+                // Act
+                const result = subject.getCommandText(testCommand, 'unknown');
+
+                // Assert
+                expect(result).toBe(undefined);
+            });
+
+            it('should return undefined for invalid commandName (no-variant)', () => {
+                // Arrange - beforeEach()
+                // Act
+                const result = subject.getCommandText('');
+
+                // Assert
+                expect(result).toBe(undefined);
+            });
+            it('should return undefined for unknown command (no-variant)', () => {
+                // Arrange - beforeEach()
+                // Act
+                const result = subject.getCommandText('unknown');
+
+                // Assert
+                expect(result).toBe(undefined);
+            });
+        });
+        describe('getCommandVariants()', () => {
+            it('should return the command variants (cache)', async () => {
+                // Arrange
+                await seedVariants(testCommand, testVariants);
+
+                // Act
+                const result = subject.getCommandVariants(testCommand);
+
+                // Assert
+                expect(result.length).toBe(testVariants.length);
+                expect(result).toEqual(expect.arrayContaining(testVariants));
+            });
+            it('should return the command variants (cache) (no-variant)', async () => {
+                // Arrange - beforeEach()
+                await seedVariants(testCommand);
+
+                // Act
+                const result = subject.getCommandVariants(testCommand);
+
+                // Assert
+                expect(result).toStrictEqual<string[]>([defaultVariant]);
+            });
+            it('should return empty collection for invalid commandName (empty string)', () => {
+                // Arrange - beforeEach()
+                // Act
+                const result = subject.getCommandVariants('');
+
+                // Assert
+                expect(result).toEqual<string[]>([]);
+            });
+            it('should return empty collection for unknown command', () => {
+                // Arrange - beforeEach()
+                // Act
+                const result = subject.getCommandVariants('unknown');
+
+                // Assert
+                expect(result).toEqual<string[]>([]);
+            });
+            it('does not include variants from a command name that is a prefix match', async () => {
+                // Arrange
+                const similarCommand = `${testCommand}Similar`;
+                const similarVariants = testVariants.map(x => `${x}Similar`);
+                await seedVariants(testCommand, testVariants);
+                await seedVariants(similarCommand, similarVariants);
+
+                // Act
+                const result = subject.getCommandVariants(testCommand);
+
+                // Assert
+                expect(result.length).toBe(testVariants.length);
+                expect(result).toEqual(expect.arrayContaining(testVariants));
+            });
+        });
+        describe('setCommandText()', () => {
+            it('should return false with empty commandName', async () => {
+                // Arrange - beforeEach()
+                // Act
+                const result = await subject.setCommandText('', 'Valid text...');
+
+                // Assert
+                expect(result).toBe<CommandTextValidationResult>('invalidInput');
+            });
+            it('should return false with empty text', async () => {
+                // Arrange - beforeEach()
+                // Act
+                const result = await subject.setCommandText(validName, '');
+
+                // Assert
+                expect(result).toBe<CommandTextValidationResult>('invalidInput');
+            });
+            it('row updated and gets new text (variant)', async () => {
+                // Arrange
+                await seedVariants(testCommand, testVariants);
+
+                // Act
+                const result = await subject.setCommandText(testCommand, validText, testVariants[0]);
+                const cached = subject.getCommandText(testCommand, testVariants[0]);
+                const rows = await CommandResponse.findAll({ where: { commandName: testCommand } });
+
+                const updated = rows.find(r => r.variant === testVariants[0]);
+                const untouched = rows.find(r => r.variant === testVariants[1]);
+
+                // Assert
+                expect(result).toBe<CommandTextUpdateResult>('updated');
+                expect(cached).toBe(validText);
+                expect(rows.length).toBe(2);
+                expect(updated?.text).toBe(validText);
+                expect(untouched?.text).toBe(textFn(testCommand, testVariants[1]));
+            });
+            it('row updated and gets new text (no-variant)', async () => {
+                // Arrange
+                await seedVariants(testCommand);
+
+                // Act
+                const result = await subject.setCommandText(testCommand, validText);
+                const cached = subject.getCommandText(testCommand);
+                const rows = await CommandResponse.findAll({ where: { commandName: testCommand } });
+
+                // Assert
+                expect(result).toBe<CommandTextUpdateResult>('updated');
+                expect(cached).toBe(validText);
+                expect(rows.length).toBe(1);
+                expect(rows[0].text).toBe(validText);
+            });
+            it(`row update fails returning 'updateFailed'`, async () => {
+                // Arrange
+                await seedVariants(testCommand, testVariants);
+                const spy = jest.spyOn(CommandResponse, 'updateCommandText')
+                    .mockResolvedValueOnce(false);
+
+                // Act
+                const result = await subject.setCommandText(testCommand, validText, testVariants[0]);
+
+                // Assert
+                expect(result).toBe<CommandTextUpdateResult>('updateFailed');
+
+                spy.mockRestore();
+            });
+            it('unknown key returns false, cache preserved', async () => {
+                // Arrange
+                const key = 'Unknown';
+                const text = 'edited text...';
+
+                // Act & Assert
+                expect(await subject.setCommandText(key, text)).toBe<CommandTextUpdateResult>('notEditable');
+                expect(subject.getCommandText(key)).toBe(undefined);
+            });
+            it('known family with unrecognized variant returns notEditable', async () => {
+                // Arrange
+                await seedVariants(testCommand, testVariants);
+
+                // Act
+                const result = await subject.setCommandText(testCommand, validText, 'unknown');
+
+                // Assert
+                expect(result).toBe<CommandTextUpdateResult>('notEditable');
+            });
+            it('invalid text (too short) rejected', async () => {
+                // Arrange
+                const badtext = 'BAD!';
+                await seedVariants(testCommand);
+
+                // Act
+                const result = await subject.setCommandText(testCommand, badtext);
+
+                // Assert
+                expect(result).toBe<CommandTextUpdateResult>('invalidText');
+                expect(subject.getCommandText(testCommand)).toBe(textFn(testCommand));
+            });
+            it('non-validation error propagates', async () => {
+                // Arrange
+                await seedVariants(testCommand);
+                const spy = jest.spyOn(CommandResponse, 'updateCommandText')
+                    .mockRejectedValueOnce(new Error('connection lost'));
+
+                // Act & Assert
+                await expect(subject.setCommandText(testCommand, 'valid text...'))
+                    .rejects.toThrow('connection lost');
+
+                spy.mockRestore();
+            });
+        });
+        describe('isValidCommandName()', () => {
+            it(`should return true for commandName that exists`, () => {
+                // Arrange
+                // Act
+                const result = subject.isValidCommandName(testCommand);
+                // Assert
+                expect(result).toBe(true);
+            });
+            it(`should return false for commandName that does not exists`, () => {
+                // Arrange
+                // Act
+                const result = subject.isValidCommandName('UknownCommand');
+                // Assert
+                expect(result).toBe(false);
+            });
+        });
+        describe('addCommandText()', () => {
+            it(`should return 'invalidInput' with empty commandName`, async () => {
+                // Arrange - beforeEach()
+                // Act
+                const result = await subject.addCommandText('', validText);
+
+                // Assert
+                expect(result).toBe<CommandTextValidationResult>('invalidInput');
+            });
+            it(`should return 'invalidInput' with empty text`, async () => {
+                // Arrange - beforeEach()
+                // Act
+                const result = await subject.addCommandText(validName, '');
+
+                // Assert
+                expect(result).toBe<CommandTextValidationResult>('invalidInput');
+            });
+            it(`should return 'invalidInput' with empty variant`, async () => {
+                // Arrange - beforeEach()
+                // Act
+                const result = await subject.addCommandText(validName, validText, '');
+
+                // Assert
+                expect(result).toBe<CommandTextValidationResult>('invalidInput');
+            });
+            it(`should return 'invalidCommandName' with an invalid command name`, async () => {
+                // Arrange - beforeEach()
+                // Act
+                const unknownCommandName = 'UnknownCommandName';
+                const result = await subject.addCommandText(unknownCommandName, validText, testVariants[0]);
+
+                // Assert
+                expect(result).toBe<CommandTextInsertResult>('invalidCommandName');
+            });
+            it(`should return 'alreadyExists' for an existing command name`, async () => {
+                // Arrange - beforeEach()
+                await seedVariants(testCommand, testVariants);
+
+                // Act
+                const result = await subject.addCommandText(testCommand, validText, testVariants[0]);
+
+                // Assert
+                expect(result).toBe<CommandTextInsertResult>('alreadyExists');
+            });
+            it(`row 'inserted' and gets new text`, async () => {
+                // Arrange - beforeEach()
+                await seedVariants(testCommand, [testVariants[0]]);
+
+                // Act
+                const initial = subject.getCommandText(testCommand, testVariants[1]);
+                const result = await subject.addCommandText(testCommand, validText, testVariants[1]);
+                const cached = subject.getCommandText(testCommand, testVariants[1]);
+                const rows = await CommandResponse.findAll({ where: { commandName: testCommand } });
+
+                const inserted = rows.find(r => r.variant === testVariants[1]);
+                const untouched = rows.filter(r => r.variant !== testVariants[1]);
+
+                // Assert
+                expect(result).toBe<CommandTextInsertResult>('inserted');
+                expect(initial).toBe(undefined);
+                expect(cached).toBe(validText);
+                expect(rows.length).toBe(2);
+                expect(inserted?.text).toBe(validText);
+                expect(untouched.length).toBe(1);
+                expect(untouched.map(x => x.variant)).not.toContain(testVariants[1]);
+            });
+            it('invalid text (already exists) rejected', async () => {
+                // Arrange
+                const spy = jest.spyOn(CommandResponse, 'addCommandText')
+                    .mockRejectedValueOnce(new UniqueConstraintError({} as any));
+
+                // Act
+                const result = await subject.addCommandText(testCommand, textFn(testCommand, testVariants[0]), testVariants[0]);
+
+                // Assert
+                expect(result).toBe<CommandTextInsertResult>('alreadyExists');
+
+                spy.mockRestore();
+            });
+            it('invalid text (dbo validation failed) rejected', async () => {
+                // Arrange
+                const badtext = 'BAD!';
+
+                // Act
+                const result = await subject.addCommandText(testCommand, badtext, testVariants[0]);
+
+                // Assert
+                expect(result).toBe<CommandTextInsertResult>('invalidText');
+            });
+            it('non-validation error propagates', async () => {
+                // Arrange
+                await seedVariants(testCommand);
+                const spy = jest.spyOn(CommandResponse, 'addCommandText')
+                    .mockRejectedValueOnce(new Error('connection lost'));
+
+                // Act & Assert
+                await expect(subject.addCommandText(testCommand, validText, testVariants[0]))
+                    .rejects.toThrow('connection lost');
+
+                spy.mockRestore();
+            });
+        });
+    });
+});

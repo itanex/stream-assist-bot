@@ -11,7 +11,7 @@ import AuthenticationServer, { IAuthenticationServer } from './bot/auth/auth.ser
 import { isUserAuthenticated } from './bot/auth/authProvider';
 import environment from './configurations/environment';
 import { name, version } from './package.json';
-import PhraseService from './bot/utilities/phrase.service';
+import CommandResponseService from './bot/utilities/command-response.service';
 
 @injectable()
 class App {
@@ -22,7 +22,7 @@ class App {
         @inject(SocketServer) private socketServer: ISocketServer,
         @inject(OverlayServer) private overlayServer: IOverlayServer,
         @inject(AuthenticationServer) private authServer: IAuthenticationServer,
-        @inject(PhraseService) private phraseService: PhraseService,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(InjectionTypes.Logger) public logger: winston.Logger,
     ) {
         this.logger.info(`** Application initialized **`);
@@ -41,7 +41,7 @@ class App {
             this.scheduler.scheduleChatEvents(),
         ]);
 
-        await this.phraseService.initialize();
+        await this.commandResponseService.initialize();
 
         this.authServer.listen();
         this.overlayServer.listen();

@@ -29,7 +29,7 @@ describe('Broadcaster', () => {
     let broadcaster: Broadcaster;
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        jest.resetAllMocks();
         jest.useFakeTimers();
 
         mockGetAuthenticatedUser.mockResolvedValue({ getStream: mockGetStream });

@@ -27,7 +27,7 @@ export class AccountAgeCommand implements ICommandHandler {
     ) {
     }
 
-    async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
+    async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         // get user by name based on either provided or command user name
         const user = await this.apiClient.users
             .getUserByName(args[1]
@@ -38,6 +38,6 @@ export class AccountAgeCommand implements ICommandHandler {
 
         this.chatClient.say(channel, `@${user.displayName} was created ${getAgeReport(ageTimeSpan)}`);
 
-        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
+        this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }

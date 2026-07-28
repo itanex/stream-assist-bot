@@ -34,6 +34,7 @@ export class MessageHandler {
         if (!commandHandler) { return; }
 
         const instruction = commandHandler.constructor.name;
+        const cooldownBucketKey = commandHandler.cooldownKey?.(commandArguments) ?? instruction;
         const broadcaster = await this.broadcaster.getBroadcaster();
 
         if (!this.canExecute(commandHandler, this.streamStateService.isOnline)) {
@@ -49,7 +50,7 @@ export class MessageHandler {
 
         // if (commandHandler.isGlobalCommand) {
         // manageCommandTimeout(command, globalTimeouts, instruction, msg.userInfo, cmd, channel);
-        const index = this.globalTimeouts.findIndex(value => value.name === instruction);
+        const index = this.globalTimeouts.findIndex(value => value.name === cooldownBucketKey);
 
         if (index > -1) {
             const ttl = Math.ceil(Math.abs(this.globalTimeouts[index].timeout - new Date().getTime()) / 1000);
@@ -63,7 +64,7 @@ export class MessageHandler {
             this.globalTimeouts.splice(index, 1);
         }
 
-        this.globalTimeouts.push({ name: instruction, timeout: new Date().getTime() });
+        this.globalTimeouts.push({ name: cooldownBucketKey, timeout: new Date().getTime() });
         // } else {
         //     // manageCommandTimeout(command, userTimeouts[msg.userInfo.userId] ?? [], instruction, msg.userInfo, cmd, channel);
         //     const userCommands = userTimeouts[msg.userInfo.userId];
@@ -84,7 +85,11 @@ export class MessageHandler {
         //     userTimeouts[msg.userInfo.userId].push({ name: instruction, timeout: new Date().getTime() });
         // }
 
-        commandHandler.handle(channel, instruction, chatUser, message, commandArguments);
+        await commandHandler
+            .handle(channel, instruction, chatUser, message, commandArguments)
+            .catch((reason: any) => {
+                this.logger.error(`* Executed Message Handler :: ${message}`, { channel, user, chatUser, reason });
+            });
     }
 
     private parseCommand(message: string): ParsedCommand {

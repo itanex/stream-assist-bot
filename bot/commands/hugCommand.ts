@@ -26,7 +26,7 @@ export class HugCommand implements ICommandHandler {
     ) {
     }
 
-    async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
+    async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         if (args[1]) {
             const user = await this.apiClient.users.getUserByName(args[1]);
 
@@ -43,6 +43,6 @@ export class HugCommand implements ICommandHandler {
             this.chatClient.say(channel, `${userstate.displayName} hugs themself`);
         }
 
-        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
+        this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }

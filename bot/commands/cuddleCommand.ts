@@ -26,7 +26,7 @@ export class CuddleCommand implements ICommandHandler {
     ) {
     }
 
-    async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
+    async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         const user = await this.apiClient.users.getUserByName(args[0].toLocaleLowerCase().trim());
 
         if (!user || userstate.displayName === user.displayName) {
@@ -35,6 +35,6 @@ export class CuddleCommand implements ICommandHandler {
 
         this.chatClient.say(channel, `${userstate.displayName} cuddles ${user.displayName}`);
 
-        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
+        this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }

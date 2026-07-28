@@ -95,7 +95,7 @@ export class ShoutOutCommand implements ICommandHandler {
         }
     }
 
-    async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any, isRaid: boolean = false): Promise<void> {
+    async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any, isRaid: boolean = false): Promise<void> {
         // Get User from the Twitch API
         const user = await this.apiClient.users.getUserByName(args[0]);
 
@@ -112,6 +112,6 @@ export class ShoutOutCommand implements ICommandHandler {
             await this.getLatestSchedule(user, channel, link);
         }
 
-        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
+        this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }

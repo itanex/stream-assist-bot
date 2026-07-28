@@ -28,7 +28,7 @@ export class FollowAgeCommand implements ICommandHandler {
     ) {
     }
 
-    async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
+    async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         let followingUser: { displayName: string, id: string } = null;
 
         if (args[1]) { // if args1 results in a username as part of the command being executed
@@ -53,6 +53,6 @@ export class FollowAgeCommand implements ICommandHandler {
             this.chatClient.say(channel, `@${followingUser.displayName} has been following ${channel} for ${getAgeReport(ageTimeSpan)}`);
         }
 
-        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
+        this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }

@@ -43,7 +43,7 @@ describe('Database (postgres)', () => {
     });
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        jest.resetAllMocks();
     });
 
     describe('Valid Database object', () => {

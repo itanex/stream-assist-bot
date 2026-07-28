@@ -29,13 +29,13 @@ export class CountExhaustCommand implements ICommandHandler {
     ) {
     }
 
-    async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
+    async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         if (this.responses.length) {
             const msg = this.tokenizeMessage(this.responses[Math.floor(Math.random() * this.responses.length)], channel);
 
             this.chatClient.say(channel, msg);
 
-            this.logger.info(`* Executed ${commandName} in ${channel} :: ${userstate.displayName} > ${message}`);
+            this.logger.info(`* Executed ${command} in ${channel} :: ${userstate.displayName} > ${message}`);
         }
     }
 

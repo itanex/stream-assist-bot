@@ -17,7 +17,7 @@ Commands are discrete units of chat functionality. Each command is a class imple
 ```typescript
 export interface ICommandHandler {
     exp: RegExp;
-    phraseKey?: PhraseKey;
+    commandName?: CommandName;
     timeout: number;
     mod: boolean;
     vip: boolean;
@@ -28,7 +28,8 @@ export interface ICommandHandler {
     viewer: boolean;
     isGlobalCommand: boolean;
     restriction: OnlineState;
-    handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void>;
+    cooldownKey?(args: string[]): string;
+    handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void>;
 }
 ```
 
@@ -37,7 +38,7 @@ export interface ICommandHandler {
 | Property | Type | Description |
 |---|---|---|
 | `exp` | `RegExp` | Pattern matched against the raw chat message. The first capture group is the command name; subsequent groups become `args`. |
-| `phraseKey` | `PhraseKey?` | Key into the phrase table for commands with database-backed response text. Omit for commands with computed or fixed responses. |
+| `commandName` | `CommandName?` | Key into the database-backed response text - either a `defaultResponses` key (single fixed text) or a `CommandFamilies` key (multiple variants). Omit for commands with computed or fixed responses. |
 | `timeout` | `number` | Cooldown period in seconds. Privileged users (mod, VIP, subscriber, etc.) receive half this duration. |
 | `mod` | `boolean` | Allow channel moderators. |
 | `vip` | `boolean` | Allow VIPs. |
@@ -48,6 +49,7 @@ export interface ICommandHandler {
 | `viewer` | `boolean` | Allow anyone in chat, including non-followers. |
 | `isGlobalCommand` | `boolean` | When `true`, the cooldown is shared across all users. Per-user cooldown is not yet implemented. |
 | `restriction` | `OnlineState` | `'always'` - runs any time. `'online'` - only while stream is live. `'offline'` - only while stream is offline. |
+| `cooldownKey` | `(args: string[]) => string` (optional method) | Overrides the default cooldown bucket. When implemented, `MessageHandler` buckets the cooldown timer on this method's return value instead of the class name. When absent, falls back to today's behavior (bucketed by class name). |
 
 ---
 
@@ -96,37 +98,71 @@ The `timeout` value is the base cooldown in seconds. Privileged users (founder, 
 
 Global cooldowns (`isGlobalCommand: true`) are shared - once any user triggers the cooldown, the command is unavailable to everyone until the period expires.
 
----
+### Custom Cooldown Buckets
 
-## Database-Backed Phrases
+By default, the cooldown timer is bucketed by the command's class name - one shared timer per command. A command can override this by implementing `cooldownKey(args)`, returning a different bucket key per invocation (e.g. bucketing by variant, so `!socials discord` and `!socials twitter` don't share a cooldown). When `cooldownKey` is absent, `MessageHandler` falls back to the class name, matching today's behavior.
 
-Command response text can live in the database (`CommandPhrase` table) instead of the class, making it editable at runtime without a redeploy.
-
-* Default text is declared in `bot/utilities/default-phrases.ts`. The `PhraseKey` type is derived from its keys, so a command's `phraseKey` must have a matching entry or the build fails.
-* On startup, `PhraseService.initialize()` seeds any missing rows from the defaults. Existing rows are never overwritten - edits survive restarts.
-* Phrases are cached in memory at startup and kept in sync on writes. Reads never hit the database per-message. Rows edited directly in the database are not visible until restart.
-* A command reads its phrase via `PhraseService.getCommandTemplate(this.phraseKey)`, falling back to its `defaultPhrases` entry if the lookup misses.
-
-### Making a command's phrase editable
-
-1. Add an entry to `defaultPhrases` with the command's trigger word as the key
-2. Declare `phraseKey` on the command class referencing that key
-3. Inject `PhraseService` and read the template in `handle`
+The cooldown chat message always names the command (its class name), regardless of which bucket key was actually used internally - the bucket key is bookkeeping only, never displayed.
 
 ---
 
-## Editing Phrases from Chat
+## Database-Backed Responses
 
-`ManageCommand` (`bot/commands/manage.command.ts`) provides runtime phrase editing. Moderator or broadcaster only.
+Command response text can live in the database (`CommandResponse` table) instead of the class, making it editable at runtime without a redeploy.
 
-    !command edit <name> <template>
-    !cmd edit <name> <template>
+* Default text is declared in `bot/utilities/default-responses.ts`. `CommandName` is derived from its keys plus `CommandFamilies`' keys, so a command's `commandName` must have a matching entry in one of the two or the build fails.
+* On startup, `CommandResponseService.initialize()` seeds any missing rows from the defaults. Existing rows are never overwritten - edits survive restarts.
+* Responses are cached in memory at startup and kept in sync on writes. Reads never hit the database per-message. Rows edited directly in the database are not visible until restart.
+* A command reads its response via `CommandResponseService.getCommandText(this.commandName)`, falling back to its `defaultResponses` entry if the lookup misses.
 
-* `<name>` is the phrase key (e.g. `about`); `<template>` is free text to end of line
-* Only commands with an existing phrase row are editable - anything else replies "does not have an editable phrase"
-* Templates are trimmed and validated (length bounds); invalid templates are rejected with a chat reply and the stored phrase is unchanged
-* Known behavior: a message missing the template entirely (`!command edit about`) does not match the pattern and is silently ignored
-* Add/remove verbs are not yet implemented - the phrase set is defined by `default-phrases.ts`
+### Making a command's response editable
+
+1. Add an entry to `defaultResponses` with the command's trigger word as the key
+2. Declare `commandName` on the command class referencing that key
+3. Inject `CommandResponseService` and read the text in `handle`
+
+### Command Families and Variants
+
+Some commands respond with one of several named variants rather than a single text response (e.g. `!socials discord` vs `!socials twitter`). These set `commandName` to a `CommandFamilies` key instead of a `defaultResponses` key - the same field serves both cases.
+
+* Families are declared in the `CommandFamilies` registry (`bot/utilities/default-responses.ts`). A command sets `commandName` to one of these registered names.
+* Unlike single-reponse commands, family variants are never seeded from `defaultResponses` - that seed path only populates single-reponse commands. Family variant rows exist only once created via the `add` verb (see [Editing Reponses from Chat](#editing-reponses-from-chat)).
+* `CommandResponseService.getCommandText(commandName, variant?)` takes an optional `variant`. Omitting it looks up the base/empty-variant entry for that name.
+* A command reads its variant text via `CommandResponseService.getCommandText(this.commandName, variant)`, where `variant` comes from its own capture group in `exp`.
+
+Whether a `commandName` value resolves to a single fixed reponse or a family of reponses depends only on which registry it's drawn from - `defaultResponses` or `CommandFamilies` - not on a separate field.
+
+---
+
+## Editing Reponses from Chat
+
+`ManageCommand` (`bot/commands/manage.command.ts`) provides runtime response editing. Moderator or broadcaster only.
+
+    !command add <name>[.<variant>] <text>
+    !command edit <name>[.<variant>] <text>
+    !cmd add <name>[.<variant>] <text>
+    !cmd edit <name>[.<variant>] <text>
+
+* `<name>` is a `commandName` value - either a `defaultResponses` key or a `CommandFamilies` key; `<name>.<variant>` targets a specific family variant (e.g. `socials.discord`). The dot-compound form is chat-input only - `name` and `variant` are split apart before reaching `CommandResponseService`, storage never holds dotted keys.
+* `add` creates a new response row. `<name>` must be a registered `CommandFamilies` name, and `<variant>` is required and cannot be empty - `add` cannot create a base/single-reponse entry.
+* `edit` updates an existing row - a family variant or a single-response command. Only commands with an existing reponse row are editable - anything else replies "does not have an editable text"
+* Text is trimmed and validated (length bounds); invalid text is rejected with a chat reply and the stored text is unchanged
+* A compound name with more than one dot (e.g. `a.b.c`) is rejected as an invalid command
+* Known behavior: a message missing the text entirely (`!command edit about`) does not match the pattern and is silently ignored
+* `remove` is not yet implemented - reponses can be added and edited, not deleted, from chat
+
+### Reply Messages
+
+| Result | Verb | Reply |
+|---|---|---|
+| `invalidInput` | add, edit | Invalid input: both [name] and [text] are required |
+| `invalidText` | add, edit | Invalid text for command '\<name\>' |
+| `invalidCommandName` | add | Command \<name\> text family is not recognized |
+| `alreadyExists` | add | Command \<name\> text already exists |
+| `inserted` | add | Command \<name\> text was inserted |
+| `notEditable` | edit | Command \<name\> does not have an editable text |
+| `updated` | edit | Command \<name\> text was updated |
+| `updateFailed` | edit | Command \<name\> text failed to update |
 
 ---
 
@@ -161,9 +197,9 @@ export class MyCommand implements ICommandHandler {
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {}
 
-    async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
+    async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         this.chatClient.say(channel, 'Hello!');
-        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
+        this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }
 ```

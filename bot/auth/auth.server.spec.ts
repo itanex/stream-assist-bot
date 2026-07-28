@@ -64,7 +64,7 @@ describe('AuthenticationServer', () => {
     let mockAxiosPost: any;
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        jest.resetAllMocks();
         // Retrieve the post mock after the factory has run
         mockAxiosPost = axios.post;
 

@@ -11,13 +11,13 @@ import StreamEventRecord from './models/stream-event-record.dbo';
 import Subscribers from './models/subscribers.dbo';
 import SubscriptionType from './models/subscriptionType';
 import SubscriptionGiftUsers from './models/subscriptionGiftUsers.dbo';
-import CommandPhrase from './models/commandPhrase.dbo';
+import CommandResponse from './models/command-response.dbo';
 
 export {
     BanEvent,
     ChannelPointRedeem,
     CheerEvent,
-    CommandPhrase,
+    CommandResponse,
     DeathCounts,
     FollowEvent,
     LurkingUsers,

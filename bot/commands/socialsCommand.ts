@@ -1,13 +1,15 @@
 import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import environment from '../../configurations/environment';
 import InjectionTypes from '../../dependency-management/types';
 import { ICommandHandler, OnlineState } from './iCommandHandler';
+import CommandResponseService from '../utilities/command-response.service';
+import { CommandName } from '../utilities/default-responses';
 
 @injectable()
 export class SocialsCommand implements ICommandHandler {
-    exp: RegExp = /^!(socials)$/i;
+    exp: RegExp = /^!(socials)(?: (\w+))?(?: .+)?$/i;
+    commandName: CommandName = 'socials';
     timeout: number = 30;
     mod: boolean = true;
     vip: boolean = true;
@@ -21,20 +23,29 @@ export class SocialsCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
-    async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        const msg = `
-            Discord ${environment.discordInvite},
-            The social media site formerly known as Twitter ${environment.twitter.link},
-            and 
-            YouTube ${environment.youtube.link}.
-            `;
+    cooldownKey(args: string[]): string {
+        const [variant] = args as string[];
+        const isKnown = !!this.commandResponseService.getCommandText(this.commandName, variant);
 
-        this.chatClient.say(channel, msg);
+        return !!variant && isKnown ? `${SocialsCommand.name}:${variant}` : SocialsCommand.name;
+    }
 
-        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
+    async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
+        const [variant] = args as string[];
+
+        const response = this.commandResponseService.getCommandText(this.commandName, variant);
+
+        if (response) {
+            this.chatClient.say(channel, response);
+        } else {
+            this.logger.warn(`Unknown Variant`, { variant, args, message });
+        }
+
+        this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }

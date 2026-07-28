@@ -25,7 +25,7 @@ export default class BrainCommand implements ICommandHandler {
     ) {
     }
 
-    async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
+    async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         const user = args[0]
             ? args[0].toLocaleLowerCase().trim()
             : userstate.displayName;
@@ -34,6 +34,6 @@ export default class BrainCommand implements ICommandHandler {
 
         this.chatClient.say(channel, `${user}'s brain is ${percent}% working.`);
 
-        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
+        this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }
