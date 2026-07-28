@@ -43,13 +43,14 @@ export default class CommandResponse extends Model {
             .entries(entries)
             .map(([commandName, text]) => ({ commandName, text }));
 
-        await CommandResponse.bulkCreate(
-            records,
-            {
-                ignoreDuplicates: true,
-                validate: true,
-            },
-        );
+        await CommandResponse
+            .bulkCreate(
+                records,
+                {
+                    ignoreDuplicates: true,
+                    validate: true,
+                },
+            );
     }
 
     /**
@@ -58,12 +59,12 @@ export default class CommandResponse extends Model {
      * @param variant The command name variant to fetch
      * @returns The Command based on the provided commandName or null
      */
-    static async getCommandText(commandName: string, variant?: string): Promise<CommandResponse | null> {
+    static async getCommandText(commandName: string, variant: string = ''): Promise<CommandResponse | null> {
         return CommandResponse
             .findOne({
                 where: {
                     commandName,
-                    variant: variant ?? null,
+                    variant,
                 },
             });
     }
@@ -91,14 +92,15 @@ export default class CommandResponse extends Model {
      * @returns The created command if successful, rejected error otherwise
      */
     static async addCommandText(commandName: string, text: string, variant: string = ''): Promise<CommandResponse> {
-        return CommandResponse.create({
-            commandName,
-            variant,
-            text,
-        }, {
-            isNewRecord: true,
-            validate: true,
-        });
+        return CommandResponse
+            .create({
+                commandName,
+                variant,
+                text,
+            }, {
+                isNewRecord: true,
+                validate: true,
+            });
     }
 
     /**
@@ -109,16 +111,66 @@ export default class CommandResponse extends Model {
      * @returns boolean flag denoting if the provided command was updated
      */
     static async updateCommandText(commandName: string, text: string, variant: string = ''): Promise<boolean> {
-        const [count] = await CommandResponse.update(
-            { text },
-            {
+        const [count] = await CommandResponse
+            .update(
+                { text },
+                {
+                    where: {
+                        commandName,
+                        variant,
+                    },
+                },
+            );
+
+        return count === 1;
+    }
+
+    /**
+     * Soft-Delete specified command, if present
+     * @param commandName The command name to remove
+     * @param variant The command name variant to remove
+     * @returns boolean flag denoting if the provided command was removed
+     */
+    static async removeCommandText(commandName: string, variant: string = ''): Promise<boolean> {
+        const count = await CommandResponse
+            .destroy({
                 where: {
                     commandName,
                     variant,
                 },
-            },
-        );
+            });
 
         return count === 1;
+    }
+
+    /**
+     * Restore specified command, if present
+     * @param commandName The command name to restore
+     * @param variant The command name variant to restore
+     * @returns boolean flag denoting if the provided command was restored
+     */
+    static async restoreCommandText(commandName: string, variant: string = ''): Promise<boolean> {
+        const command = await CommandResponse
+            .findOne({
+                where: {
+                    commandName,
+                    variant,
+                },
+                paranoid: false,
+            });
+
+        if (command?.deletedAt) {
+            await CommandResponse
+                .restore({
+                    where: {
+                        commandName,
+                        variant,
+                    },
+                });
+
+            return true;
+        }
+
+        return false;
     }
 }
