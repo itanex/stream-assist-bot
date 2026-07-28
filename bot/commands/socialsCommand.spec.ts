@@ -55,7 +55,7 @@ describe('Socials Command Tests', () => {
             // Arrange
             const args = ['variant'];
             mockCommandResponseService.getCommandText
-                .mockReturnValue('valid template');
+                .mockReturnValue('valid text...');
 
             // Act
             const result = subject.cooldownKey(args);
