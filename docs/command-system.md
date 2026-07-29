@@ -136,26 +136,29 @@ Whether a `commandName` value resolves to a single fixed reponse or a family of 
 
 ## Editing Reponses from Chat
 
-`ManageCommand` (`bot/commands/manage.command.ts`) provides runtime response editing. Moderator or broadcaster only.
+`ManageCommand` (`bot/commands/manage.command.ts`) provides runtime response management. Moderator or broadcaster only.
 
     !command add <name>[.<variant>] <text>
     !command edit <name>[.<variant>] <text>
+    !command remove <name>.<variant>
     !cmd add <name>[.<variant>] <text>
     !cmd edit <name>[.<variant>] <text>
+    !cmd remove <name>.<variant>
 
 * `<name>` is a `commandName` value - either a `defaultResponses` key or a `CommandFamilies` key; `<name>.<variant>` targets a specific family variant (e.g. `socials.discord`). The dot-compound form is chat-input only - `name` and `variant` are split apart before reaching `CommandResponseService`, storage never holds dotted keys.
-* `add` creates a new response row. `<name>` must be a registered `CommandFamilies` name, and `<variant>` is required and cannot be empty - `add` cannot create a base/single-reponse entry.
-* `edit` updates an existing row - a family variant or a single-response command. Only commands with an existing reponse row are editable - anything else replies "does not have an editable text"
-* Text is trimmed and validated (length bounds); invalid text is rejected with a chat reply and the stored text is unchanged
+* `add` creates a new response row. `<name>` must be a registered `CommandFamilies` name, and `<variant>` is required and cannot be empty - `add` cannot create a base/single-response entry.
+* `edit` updates an existing row - a family variant or a single-response command. Only commands with an existing response row are editable - anything else replies "does not have an editable text"
+* `remove` soft-deletes an existing family variant row and evicts it from cache. `<variant>` is required and cannot be empty - baseline/single-response rows (`defaultResponses` entries) cannot be removed from chat.
+* A removed variant is gone from lookups and family listings (e.g. `!socials`) until restored. `add`-ing the same `<name>.<variant>` again un-deletes the row and overwrites its text with the newly supplied value, rather than failing with "already exists".
+* Text (`add`/`edit`) is trimmed and validated (length bounds); invalid text is rejected with a chat reply and the stored text is unchanged
 * A compound name with more than one dot (e.g. `a.b.c`) is rejected as an invalid command
-* Known behavior: a message missing the text entirely (`!command edit about`) does not match the pattern and is silently ignored
-* `remove` is not yet implemented - reponses can be added and edited, not deleted, from chat
+* A message missing its trailing text (e.g. `!command edit about`) still matches the pattern; `add`/`edit` reply with the generic invalid-input message rather than being silently ignored. `remove` never takes trailing text, so this doesn't apply to it.
 
 ### Reply Messages
 
 | Result | Verb | Reply |
 |---|---|---|
-| `invalidInput` | add, edit | Invalid input: both [name] and [text] are required |
+| `invalidInput` | add, edit, remove | Invalid input: both [name] and [text] are required |
 | `invalidText` | add, edit | Invalid text for command '\<name\>' |
 | `invalidCommandName` | add | Command \<name\> text family is not recognized |
 | `alreadyExists` | add | Command \<name\> text already exists |
@@ -163,6 +166,9 @@ Whether a `commandName` value resolves to a single fixed reponse or a family of 
 | `notEditable` | edit | Command \<name\> does not have an editable text |
 | `updated` | edit | Command \<name\> text was updated |
 | `updateFailed` | edit | Command \<name\> text failed to update |
+| `notFound` | remove | Command \<name\> was not found |
+| `removed` | remove | Command \<name\> was removed |
+| `removeFailed` | remove | Command \<name\> failed to be removed |
 
 ---
 
