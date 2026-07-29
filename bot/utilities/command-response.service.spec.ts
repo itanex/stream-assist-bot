@@ -6,6 +6,7 @@ import CommandResponseService, {
     CommandTextValidationResult,
     CommandTextInsertResult,
     CommandTextUpdateResult,
+    CommandTextRemoveResult,
 } from './command-response.service';
 import { mockLogger } from '../../tests/common.mocks';
 import { defaultResponses } from './default-responses';
@@ -421,6 +422,30 @@ describe('CommandResponse.Service (postgres)', () => {
                 expect(untouched.length).toBe(1);
                 expect(untouched.map(x => x.variant)).not.toContain(testVariants[1]);
             });
+            it(`row 'inserted' and gets new text (restored)`, async () => {
+                // Arrange - beforeEach()
+                await seedVariants(testCommand, testVariants);
+
+                // Act
+                const sideeffect = await subject.removeCommandText(testCommand, testVariants[1]);
+                const initial = subject.getCommandText(testCommand, testVariants[1]);
+                const result = await subject.addCommandText(testCommand, validText, testVariants[1]);
+                const cached = subject.getCommandText(testCommand, testVariants[1]);
+                const rows = await CommandResponse.findAll({ where: { commandName: testCommand } });
+
+                const inserted = rows.find(r => r.variant === testVariants[1]);
+                const untouched = rows.filter(r => r.variant !== testVariants[1]);
+
+                // Assert
+                expect(sideeffect).toBe<CommandTextRemoveResult>('removed');
+                expect(result).toBe<CommandTextInsertResult>('inserted');
+                expect(initial).toBe(undefined);
+                expect(cached).toBe(validText);
+                expect(rows.length).toBe(2);
+                expect(inserted?.text).toBe(validText);
+                expect(untouched.length).toBe(1);
+                expect(untouched.map(x => x.variant)).not.toContain(testVariants[1]);
+            });
             it('invalid text (already exists) rejected', async () => {
                 // Arrange
                 const spy = jest.spyOn(CommandResponse, 'addCommandText')
@@ -452,6 +477,82 @@ describe('CommandResponse.Service (postgres)', () => {
 
                 // Act & Assert
                 await expect(subject.addCommandText(testCommand, validText, testVariants[0]))
+                    .rejects.toThrow('connection lost');
+
+                spy.mockRestore();
+            });
+        });
+        describe('removeCommandText()', () => {
+            it('should return false with empty commandName', async () => {
+                // Arrange - beforeEach()
+                // Act
+                const result = await subject.removeCommandText('', 'ValidVariant');
+
+                // Assert
+                expect(result).toBe<CommandTextValidationResult>('invalidInput');
+            });
+            it('should return invalidInput with empty variant', async () => {
+                // Arrange - beforeEach()
+                // Act
+                const result = await subject.removeCommandText(validName);
+
+                // Assert
+                expect(result).toBe<CommandTextValidationResult>('invalidInput');
+            });
+            it('command/variant not in cache returns notFound', async () => {
+                // Arrange
+                await seedVariants(testCommand, testVariants);
+
+                // Act
+                const result = await subject.removeCommandText(testCommand, 'unknown');
+
+                // Assert
+                expect(result).toBe<CommandTextRemoveResult>('notFound');
+            });
+            it('should remove record from database records and cache', async () => {
+                // Arrange
+                await seedVariants(testCommand, testVariants);
+
+                // Act
+                const result = await subject.removeCommandText(testCommand, testVariants[0]);
+                const rows = await CommandResponse.findAll({ where: { commandName: testCommand } });
+                const variants = subject.getCommandVariants(testCommand);
+
+                // Assert
+                expect(result).toBe<CommandTextRemoveResult>('removed');
+                expect(rows.length).toBe(testVariants.length - 1);
+                expect(rows).not.toContainEqual(expect.objectContaining({ commandName: testCommand, variant: testVariants[0] }));
+                expect(variants.length).toBe(testVariants.length - 1);
+                expect(variants).not.toContain(testVariants[0]);
+            });
+            it('should not have removed valid command/variant from database or cache', async () => {
+                // Arrange
+                await seedVariants(testCommand, testVariants);
+                const spy = jest.spyOn(CommandResponse, 'removeCommandText')
+                    .mockResolvedValue(false);
+
+                // Act
+                const result = await subject.removeCommandText(testCommand, testVariants[0]);
+                const rows = await CommandResponse.findAll({ where: { commandName: testCommand } });
+                const variants = subject.getCommandVariants(testCommand);
+
+                // Assert
+                expect(result).toBe<CommandTextRemoveResult>('removeFailed');
+                expect(rows.length).toBe(testVariants.length);
+                expect(rows).toContainEqual(expect.objectContaining({ commandName: testCommand, variant: testVariants[0] }));
+                expect(variants.length).toBe(testVariants.length);
+                expect(variants).toContain(testVariants[0]);
+
+                spy.mockRestore();
+            });
+            it('thrown error propagates', async () => {
+                // Arrange
+                await seedVariants(testCommand, testVariants);
+                const spy = jest.spyOn(CommandResponse, 'removeCommandText')
+                    .mockRejectedValueOnce(new Error('connection lost'));
+
+                // Act & Assert
+                await expect(subject.removeCommandText(testCommand, testVariants[0]))
                     .rejects.toThrow('connection lost');
 
                 spy.mockRestore();

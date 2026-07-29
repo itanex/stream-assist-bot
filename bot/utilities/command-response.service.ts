@@ -19,6 +19,11 @@ export type CommandTextInsertResult = CommandTextValidationResult |
     'invalidCommandName' |
     'inserted';
 
+export type CommandTextRemoveResult = CommandTextValidationResult |
+    'notFound' |
+    'removed' |
+    'removeFailed';
+
 type ResponseEntry = { variant: string; text: string };
 
 const cacheKey = (name: string, variant: string = ''): string => (variant ? `${name}.${variant}` : name);
@@ -64,6 +69,13 @@ export default class CommandResponseService {
         return this.responseCache.get(cacheKey(commandName, variant))?.text;
     }
 
+    /**
+     * Add the command/variant with the provided text
+     * @param commandName Command to add
+     * @param text new text value for the Command
+     * @param variant The command name variant to add
+     * @returns boolean flag denoting if the provided command/variant was created
+     */
     async addCommandText(commandName: string, text: string, variant: string = ''): Promise<CommandTextInsertResult> {
         if (!commandName || !text || !variant) {
             return 'invalidInput';
@@ -78,7 +90,13 @@ export default class CommandResponseService {
         }
 
         try {
-            await CommandResponse.addCommandText(commandName, text, variant);
+            const restored = await CommandResponse.restoreCommandText(commandName, variant);
+
+            if (restored) {
+                await CommandResponse.updateCommandText(commandName, text, variant);
+            } else {
+                await CommandResponse.addCommandText(commandName, text, variant);
+            }
 
             this.responseCache.set(cacheKey(commandName, variant), { variant, text });
 
@@ -95,7 +113,7 @@ export default class CommandResponseService {
     }
 
     /**
-     * Update the command with the provided text
+     * Update the command/variant with the provided text
      * @param commandName Command to update
      * @param text new text value for the Command
      * @param variant The command name variant to update
@@ -128,5 +146,31 @@ export default class CommandResponseService {
         }
 
         return 'updateFailed';
+    }
+
+    /**
+     * Remove (soft-delete) the command/variant
+     * @param commandName Command to remove
+     * @param variant The command variant to remove
+     * @returns boolean flag denoting if the provided command/variant was removed
+     */
+    async removeCommandText(commandName: string, variant: string = ''): Promise<CommandTextRemoveResult> {
+        if (!commandName || !variant) {
+            return 'invalidInput';
+        }
+
+        if (!this.responseCache.has(cacheKey(commandName, variant))) {
+            return 'notFound';
+        }
+
+        const result = await CommandResponse.removeCommandText(commandName, variant);
+
+        if (result) {
+            this.responseCache.delete(cacheKey(commandName, variant));
+            return 'removed';
+        }
+
+        this.logger.warn(`Valid command (${cacheKey(commandName, variant)}) database remove attempt failed.`);
+        return 'removeFailed';
     }
 }

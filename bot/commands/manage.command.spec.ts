@@ -2,13 +2,29 @@ import 'reflect-metadata';
 import { ChatUser } from '@twurple/chat';
 import ManageCommand, {
     InsertReplies,
+    RemoveReplies,
     UnsupportedMessage,
     UpdateReplies,
 } from './manage.command';
 import { mockChatClient, mockCommandResponseService, mockLogger } from '../../tests/common.mocks';
-import { CommandTextInsertResult, CommandTextUpdateResult } from '../utilities/command-response.service';
+import {
+    CommandTextInsertResult,
+    CommandTextRemoveResult,
+    CommandTextUpdateResult,
+} from '../utilities/command-response.service';
 
-const messageFn = (subcommand: string, compoundName: string, text: string) => `!command ${subcommand} ${compoundName} ${text}`;
+/** Utility method for constructing command message inline with ManageCommand */
+const messageFn = (subcommand: string, compoundName: string, text: string = '') => `!command ${subcommand} ${compoundName} ${text}`.trim();
+
+/** Utility method for extracting components to properly invoke the handler */
+const parseComand = (message: string, expression: RegExp): string[] => {
+    const result = message.trim().match(expression)!;
+    if (result) {
+        const [, ...[, ...args]] = result;
+        return args;
+    }
+    return [];
+};
 
 describe('ManageCommand', () => {
     const channel = 'TestChannel';
@@ -33,13 +49,9 @@ describe('ManageCommand', () => {
     it('Unsupported excessive subvariant (3 generations)', async () => {
         // Arrange
         const compoundName = 'Command.Variant.UnsupportedVariantLevel';
-        const subCommand = 'invariant';
+        const subCommand = 'add';
         const message = messageFn(subCommand, compoundName, text);
-        const args: any[] = [
-            subCommand,
-            compoundName,
-            text,
-        ];
+        const args = parseComand(message, subject.exp);
 
         // Act
         await subject.handle(channel, command, user, message, args);
@@ -104,9 +116,9 @@ describe('ManageCommand', () => {
                 // Arrange
                 const compoundName = 'Command.Variant';
                 const [name, variant] = compoundName.split('.');
-                const message = `!command edit ${compoundName} ${text}`;
+                const message = messageFn(subCommand, compoundName, text);
                 const args: any[] = [
-                    'edit',
+                    subCommand,
                     compoundName,
                     text,
                 ];
@@ -132,6 +144,52 @@ describe('ManageCommand', () => {
 
             mockCommandResponseService
                 .setCommandText
+                .mockRejectedValue(new Error('connection lost'));
+
+            // Act & Assert
+            await expect(subject.handle(channel, command, user, message, args))
+                .rejects.toThrow('connection lost');
+
+            expect(mockChatClient.say).not.toHaveBeenCalled();
+        });
+    });
+    describe('Remove Command', () => {
+        const subCommand = 'remove';
+
+        it.each(Object.keys(RemoveReplies) as CommandTextRemoveResult[])(
+            'replies correctly for %s result',
+            async result => {
+                // Arrange
+                const compoundName = 'Command.Variant';
+                const [name, variant] = compoundName.split('.');
+                const message = messageFn(subCommand, compoundName);
+                const args: any[] = [
+                    subCommand,
+                    compoundName,
+                    text,
+                ];
+
+                mockCommandResponseService
+                    .removeCommandText
+                    .mockResolvedValue(result);
+
+                // Act
+                await subject.handle(channel, command, user, message, args);
+
+                // Assert
+                expect(mockCommandResponseService.removeCommandText)
+                    .toHaveBeenCalledWith(name, variant);
+                expect(mockChatClient.say).toHaveBeenCalledWith(channel, RemoveReplies[result](compoundName));
+            },
+        );
+
+        it('propagates unexpected service errors without replying', async () => {
+            // Arrange
+            const message = messageFn(subCommand, command, text);
+            const args = [subCommand, command, text];
+
+            mockCommandResponseService
+                .removeCommandText
                 .mockRejectedValue(new Error('connection lost'));
 
             // Act & Assert
