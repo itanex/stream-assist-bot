@@ -141,9 +141,11 @@ Whether a `commandName` value resolves to a single fixed reponse or a family of 
     !command add <name>[.<variant>] <text>
     !command edit <name>[.<variant>] <text>
     !command remove <name>.<variant>
+    !command restore <name>.<variant>
     !cmd add <name>[.<variant>] <text>
     !cmd edit <name>[.<variant>] <text>
     !cmd remove <name>.<variant>
+    !cmd restore <name>.<variant>
 
 * `<name>` is a `commandName` value - either a `defaultResponses` key or a `CommandFamilies` key; `<name>.<variant>` targets a specific family variant (e.g. `socials.discord`). The dot-compound form is chat-input only - `name` and `variant` are split apart before reaching `CommandResponseService`, storage never holds dotted keys.
 * `add` creates a new response row. `<name>` must be a registered `CommandFamilies` name, and `<variant>` is required and cannot be empty - `add` cannot create a base/single-response entry.
@@ -153,12 +155,13 @@ Whether a `commandName` value resolves to a single fixed reponse or a family of 
 * Text (`add`/`edit`) is trimmed and validated (length bounds); invalid text is rejected with a chat reply and the stored text is unchanged
 * A compound name with more than one dot (e.g. `a.b.c`) is rejected as an invalid command
 * A message missing its trailing text (e.g. `!command edit about`) still matches the pattern; `add`/`edit` reply with the generic invalid-input message rather than being silently ignored. `remove` never takes trailing text, so this doesn't apply to it.
+* `restore` un-deletes an existing soft-deleted family variant row and reinserts it into cache. `<variant>` is required and cannot be empty - baseline/single-response rows (`defaultResponses` entries) can never be soft-deleted from chat, so there's nothing for `restore` to act on.
 
 ### Reply Messages
 
 | Result | Verb | Reply |
 |---|---|---|
-| `invalidInput` | add, edit, remove | Invalid input: both [name] and [text] are required |
+| `invalidInput` | add, edit, remove, restore | Invalid input: both [name] and [text] are required |
 | `invalidText` | add, edit | Invalid text for command '\<name\>' |
 | `invalidCommandName` | add | Command \<name\> text family is not recognized |
 | `alreadyExists` | add | Command \<name\> text already exists |
@@ -169,6 +172,9 @@ Whether a `commandName` value resolves to a single fixed reponse or a family of 
 | `notFound` | remove | Command \<name\> was not found |
 | `removed` | remove | Command \<name\> was removed |
 | `removeFailed` | remove | Command \<name\> failed to be removed |
+| `notFound` | restore | Command \<name\> was not found |
+| `alreadyActive` | restore | Command \<name\> is already active |
+| `restored` | restore | Command \<name\> was restored |
 
 ---
 
