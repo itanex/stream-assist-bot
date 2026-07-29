@@ -24,6 +24,11 @@ export type CommandTextRemoveResult = CommandTextValidationResult |
     'removed' |
     'removeFailed';
 
+export type CommandTextRestoreResult = CommandTextValidationResult |
+    'notFound' |
+    'alreadyActive' |
+    'restored';
+
 type ResponseEntry = { variant: string; text: string };
 
 const cacheKey = (name: string, variant: string = ''): string => (variant ? `${name}.${variant}` : name);
@@ -90,7 +95,7 @@ export default class CommandResponseService {
         }
 
         try {
-            const restored = await CommandResponse.restoreCommandText(commandName, variant);
+            const [restored] = await CommandResponse.restoreCommandText(commandName, variant);
 
             if (restored) {
                 await CommandResponse.updateCommandText(commandName, text, variant);
@@ -172,5 +177,32 @@ export default class CommandResponseService {
 
         this.logger.warn(`Valid command (${cacheKey(commandName, variant)}) database remove attempt failed.`);
         return 'removeFailed';
+    }
+
+    /**
+     * Restore the command/variant from its soft-delete state
+     * @param commandName Command to restore
+     * @param variant The command variant to restore
+     * @returns boolean flag denoting if the provided command/variant was restored
+     */
+    async restoreCommandText(commandName: string, variant: string = ''): Promise<CommandTextRestoreResult> {
+        if (!commandName || !variant) {
+            return 'invalidInput';
+        }
+
+        if (!this.responseCache.has(cacheKey(commandName, variant))) {
+            const [restored, command] = await CommandResponse.restoreCommandText(commandName, variant);
+
+            if (restored && command) {
+                this.responseCache.set(cacheKey(command.commandName, command.variant), { variant: command.variant, text: command.text });
+                return 'restored';
+            }
+
+            if (!command) {
+                return 'notFound';
+            }
+        }
+
+        return 'alreadyActive';
     }
 }

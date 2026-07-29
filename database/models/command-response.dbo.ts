@@ -149,7 +149,7 @@ export default class CommandResponse extends Model {
      * @param variant The command name variant to restore
      * @returns boolean flag denoting if the provided command was restored
      */
-    static async restoreCommandText(commandName: string, variant: string = ''): Promise<boolean> {
+    static async restoreCommandText(commandName: string, variant: string = ''): Promise<[boolean, CommandResponse | null]> {
         const command = await CommandResponse
             .findOne({
                 where: {
@@ -168,9 +168,9 @@ export default class CommandResponse extends Model {
                     },
                 });
 
-            return true;
+            return [true, command];
         }
 
-        return false;
+        return [false, command];
     }
 }
