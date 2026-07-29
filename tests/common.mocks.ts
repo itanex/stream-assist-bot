@@ -25,4 +25,5 @@ export const mockCommandResponseService = <unknown>{
     getCommandText: jest.fn(),
     setCommandText: jest.fn(),
     removeCommandText: jest.fn(),
+    restoreCommandText: jest.fn(),
 } as jest.Mocked<CommandResponseService>;
