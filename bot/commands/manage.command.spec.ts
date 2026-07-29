@@ -3,6 +3,7 @@ import { ChatUser } from '@twurple/chat';
 import ManageCommand, {
     InsertReplies,
     RemoveReplies,
+    RestoreReplies,
     UnsupportedMessage,
     UpdateReplies,
 } from './manage.command';
@@ -11,6 +12,7 @@ import {
     CommandTextInsertResult,
     CommandTextRemoveResult,
     CommandTextUpdateResult,
+    CommandTextRestoreResult,
 } from '../utilities/command-response.service';
 
 /** Utility method for constructing command message inline with ManageCommand */
@@ -71,11 +73,7 @@ describe('ManageCommand', () => {
                 const compoundName = 'Command.Variant';
                 const [name, variant] = compoundName.split('.');
                 const message = messageFn(subCommand, compoundName, text);
-                const args: any[] = [
-                    subCommand,
-                    compoundName,
-                    text,
-                ];
+                const args = parseComand(message, subject.exp);
 
                 mockCommandResponseService
                     .addCommandText
@@ -117,11 +115,7 @@ describe('ManageCommand', () => {
                 const compoundName = 'Command.Variant';
                 const [name, variant] = compoundName.split('.');
                 const message = messageFn(subCommand, compoundName, text);
-                const args: any[] = [
-                    subCommand,
-                    compoundName,
-                    text,
-                ];
+                const args = parseComand(message, subject.exp);
 
                 mockCommandResponseService
                     .setCommandText
@@ -163,11 +157,7 @@ describe('ManageCommand', () => {
                 const compoundName = 'Command.Variant';
                 const [name, variant] = compoundName.split('.');
                 const message = messageFn(subCommand, compoundName);
-                const args: any[] = [
-                    subCommand,
-                    compoundName,
-                    text,
-                ];
+                const args = parseComand(message, subject.exp);
 
                 mockCommandResponseService
                     .removeCommandText
@@ -190,6 +180,48 @@ describe('ManageCommand', () => {
 
             mockCommandResponseService
                 .removeCommandText
+                .mockRejectedValue(new Error('connection lost'));
+
+            // Act & Assert
+            await expect(subject.handle(channel, command, user, message, args))
+                .rejects.toThrow('connection lost');
+
+            expect(mockChatClient.say).not.toHaveBeenCalled();
+        });
+    });
+    describe('Restore Command', () => {
+        const subCommand = 'restore';
+
+        it.each(Object.keys(RestoreReplies) as CommandTextRestoreResult[])(
+            'replies correctly for %s result',
+            async result => {
+                // Arrange
+                const compoundName = 'Command.Variant';
+                const [name, variant] = compoundName.split('.');
+                const message = messageFn(subCommand, compoundName);
+                const args = parseComand(message, subject.exp);
+
+                mockCommandResponseService
+                    .restoreCommandText
+                    .mockResolvedValue(result);
+
+                // Act
+                await subject.handle(channel, command, user, message, args);
+
+                // Assert
+                expect(mockCommandResponseService.restoreCommandText)
+                    .toHaveBeenCalledWith(name, variant);
+                expect(mockChatClient.say).toHaveBeenCalledWith(channel, RestoreReplies[result](compoundName));
+            },
+        );
+
+        it('propagates unexpected service errors without replying', async () => {
+            // Arrange
+            const message = messageFn(subCommand, command, text);
+            const args = [subCommand, command, text];
+
+            mockCommandResponseService
+                .restoreCommandText
                 .mockRejectedValue(new Error('connection lost'));
 
             // Act & Assert

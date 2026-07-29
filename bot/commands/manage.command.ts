@@ -8,6 +8,7 @@ import CommandResponseService, {
     CommandTextInsertResult,
     CommandTextUpdateResult,
     CommandTextRemoveResult,
+    CommandTextRestoreResult,
 } from '../utilities/command-response.service';
 
 export const GenericReplies: Record<CommandTextValidationResult, (name: string) => string> = {
@@ -36,6 +37,13 @@ export const RemoveReplies: Record<CommandTextRemoveResult, (name: string) => st
     removeFailed: name => `Command ${name} failed to be removed`,
 };
 
+export const RestoreReplies: Record<CommandTextRestoreResult, (name: string) => string> = {
+    ...GenericReplies,
+    notFound: name => `Command ${name} was not found`,
+    restored: name => `Command ${name} was restored`,
+    alreadyActive: name => `Command ${name} is already active`,
+};
+
 export const UnsupportedMessage = (name: string) => `${name} is not a valid command`;
 
 //
@@ -43,7 +51,7 @@ export const UnsupportedMessage = (name: string) => `${name} is not a valid comm
 //
 @injectable()
 export default class ManageCommand implements ICommandHandler {
-    exp: RegExp = /^!(command|cmd) (add|edit|remove) ([\w.]+)(?: (.+))?$/i;
+    exp: RegExp = /^!(command|cmd) (add|edit|remove|restore) ([\w.]+)(?: (.+))?$/i;
     timeout: number = 10;
     mod: boolean = true;
     vip: boolean = false;
@@ -84,6 +92,11 @@ export default class ManageCommand implements ICommandHandler {
                 case 'remove': {
                     const result = await this.commandResponseService.removeCommandText(name, variant);
                     this.chatClient.say(channel, RemoveReplies[result](compoundName));
+                    break;
+                }
+                case 'restore': {
+                    const result = await this.commandResponseService.restoreCommandText(name, variant);
+                    this.chatClient.say(channel, RestoreReplies[result](compoundName));
                     break;
                 }
             }
