@@ -18,6 +18,8 @@ description: Generate a commit message to be used in GitKraken. Will have a titl
       * Breaking change: `!` immediately before the colon
       * `<description>`: imperative present tense, no capitalized first
         letter, no trailing period
+      * Wrap code identifiers in backticks - types/classes, functions/
+        methods, variables/fields, file paths, and config/API keys
    * Body:
       * (Optional)
       * Bullet points are '*' not '-'
@@ -38,6 +40,11 @@ description: Generate a commit message to be used in GitKraken. Will have a titl
 * Identify/callout relevancy issues across the full picture - e.g. staged
   changes that mix unrelated concerns, or unstaged/untracked changes that
   look related to what's staged and may have been left out by mistake
+* When an unstaged/untracked change (e.g. a lint/config rule) appears to be
+  a direct product of what's staged - such as a rule that would have caught
+  a bug pattern being fixed - explicitly recommend folding it into the same
+  commit. Rate the confidence of that relatedness 1-5 as part of the
+  recommendation
 * Draft and Present feedback about files to be staged and those unstaged
     * Optional - do not present if there are no issues
     * Markdown format

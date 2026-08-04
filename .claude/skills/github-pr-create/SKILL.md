@@ -47,7 +47,7 @@ Candidates come only from the issue's title (headline/parenthetical order) and w
 
 ### Description
 
-The issue title, with only the first letter lowercased - rest of the title unchanged (preserves proper nouns and identifiers like `CommandResponse` or `Claude Code`).
+The issue title, with only the first letter lowercased - rest of the title unchanged (preserves proper nouns and identifiers like `CommandResponse` or `Claude Code`). Wrap code identifiers in backticks - types/classes, functions/methods, variables/fields, file paths, and config/API keys.
 
 ## Base
 
