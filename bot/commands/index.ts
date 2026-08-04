@@ -1,8 +1,8 @@
 import { AboutCommand } from './aboutCommand';
 import { AccountAgeCommand } from './accountAgeCommand';
-import BrainCommand from './brainCommand';
+import BrainCommand from './brain.command';
 import { CountExhaustCommand } from './countExhaustCommand';
-import { CuddleCommand } from './cuddleCommand';
+import { CuddleCommand } from './cuddle.command';
 import { DeathCommand, DeathCountCommand, LastDeathCountCommmand } from './deathCommands';
 import { DiceCommand } from './diceCommand';
 import { DivideByZeroCommand } from './DivideByZeroCommand';
