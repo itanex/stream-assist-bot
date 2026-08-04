@@ -5,6 +5,9 @@ import winston from 'winston';
 import { ICommandHandler, OnlineState } from './iCommandHandler';
 import InjectionTypes from '../../dependency-management/types';
 import Timespan, { getAgeReport } from '../utilities/timeSpan';
+import { CommandName, TransientContext } from '../utilities/default-responses';
+import CommandResponseService from '../utilities/command-response.service';
+import { templateResolver } from '../utilities/template-resolver';
 
 @injectable()
 export class AccountAgeCommand implements ICommandHandler {
@@ -19,24 +22,37 @@ export class AccountAgeCommand implements ICommandHandler {
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
+    commandName: CommandName = 'accountage';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(ApiClient) private apiClient: ApiClient,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        // get user by name based on either provided or command user name
-        const user = await this.apiClient.users
-            .getUserByName(args[1]
-                ? args[1].toLocaleLowerCase().trim()
-                : userstate.userName);
+        const username = args[1]
+            ? args[1].toLocaleLowerCase().trim()
+            : userstate.userName;
 
-        const ageTimeSpan = Timespan.fromNow(user.creationDate);
+        const user = await this.apiClient.users.getUserByName(username);
 
-        this.chatClient.say(channel, `@${user.displayName} was created ${getAgeReport(ageTimeSpan)}`);
+        if (user) {
+            const result = this.commandResponseService.getCommandText(this.commandName);
+
+            if (result) {
+                const context: TransientContext = {
+                    speakinguser: user.displayName,
+                    accountage: `${getAgeReport(Timespan.fromNow(user.creationDate))}`,
+                };
+
+                this.chatClient.say(channel, templateResolver(result, context, this.logger));
+            } else {
+                this.logger.warn(`Unable to retrieve ${this.commandName} response text`);
+            }
+        }
 
         this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
     }
