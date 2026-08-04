@@ -15,7 +15,7 @@ import { HugCommand } from './hugCommand';
 import { ICommandHandler, OnlineState } from './iCommandHandler';
 import { LastRaidCommand } from './lastRaidCommand';
 import { LastSubCommand } from './lastSubCommand';
-import { LurkCommand, UnLurkCommand, WhoIsLurkingCommand } from './lurkCommands';
+import { LurkCommand, UnLurkCommand, WhoIsLurkingCommand } from './lurk.commands';
 import ManageCommand from './manage.command';
 import { ShoutOutCommand } from './shoutOutCommand';
 import { SocialsCommand } from './socialsCommand';

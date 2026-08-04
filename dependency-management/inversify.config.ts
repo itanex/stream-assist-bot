@@ -70,6 +70,7 @@ import AuthenticationServer, { IAuthenticationServer } from '../bot/auth/auth.se
 import StreamStateService from '../bot/utilities/stream-state.service';
 import JoinGreetingHandler from '../bot/handlers/join-greeting.handler';
 import CommandResponseService from '../bot/utilities/command-response.service';
+import LurkRespository from '../bot/utilities/lurk.respository';
 
 const SAContainer = new Container();
 
@@ -78,6 +79,7 @@ SAContainer.bind<Database>(Database).toSelf().inSingletonScope();
 SAContainer.bind<Broadcaster>(Broadcaster).toSelf().inSingletonScope();
 SAContainer.bind<StreamStateService>(StreamStateService).toSelf().inSingletonScope();
 SAContainer.bind<CommandResponseService>(CommandResponseService).toSelf().inSingletonScope();
+SAContainer.bind<LurkRespository>(LurkRespository).toSelf().inSingletonScope();
 
 SAContainer.bind<IChatBot>(ChatBot).toSelf().inSingletonScope();
 

@@ -51,6 +51,7 @@
     "import/no-unresolved": "off",
     "object-curly-newline": "off",
     "quotes": ["warn", "single", { "allowTemplateLiterals": true }],
-    "radix": ["error", "as-needed"]
+    "radix": ["error", "as-needed"],
+    "@typescript-eslint/no-floating-promises":"error"
   }
 }
