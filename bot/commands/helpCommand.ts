@@ -33,7 +33,7 @@ export class HelpCommand implements ICommandHandler {
     }
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        this.chatClient.say(channel, this.helpResponses[Math.floor(Math.random() * this.helpResponses.length)]);
+        await this.chatClient.say(channel, this.helpResponses[Math.floor(Math.random() * this.helpResponses.length)]);
 
         this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
     }

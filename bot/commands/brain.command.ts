@@ -44,7 +44,7 @@ export default class BrainCommand implements ICommandHandler {
                 targetuser,
             };
 
-            this.chatClient.say(channel, templateResolver(result, context, this.logger));
+            await this.chatClient.say(channel, templateResolver(result, context, this.logger));
         } else {
             this.logger.warn(`Unable to retrieve ${this.commandName} response text`);
         }

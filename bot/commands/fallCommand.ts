@@ -36,7 +36,7 @@ export class FallCommand implements ICommandHandler {
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         if (this.responses.length) {
-            this.chatClient.say(channel, this.responses[Math.floor(Math.random() * this.responses.length)]);
+            await this.chatClient.say(channel, this.responses[Math.floor(Math.random() * this.responses.length)]);
 
             this.logger.info(`* Executed ${command} in ${channel} :: ${userstate.displayName} > ${message}`);
         }

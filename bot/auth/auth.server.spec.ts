@@ -63,7 +63,7 @@ describe('AuthenticationServer', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let mockAxiosPost: any;
 
-    beforeEach(() => {
+    beforeEach(async () => {
         jest.resetAllMocks();
         // Retrieve the post mock after the factory has run
         mockAxiosPost = axios.post;
@@ -74,7 +74,7 @@ describe('AuthenticationServer', () => {
         container.bind(AuthenticationServer).to(AuthenticationServer);
 
         authServer = container.get(AuthenticationServer);
-        authServer.configure();
+        await authServer.configure();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         app = (authServer as any).app;
     });

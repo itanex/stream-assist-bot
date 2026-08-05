@@ -35,7 +35,7 @@ export class DivideByZeroCommand implements ICommandHandler {
             this.logger.warn(`* Command Text not found for ${command} in ${channel} || ${userstate.displayName} > ${message}`);
         }
 
-        this.chatClient.say(channel, commandText ?? defaultResponses.dividebyzero);
+        await this.chatClient.say(channel, commandText ?? defaultResponses.dividebyzero);
         this.logger.info(`* Executed ${command} in ${channel} :: ${userstate.displayName} > ${message}`);
     }
 }

@@ -41,7 +41,7 @@ export class LurkCommand implements ICommandHandler {
                 speakinguser: user.displayName,
             };
 
-            this.chatClient.say(channel, templateResolver(result ?? defaultResponses.lurk, context, this.logger));
+            await this.chatClient.say(channel, templateResolver(result ?? defaultResponses.lurk, context, this.logger));
         }
 
         // Don't say anything if the user is already lurking
@@ -83,7 +83,7 @@ export class UnLurkCommand implements ICommandHandler {
             };
 
             // Report the command result
-            this.chatClient.say(channel, templateResolver(result ?? defaultResponses.unlurk, context, this.logger));
+            await this.chatClient.say(channel, templateResolver(result ?? defaultResponses.unlurk, context, this.logger));
         }
 
         this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);
@@ -119,21 +119,21 @@ export class WhoIsLurkingCommand implements ICommandHandler {
 
         switch (records.length) {
             case 0:
-                this.chatClient.say(channel, 'There are no users currenlty lurking in the channel');
+                await this.chatClient.say(channel, 'There are no users currenlty lurking in the channel');
                 break;
             case 1:
-                this.chatClient.say(channel, `There is ${records.length} user lurking: ${lastUser}`);
+                await this.chatClient.say(channel, `There is ${records.length} user lurking: ${lastUser}`);
                 break;
             case 2:
-                this.chatClient.say(channel, `There are ${records.length} users lurking: ${users[0]} and ${lastUser}`);
+                await this.chatClient.say(channel, `There are ${records.length} users lurking: ${users[0]} and ${lastUser}`);
                 break;
             case 3:
             case 4:
             case 5:
-                this.chatClient.say(channel, `There are ${records.length} users lurking: ${users.join(', ')}, and ${lastUser}`);
+                await this.chatClient.say(channel, `There are ${records.length} users lurking: ${users.join(', ')}, and ${lastUser}`);
                 break;
             default:
-                this.chatClient.say(channel, `There are ${records.length} users lurking.`);
+                await this.chatClient.say(channel, `There are ${records.length} users lurking.`);
         }
 
         this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);

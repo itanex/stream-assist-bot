@@ -32,7 +32,7 @@ export class RaidHandler implements IRaidStreamEvent {
     }
 
     async onRaid(channel: string, user: string, raidInfo: ChatRaidInfo, message: UserNotice): Promise<void> {
-        this.apiClient.chat.sendAnnouncement(environment.twitchBot.broadcaster.id, {
+        await this.apiClient.chat.sendAnnouncement(environment.twitchBot.broadcaster.id, {
             message: `RAID: Thank you, ${raidInfo.displayName}, for bringing the ${raidInfo.viewerCount} viewer(s) with you!`,
             color: 'primary',
         });
@@ -42,8 +42,8 @@ export class RaidHandler implements IRaidStreamEvent {
             displayName: user,
         } as ChatUser;
 
-        setTimeout(() => {
-            this.shoutOutCommand.handle(channel, this.command, chatUser, this.command, [raidInfo.displayName], undefined, true);
+        setTimeout(async () => {
+            await this.shoutOutCommand.handle(channel, this.command, chatUser, this.command, [raidInfo.displayName], undefined, true);
         }, 3000);
 
         const raider = Raiders.build({

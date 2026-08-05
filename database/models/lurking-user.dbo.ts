@@ -71,7 +71,7 @@ export default class LurkingUsers extends Model {
                     where: {
                         displayName: user.displayName,
                         userId: user.userId,
-                        endTime: null
+                        endTime: null,
                     },
                     returning: true,
                 },

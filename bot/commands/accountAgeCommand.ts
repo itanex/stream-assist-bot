@@ -48,7 +48,7 @@ export class AccountAgeCommand implements ICommandHandler {
                     accountage: `${getAgeReport(Timespan.fromNow(user.creationDate))}`,
                 };
 
-                this.chatClient.say(channel, templateResolver(result, context, this.logger));
+                await this.chatClient.say(channel, templateResolver(result, context, this.logger));
             } else {
                 this.logger.warn(`Unable to retrieve ${this.commandName} response text`);
             }

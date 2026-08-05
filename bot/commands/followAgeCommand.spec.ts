@@ -77,7 +77,7 @@ describe('Follow Age Command Tests', () => {
                 .mockResolvedValue({
                     data: [followUser],
                     cursor: 'n/a',
-                    total: 1
+                    total: 1,
                 });
 
             mockCommandResponseService
@@ -112,7 +112,7 @@ describe('Follow Age Command Tests', () => {
             const expectedApiUsername = 'targetuser';
             const followUser = <HelixChannelFollower>{
                 userDisplayName: 'TargetUser',
-                followDate: new Date(2000, 1, 1)
+                followDate: new Date(2000, 1, 1),
             };
             const apiUser = <HelixUser>{
                 displayName: 'TargetUser',
@@ -130,12 +130,12 @@ describe('Follow Age Command Tests', () => {
                 .mockResolvedValue({
                     data: [followUser],
                     cursor: 'n/a',
-                    total: 1
+                    total: 1,
                 });
 
             mockCommandResponseService
                 .getCommandText
-                .mockReturnValue(`%${transientKeywords.targetuser}%, %${transientKeywords.followage}%`)
+                .mockReturnValue(`%${transientKeywords.targetuser}%, %${transientKeywords.followage}%`);
 
             // Act
             await subject.handle(channel, command, chatUser, message, args);
@@ -179,7 +179,7 @@ describe('Follow Age Command Tests', () => {
                 .mockResolvedValue({
                     data: [],
                     cursor: 'n/a',
-                    total: 1
+                    total: 1,
                 });
 
             // Act
@@ -231,7 +231,7 @@ describe('Follow Age Command Tests', () => {
             // Arrange
             const followUser = <HelixChannelFollower>{
                 userDisplayName: chatUser.displayName,
-                followDate: new Date(2000, 1, 1)
+                followDate: new Date(2000, 1, 1),
             };
 
             mockApiClient
@@ -240,7 +240,7 @@ describe('Follow Age Command Tests', () => {
                 .mockResolvedValue({
                     data: [followUser],
                     cursor: 'n/a',
-                    total: 1
+                    total: 1,
                 });
 
             mockCommandResponseService

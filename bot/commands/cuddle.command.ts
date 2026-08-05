@@ -46,7 +46,7 @@ export class CuddleCommand implements ICommandHandler {
                         targetuser: targetUser.displayName,
                     };
 
-                    this.chatClient.say(channel, templateResolver(result, context, this.logger));
+                    await this.chatClient.say(channel, templateResolver(result, context, this.logger));
                 } else {
                     this.logger.warn(`Unable to retrieve ${this.commandName} response text`);
                 }

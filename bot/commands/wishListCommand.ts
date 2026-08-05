@@ -33,7 +33,7 @@ export class WishListCommand implements ICommandHandler {
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         if (responses.length) {
-            this.chatClient.say(channel, responses[Math.floor(Math.random() * responses.length)]);
+            await this.chatClient.say(channel, responses[Math.floor(Math.random() * responses.length)]);
 
             this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
         }

@@ -32,15 +32,15 @@ export class HugCommand implements ICommandHandler {
 
             if (user) {
                 if (userstate.displayName !== user.displayName) {
-                    this.chatClient.say(channel, `${userstate.displayName} hugs ${user.displayName}`);
+                    await this.chatClient.say(channel, `${userstate.displayName} hugs ${user.displayName}`);
                 } else {
-                    this.chatClient.say(channel, `${userstate.displayName} hugs themself`);
+                    await this.chatClient.say(channel, `${userstate.displayName} hugs themself`);
                 }
             } else {
-                this.chatClient.say(channel, `${userstate.displayName} can't find ${args[0]} and decides to hug everyone`);
+                await this.chatClient.say(channel, `${userstate.displayName} can't find ${args[0]} and decides to hug everyone`);
             }
         } else {
-            this.chatClient.say(channel, `${userstate.displayName} hugs themself`);
+            await this.chatClient.say(channel, `${userstate.displayName} hugs themself`);
         }
 
         this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);

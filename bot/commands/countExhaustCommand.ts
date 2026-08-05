@@ -42,7 +42,7 @@ export class CountExhaustCommand implements ICommandHandler {
                 broadcaster: broadcaster.displayName,
             };
 
-            this.chatClient.say(channel, templateResolver(result, context, this.logger));
+            await this.chatClient.say(channel, templateResolver(result, context, this.logger));
         }
 
         this.logger.info(`* Executed ${command} in ${channel} :: ${userstate.displayName} > ${message}`);

@@ -54,7 +54,7 @@ class App {
         /* eslint-enable no-console */
 
         if (isUserAuthenticated()) {
-            this.chatBot.start();
+            await this.chatBot.start();
         } else {
             this.logger.info('ChatBot is waiting for authorization - complete the OAuth flow and the auth server will start it automatically');
         }

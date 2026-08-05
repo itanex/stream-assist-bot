@@ -57,9 +57,9 @@ export class ShoutOutCommand implements ICommandHandler {
             const when = `${startDate.fromNow()}`;
 
             if (startDate.isBefore(dayjs(), `seconds`)) {
-                this.chatClient.say(channel, `${entry} @${user.displayName} was streaming ${topic} ${when} - ${link}`);
+                await this.chatClient.say(channel, `${entry} @${user.displayName} was streaming ${topic} ${when} - ${link}`);
             } else {
-                this.chatClient.say(channel, `${entry} @${user.displayName} plans to stream ${topic} ${when} - ${link}`);
+                await this.chatClient.say(channel, `${entry} @${user.displayName} plans to stream ${topic} ${when} - ${link}`);
             }
         } else {
             const videos: HelixPaginatedResult<HelixVideo> = await this.apiClient.videos
@@ -75,12 +75,12 @@ export class ShoutOutCommand implements ICommandHandler {
                 const diff = when.diff(dayjs(), `day`);
 
                 if (Math.abs(diff) < 10) {
-                    this.chatClient.say(channel, `@${user.displayName} was last streaming '${channelDetails.gameName}' ${when.fromNow()} - ${link}`);
+                    await this.chatClient.say(channel, `@${user.displayName} was last streaming '${channelDetails.gameName}' ${when.fromNow()} - ${link}`);
                 } else {
-                    this.chatClient.say(channel, `@${user.displayName} was last streaming '${channelDetails.gameName}' - ${link}`);
+                    await this.chatClient.say(channel, `@${user.displayName} was last streaming '${channelDetails.gameName}' - ${link}`);
                 }
             } else {
-                this.chatClient.say(channel, `Check out @${user.displayName} at ${link}`);
+                await this.chatClient.say(channel, `Check out @${user.displayName} at ${link}`);
             }
         }
     }
@@ -89,9 +89,9 @@ export class ShoutOutCommand implements ICommandHandler {
         const stream = (await user.getStream());
 
         if (stream && stream.type === 'live') {
-            this.chatClient.say(channel, `@${user.displayName} just finished streaming '${stream.gameName}' - ${link}`);
+            await this.chatClient.say(channel, `@${user.displayName} just finished streaming '${stream.gameName}' - ${link}`);
         } else {
-            this.chatClient.say(channel, `Check out @${user.displayName} at ${link}`);
+            await this.chatClient.say(channel, `Check out @${user.displayName} at ${link}`);
         }
     }
 

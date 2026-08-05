@@ -30,7 +30,7 @@ describe(' Divide By Zero Command Tests', () => {
             .mockReturnValue(configuredText);
 
         // Act
-        subject.handle(channel, command, user, message, []);
+        await subject.handle(channel, command, user, message, []);
 
         // Assert
         expect(mockChatClient.say).toHaveBeenNthCalledWith(1, channel, configuredText);

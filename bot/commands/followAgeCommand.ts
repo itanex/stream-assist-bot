@@ -65,10 +65,10 @@ export class FollowAgeCommand implements ICommandHandler {
                     const context: TransientContext = {
                         targetuser: follower.data[0].userDisplayName,
                         broadcaster: (await this.broadcaster.getBroadcaster()).displayName,
-                        followage: `${getAgeReport(Timespan.fromNow(follower.data[0].followDate))}`
-                    }
+                        followage: `${getAgeReport(Timespan.fromNow(follower.data[0].followDate))}`,
+                    };
 
-                    this.chatClient.say(channel, templateResolver(result, context, this.logger));
+                    await this.chatClient.say(channel, templateResolver(result, context, this.logger));
                 } else {
                     this.logger.warn(`Unable to retrieve ${this.commandName} response text`);
                 }

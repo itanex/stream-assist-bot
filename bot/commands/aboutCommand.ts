@@ -35,7 +35,7 @@ export class AboutCommand implements ICommandHandler {
             this.logger.warn(`* Command Text not found for ${command} in ${channel} || ${userstate.displayName} > ${message}`);
         }
 
-        this.chatClient.say(channel, commandText ?? defaultResponses.about);
+        await this.chatClient.say(channel, commandText ?? defaultResponses.about);
         this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }

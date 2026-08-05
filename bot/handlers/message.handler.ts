@@ -57,7 +57,7 @@ export class MessageHandler {
             const period = this.timeoutPeriod(chatUser, commandHandler);
 
             if (ttl < period) {
-                this.onCommandCooldown(instruction, channel, period - ttl);
+                await this.onCommandCooldown(instruction, channel, period - ttl);
                 return;
             }
 
@@ -89,8 +89,8 @@ export class MessageHandler {
         // originating channel (shared-chat sessions); falls back to this bot's home channel.
         const resolveChannel = async (): Promise<string> => {
             if (sourceChannelId) {
-                const user = await this.apiClient.users.getUserById(sourceChannelId);
-                return user?.displayName ?? broadcaster.displayName;
+                const result = await this.apiClient.users.getUserById(sourceChannelId);
+                return result?.displayName ?? broadcaster.displayName;
             }
 
             return broadcaster.displayName;
@@ -174,7 +174,7 @@ export class MessageHandler {
             : command.timeout;
     }
 
-    private onCommandCooldown(instruction: string, channel: string, ttl: number): void {
-        this.chatClient.say(channel, `Sorry, the "${instruction}" command is still on cooldown. It will be ready in ${ttl} second(s)`);
+    private async onCommandCooldown(instruction: string, channel: string, ttl: number): Promise<void> {
+        await this.chatClient.say(channel, `Sorry, the "${instruction}" command is still on cooldown. It will be ready in ${ttl} second(s)`);
     }
 }

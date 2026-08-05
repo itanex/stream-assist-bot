@@ -27,10 +27,10 @@ describe('Shout Out Command Tests', () => {
     } as HelixUser;
     const apiUserTwitchLink = `https://twitch.tv/${args[0]}`;
 
+    // Anchored to noon (not the actual current hour) so an hour offset in either
+    // direction can never cross a day boundary and make isToday() flaky.
     const now = new Date();
-    now.setMilliseconds(0);
-    now.setSeconds(0);
-    now.setMinutes(0);
+    now.setHours(12, 0, 0, 0);
     const anHourAgo = new Date(
         now.getFullYear(),
         now.getMonth(),

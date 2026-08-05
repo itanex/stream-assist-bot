@@ -36,7 +36,7 @@ export class SubscriptionHandler implements ISubscriptionHandler {
     }
 
     async onSubscribe(channel: string, user: string, subInfo: ChatSubInfo, message: UserNotice): Promise<void> {
-        this.chatClient.say(channel, `Thank you. @${user} joined the colony!`);
+        await this.chatClient.say(channel, `Thank you. @${user} joined the colony!`);
 
         await Subscribers
             .create({
@@ -58,9 +58,9 @@ export class SubscriptionHandler implements ISubscriptionHandler {
         const isPrime = subInfo.plan.toLocaleLowerCase() !== 'prime';
 
         if (isPrime) {
-            this.chatClient.say(channel, `Thank you. @${user} for continuing with the colony at Tier ${Number(subInfo.plan) / 1000}!`);
+            await this.chatClient.say(channel, `Thank you. @${user} for continuing with the colony at Tier ${Number(subInfo.plan) / 1000}!`);
         } else {
-            this.chatClient.say(channel, `Thank you. @${user} for continuing with the colony using your twitch prime subscription`);
+            await this.chatClient.say(channel, `Thank you. @${user} for continuing with the colony using your twitch prime subscription`);
         }
 
         await Subscribers
@@ -80,7 +80,7 @@ export class SubscriptionHandler implements ISubscriptionHandler {
     }
 
     async onResubHandler(channel: string, user: string, subInfo: ChatSubInfo, message: UserNotice): Promise<void> {
-        this.chatClient.say(channel, `Thank you. @${user} has been with the colony for a total of ${subInfo.months} months!`);
+        await this.chatClient.say(channel, `Thank you. @${user} has been with the colony for a total of ${subInfo.months} months!`);
 
         await Subscribers
             .create({
@@ -102,7 +102,7 @@ export class SubscriptionHandler implements ISubscriptionHandler {
         const previousGiftCount = this.giftCounts.get(user) ?? 0;
         this.giftCounts.set(user, previousGiftCount + subInfo.count);
 
-        this.chatClient.say(channel, `Thank you, ${user} for gifting ${subInfo.count} subs to the community!`);
+        await this.chatClient.say(channel, `Thank you, ${user} for gifting ${subInfo.count} subs to the community!`);
 
         await Subscribers
             .create({
@@ -131,7 +131,7 @@ export class SubscriptionHandler implements ISubscriptionHandler {
         if (previousGiftCount > 0) {
             this.giftCounts.set(subInfo.gifter, previousGiftCount - 1);
         } else {
-            this.chatClient.say(channel, `Thank you, ${subInfo.gifterDisplayName} for recruiting ${user} into the colony!`);
+            await this.chatClient.say(channel, `Thank you, ${subInfo.gifterDisplayName} for recruiting ${user} into the colony!`);
         }
 
         await Subscribers

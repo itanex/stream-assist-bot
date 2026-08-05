@@ -115,7 +115,7 @@ export class EightBallCommand implements ICommandHandler {
 
             this.broadcastAudio(command, fileHash, langCode);
 
-            this.chatClient.say(channel, answer);
+            await this.chatClient.say(channel, answer);
 
             this.logger.info(`* Executed ${command} in ${channel} :: ${userstate.displayName} > ${message}`);
         }

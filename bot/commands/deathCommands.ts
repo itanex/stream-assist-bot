@@ -70,13 +70,13 @@ export class DeathCommand implements ICommandHandler {
                         this.commandTimeout = { name: 'DeathCommand', timeout: new Date().getTime() };
 
                         if (deathCount === 1) {
-                            this.chatClient.say(channel, `We're gonna need another Timy!`);
+                            await this.chatClient.say(channel, `We're gonna need another Timy!`);
                         } else if (this.responses.length) {
-                            this.chatClient.say(channel, this.responses[Math.floor(Math.random() * this.responses.length)]);
+                            await this.chatClient.say(channel, this.responses[Math.floor(Math.random() * this.responses.length)]);
                         }
                     } else if (this.responses.length && deathCount % 10 === 0) {
                         this.commandTimeout = { name: 'DeathCommand', timeout: new Date().getTime() };
-                        this.chatClient.say(channel, this.responses[Math.floor(Math.random() * this.responses.length)]);
+                        await this.chatClient.say(channel, this.responses[Math.floor(Math.random() * this.responses.length)]);
                     }
 
                     this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${deathCount}`);
@@ -114,9 +114,9 @@ export class DeathCountCommand implements ICommandHandler {
                 .getCurrentStreamDeathCount(stream)
                 .then(async ([instance]) => {
                     if (instance.deathCount > 1) {
-                        this.chatClient.say(channel, `We have used ${instance.deathCount} Timy today`);
+                        await this.chatClient.say(channel, `We have used ${instance.deathCount} Timy today`);
                     } else {
-                        this.chatClient.say(channel, `We have used ${instance.deathCount} Timys today`);
+                        await this.chatClient.say(channel, `We have used ${instance.deathCount} Timys today`);
                     }
                     this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${instance.deathCount}`);
                 });
@@ -155,7 +155,7 @@ export class LastDeathCountCommmand implements ICommandHandler {
         if (stream) {
             await DeathCounts
                 .getLastStreamDeathCount(stream.id)
-                .then(records => {
+                .then(async records => {
                     const result = this.commandResponseService.getCommandText(this.commandName);
                     if (result) {
                         const games = records
@@ -178,7 +178,7 @@ export class LastDeathCountCommmand implements ICommandHandler {
                         };
 
                         // Report command result to stream
-                        this.chatClient.say(channel, templateResolver(result, context, this.logger));
+                        await this.chatClient.say(channel, templateResolver(result, context, this.logger));
                     } else {
                         this.logger.warn(`Unable to retrieve ${this.commandName} response text`);
                     }

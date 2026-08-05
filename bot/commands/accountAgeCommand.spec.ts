@@ -32,14 +32,14 @@ describe('Account Age Command Tests', () => {
     describe('should report account age of target account', () => {
         const chatUser = <ChatUser>{
             displayName: 'TestUser',
-            userName: 'TestUser'
+            userName: 'TestUser',
         };
 
         it('should display age of speaker account', async () => {
             // Arrange
             const targetUser = <HelixUser>{
                 displayName: chatUser.displayName,
-                creationDate: new Date(2000, 0, 1)
+                creationDate: new Date(2000, 0, 1),
             };
             const args = [''];
 
@@ -71,7 +71,7 @@ describe('Account Age Command Tests', () => {
             // Arrange
             const targetUser = <HelixUser>{
                 displayName: 'ProperCasedName',
-                creationDate: new Date(2000, 0, 1)
+                creationDate: new Date(2000, 0, 1),
             };
 
             // mixed case + padding, proves trim + lowercase
@@ -120,7 +120,7 @@ describe('Account Age Command Tests', () => {
             // Arrange
             const targetUser = <HelixUser>{
                 displayName: '',
-                creationDate: new Date(2000, 0, 1)
+                creationDate: new Date(2000, 0, 1),
             };
             const args = ['irrelevant'];
 
