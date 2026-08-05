@@ -12,7 +12,7 @@ Creates a pull request via `gh pr create` for the current branch.
 1. Read the issue tied to the branch
 2. Score the branch's commits to determine type
 3. Resolve scope (ask if a candidate is found)
-4. Resolve milestone, assignee, base, reviewer, draft (fixed or issue-derived rules)
+4. Resolve milestone, assignee, base, reviewer, draft (fixed or issue-derived rules; ask if no issue is tied to the branch)
 5. Resolve project (use directly if the issue has exactly one, otherwise ask)
 6. Compute labels as the union of the issue's labels and deduced commit-type labels
 7. Compose the body
@@ -57,6 +57,8 @@ Never set - omit `--base` and let `gh pr create` use its own default.
 
 The issue's milestone, if it has one. Left unset otherwise.
 
+No issue tied to the branch -> fetch the repo's open milestones (`gh api repos/{owner}/{repo}/milestones`) and ask the user, offering the titles as quick picks plus a "skip" option.
+
 ## Assignee
 
 Always the command invoker - `gh`'s `@me` alias (the currently authenticated user), never a fixed name.
@@ -72,6 +74,8 @@ Never set.
 ## Project
 
 Check the issue's own project membership (`projectItems`). Exactly one -> use it directly. Zero, or more than one -> ask the user (offer any found candidates as quick picks; free text for anything else).
+
+No issue tied to the branch -> fetch the repo's projects (`gh project list --owner <owner>`) and ask the user, offering the titles as quick picks plus a "skip" option.
 
 ## Labels
 
