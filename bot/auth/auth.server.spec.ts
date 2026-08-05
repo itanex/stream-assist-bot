@@ -201,8 +201,8 @@ describe('AuthenticationServer', () => {
             (isUserAuthenticated as jest.Mock).mockReturnValue(false);
             (getAuthFailureReason as jest.Mock).mockReturnValue('No token file found - authorization required');
             const listenSpy = jest.spyOn(app, 'listen').mockImplementation(
-                (_port: unknown, _host: unknown, callback?: () => void) => {
-                    if (callback) callback();
+                (_port: unknown, _host: unknown, callback: unknown) => {
+                    if (typeof callback === 'function') callback();
                     return {} as any;
                 },
             );
@@ -225,8 +225,8 @@ describe('AuthenticationServer', () => {
             // Arrange
             (isUserAuthenticated as jest.Mock).mockReturnValue(true);
             const listenSpy = jest.spyOn(app, 'listen').mockImplementation(
-                (_port: unknown, _host: unknown, callback?: () => void) => {
-                    if (callback) callback();
+                (_port: unknown, _host: unknown, callback: unknown) => {
+                    if (typeof callback === 'function') callback();
                     return {} as any;
                 },
             );
