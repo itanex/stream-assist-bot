@@ -39,6 +39,7 @@ jobs:
         uses: ./.github/workflows/tag-version.yml
         permissions:
             contents: write
+        secrets: inherit
         with:
             version_bump: ${{ inputs.version_bump }}
             no_increment: ${{ inputs.no_increment }}
