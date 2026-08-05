@@ -6,10 +6,13 @@ import { ICommandHandler, OnlineState } from './iCommandHandler';
 import InjectionTypes from '../../dependency-management/types';
 import environment from '../../configurations/environment';
 import Timespan, { getAgeReport } from '../utilities/timeSpan';
+import { CommandName, TransientContext } from '../utilities/default-responses';
+import CommandResponseService from '../utilities/command-response.service';
+import { templateResolver } from '../utilities/template-resolver';
 
 @injectable()
 export class FollowAgeCommand implements ICommandHandler {
-    exp: RegExp = /^!(followage)( [#@]?([a-zA-Z0-9][\w]{2,24}))?$/i;
+    exp: RegExp = /^!(followage)(?: [#@]?([a-zA-Z0-9][\w]{2,24}))?$/i;
     timeout: number = 10;
     mod: boolean = true;
     vip: boolean = true;
@@ -20,24 +23,29 @@ export class FollowAgeCommand implements ICommandHandler {
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
+    commandName: CommandName = 'followage';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(ApiClient) private apiClient: ApiClient,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        let followingUser: { displayName: string, id: string } = null;
+        let followingUser: { displayName: string, id: string } | null = null;
 
-        if (args[1]) { // if args1 results in a username as part of the command being executed
-            const user = await this.apiClient.users.getUserByName(args[1]);
-            followingUser = {
-                displayName: user.displayName,
-                id: user.id,
-            };
-        } else if (!userstate.isBroadcaster) {
+        if (args[0]) { // if args1 results in a username as part of the command being executed
+            const user = await this.apiClient.users.getUserByName(args[0].toLocaleLowerCase().trim());
+
+            if (user) {
+                followingUser = {
+                    displayName: user.displayName,
+                    id: user.id,
+                };
+            }
+        } else if (!userstate.isBroadcaster) { // broadcaster can't follow itself
             followingUser = {
                 displayName: userstate.displayName,
                 id: userstate.userId,
@@ -48,9 +56,20 @@ export class FollowAgeCommand implements ICommandHandler {
             const follower = await this.apiClient.channels
                 .getChannelFollowers(environment.twitchBot.broadcaster.id, followingUser.id);
 
-            const ageTimeSpan = Timespan.fromNow(follower.data[0].followDate);
+            if (follower.data[0]) {
+                const result = this.commandResponseService.getCommandText(this.commandName);
 
-            this.chatClient.say(channel, `@${followingUser.displayName} has been following ${channel} for ${getAgeReport(ageTimeSpan)}`);
+                if (result) {
+                    const context: TransientContext = {
+                        targetuser: follower.data[0].userDisplayName,
+                        followage: `${getAgeReport(Timespan.fromNow(follower.data[0].followDate))}`
+                    }
+
+                    this.chatClient.say(channel, templateResolver(result, context, this.logger));
+                } else {
+                    this.logger.warn(`Unable to retrieve ${this.commandName} response text`);
+                }
+            }
         }
 
         this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);

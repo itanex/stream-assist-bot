@@ -21,16 +21,16 @@ const environment = {
         /** broadcaster information */
         broadcaster: {
             /** User Name - SplitPersonality */
-            username: process.env.TWITCH_USERNAME,
+            username: String(process.env.TWITCH_USERNAME),
             /** Twitch user id / broadcasterId */
-            id: process.env.TWITCH_BROADCASTER_ID,
+            id: Number(process.env.TWITCH_BROADCASTER_ID),
         },
         /** twitch bot information/identity */
         bot: {
             /** Bot Account Username */
-            username: process.env.TWITCH_BOT_USERNAME,
+            username: String(process.env.TWITCH_BOT_USERNAME),
             /** Bot Account twitch UserId */
-            userId: process.env.TWITCH_BOT_USER_ID,
+            userId: Number(process.env.TWITCH_BOT_USER_ID),
         },
         /** OBS Overlay Web server */
         overlay: {
