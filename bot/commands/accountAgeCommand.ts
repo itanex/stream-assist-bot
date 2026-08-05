@@ -44,7 +44,7 @@ export class AccountAgeCommand implements ICommandHandler {
 
             if (result) {
                 const context: TransientContext = {
-                    speakinguser: user.displayName,
+                    targetuser: user.displayName,
                     accountage: `${getAgeReport(Timespan.fromNow(user.creationDate))}`,
                 };
 
