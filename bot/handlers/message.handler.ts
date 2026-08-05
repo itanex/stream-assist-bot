@@ -1,3 +1,4 @@
+import { ApiClient } from '@twurple/api';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable, multiInject } from 'inversify';
 import winston from 'winston';
@@ -15,11 +16,10 @@ type ParsedCommand = {
 @injectable()
 export class MessageHandler {
     private readonly globalTimeouts: CommandTimeout[] = [];
-    /**
-     *
-     */
+
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
+        @inject(ApiClient) private apiClient: ApiClient,
         @multiInject(InjectionTypes.CommandHandlers) private commandHandlers: ICommandHandler[],
         @inject(Broadcaster) private broadcaster: Broadcaster,
         @inject(StreamStateService) private streamStateService: StreamStateService,
@@ -27,7 +27,7 @@ export class MessageHandler {
     ) {
     }
 
-    async handle(channel: string, user: string, message: string, chatUser: ChatUser): Promise<void> {
+    async handle(channel: string, user: string, message: string, chatUser: ChatUser, sourceChannelId?: string | null): Promise<void> {
         // Find command to execute
         const { commandHandler, commandArguments } = this.parseCommand(message);
 
@@ -85,8 +85,13 @@ export class MessageHandler {
         //     userTimeouts[msg.userInfo.userId].push({ name: instruction, timeout: new Date().getTime() });
         // }
 
+        // Prefer the message's originating channel (shared-chat sessions); fall back to this bot's home channel
+        const resolvedChannel = sourceChannelId
+            ? (await this.apiClient.users.getUserById(sourceChannelId))?.displayName ?? broadcaster.displayName
+            : broadcaster.displayName;
+
         await commandHandler
-            .handle(channel, instruction, chatUser, message, commandArguments)
+            .handle(channel, instruction, chatUser, message, commandArguments, resolvedChannel)
             .catch((reason: any) => {
                 this.logger.error(`* Executed Message Handler :: ${message}`, { channel, user, chatUser, reason });
             });

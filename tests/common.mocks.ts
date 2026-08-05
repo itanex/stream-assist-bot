@@ -10,6 +10,7 @@ export const mockChatClient = <unknown>{
 export const mockApiClient = <unknown>{
     users: {
         getUserByName: jest.fn(),
+        getUserById: jest.fn(),
     },
     streams: {
         getStreamByUserName: jest.fn(),
@@ -18,7 +19,7 @@ export const mockApiClient = <unknown>{
         getChannelFollowers: jest.fn(),
     },
 } as jest.Mocked<ApiClient> & {
-    users: jest.Mocked<Pick<HelixUserApi, 'getUserByName'>>;
+    users: jest.Mocked<Pick<HelixUserApi, 'getUserByName' | 'getUserById'>>;
     streams: jest.Mocked<Pick<HelixStreamApi, 'getStreamByUserName'>>;
     channels: jest.Mocked<Pick<HelixChannelApi, 'getChannelFollowers'>>;
 };

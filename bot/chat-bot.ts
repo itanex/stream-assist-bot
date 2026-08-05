@@ -1,7 +1,3 @@
-// reflect-metadata should be imported
-// before any interface or other imports
-// also it should be imported only once
-// so that a singleton is created.
 import 'reflect-metadata';
 import {
     ChatClient,
@@ -56,6 +52,14 @@ export interface IChatBot {
     shutdown: () => void;
 }
 
+/**
+ * Twurple 7.1.0 has no `sourceChannelId` getter for shared-chat messages (added in 8.x).
+ * Reads the raw tag until the ESM migration upgrades Twurple - swap for `msg.sourceChannelId` then.
+ */
+function getSourceChannelId(msg: ChatMessage): string | null {
+    return msg.tags.get('source-room-id') ?? null;
+}
+
 @injectable()
 export default class ChatBot implements IChatBot {
     constructor(
@@ -80,7 +84,7 @@ export default class ChatBot implements IChatBot {
 
     configure(): IChatBot {
         this.chatClient.onMessage(async (channel: string, user: string, text: string, msg: ChatMessage) => {
-            this.messageHandler.handle(channel, user, text, msg.userInfo);
+            this.messageHandler.handle(channel, user, text, msg.userInfo, getSourceChannelId(msg));
             this.joinGreetingHandler.greetIfEligible(channel, msg.userInfo);
         });
 

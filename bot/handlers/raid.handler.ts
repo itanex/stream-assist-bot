@@ -28,7 +28,7 @@ export class RaidHandler implements IRaidStreamEvent {
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
         // clear
-        this.shoutOutCommand = commandHandlers.find(x => x.constructor.name === `${ShoutOutCommand.name}`) as ShoutOutCommand;
+        this.shoutOutCommand = commandHandlers.find(x => x.constructor.name === `${ShoutOutCommand.name}`) as unknown as ShoutOutCommand;
     }
 
     async onRaid(channel: string, user: string, raidInfo: ChatRaidInfo, message: UserNotice): Promise<void> {
@@ -43,7 +43,7 @@ export class RaidHandler implements IRaidStreamEvent {
         } as ChatUser;
 
         setTimeout(() => {
-            this.shoutOutCommand.handle(channel, this.command, chatUser, this.command, [raidInfo.displayName], true);
+            this.shoutOutCommand.handle(channel, this.command, chatUser, this.command, [raidInfo.displayName], undefined, true);
         }, 3000);
 
         const raider = Raiders.build({

@@ -1,7 +1,3 @@
-// reflect-metadata should be imported
-// before any interface or other imports
-// also it should be imported only once
-// so that a singleton is created.
 import 'reflect-metadata';
 import { ApiClient, HelixChannel, HelixPaginatedResult, HelixSchedule, HelixStream, HelixUser, HelixVideo } from '@twurple/api';
 import { HelixPaginatedScheduleResult } from '@twurple/api/lib/interfaces/endpoints/schedule.input';
@@ -24,11 +20,11 @@ describe('Shout Out Command Tests', () => {
     const user = <ChatUser>{ displayName: 'TestUser' };
 
     const args = ['TestShoutOutUser'];
-    const apiUser = <HelixUser>{
+    const apiUser = <unknown>{
         displayName: args[0],
         id: 'TestShoutOutUserId',
         getStream: null,
-    };
+    } as HelixUser;
     const apiUserTwitchLink = `https://twitch.tv/${args[0]}`;
 
     const now = new Date();
@@ -113,7 +109,7 @@ describe('Shout Out Command Tests', () => {
                 .find(x => x.constructor.name === `${ShoutOutCommand.name}`) as ShoutOutCommand;
 
             // Act
-            await subject.handle(channel, command, user, message, args, isRaid);
+            await subject.handle(channel, command, user, message, args, undefined, isRaid);
 
             // Assert
             expect(mockApiClient.users.getUserByName)
@@ -150,7 +146,7 @@ describe('Shout Out Command Tests', () => {
             subject.getLatestSchedule = jest.fn().mockResolvedValue(null);
 
             // Act
-            await subject.handle(channel, command, user, message, args, isRaid);
+            await subject.handle(channel, command, user, message, args, undefined, isRaid);
 
             // Assert
             expect(mockApiClient.users.getUserByName)
@@ -179,9 +175,9 @@ describe('Shout Out Command Tests', () => {
     describe(`Utility Method - getUserStream`, () => {
         it.each([
             [null],
-            [{ type: 'live', gameName: 'TestGameName' }],
-            [{ type: '', gameName: 'TestGameName' }],
-        ])(`should say something in chat about user '%s'`, async (stream: HelixStream) => {
+            [<HelixStream>{ type: 'live', gameName: 'TestGameName' }],
+            [<HelixStream>{ type: '', gameName: 'TestGameName' }],
+        ])(`should say something in chat about user '%s'`, async (stream: HelixStream | null) => {
             // Arrange
             apiUser.getStream = jest.fn().mockResolvedValue(stream);
 
@@ -317,7 +313,7 @@ describe('Shout Out Command Tests', () => {
             const when = dayjs(startDate).fromNow();
             const schedule: HelixPaginatedScheduleResult = <unknown>{
                 cursor: '',
-                data: {
+                data: <unknown>{
                     segments: [],
                 } as HelixSchedule,
             } as HelixPaginatedScheduleResult;

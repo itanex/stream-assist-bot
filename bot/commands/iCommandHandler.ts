@@ -26,5 +26,5 @@ export interface ICommandHandler {
     /** CooldownKey */
     cooldownKey?(args: string[]): string;
 
-    handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void>;
+    handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any, resolvedChannel?: string): Promise<void>;
 }
