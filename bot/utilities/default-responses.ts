@@ -7,7 +7,7 @@ export const defaultResponses = {
     lurk: `OK, %speakinguser% see you when you get back`,
     unlurk: `Welcome back, %speakinguser%. You were gone for %lurkduration%`,
     accountage: `@%targetuser% was created %accountage%`,
-    followage: `@%targetuser% has been following %channel% for %followage%`,
+    followage: `@%targetuser% has been following %broadcaster% for %followage%`,
     lastdeathcount: `During the stream on %streamdate%, we used %deathtotal% timys in the following game(s): %streamcategory%`,
 } as const;
 

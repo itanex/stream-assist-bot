@@ -9,6 +9,7 @@ import Timespan, { getAgeReport } from '../utilities/timeSpan';
 import { CommandName, TransientContext } from '../utilities/default-responses';
 import CommandResponseService from '../utilities/command-response.service';
 import { templateResolver } from '../utilities/template-resolver';
+import Broadcaster from '../utilities/broadcaster';
 
 @injectable()
 export class FollowAgeCommand implements ICommandHandler {
@@ -28,6 +29,7 @@ export class FollowAgeCommand implements ICommandHandler {
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(ApiClient) private apiClient: ApiClient,
+        @inject(Broadcaster) private broadcaster: Broadcaster,
         @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
@@ -62,6 +64,7 @@ export class FollowAgeCommand implements ICommandHandler {
                 if (result) {
                     const context: TransientContext = {
                         targetuser: follower.data[0].userDisplayName,
+                        broadcaster: (await this.broadcaster.getBroadcaster()).displayName,
                         followage: `${getAgeReport(Timespan.fromNow(follower.data[0].followDate))}`
                     }
 

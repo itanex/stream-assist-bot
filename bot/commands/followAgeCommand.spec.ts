@@ -1,5 +1,9 @@
 import 'reflect-metadata';
-import { HelixChannelFollower, HelixUser } from '@twurple/api';
+import {
+    HelixChannelFollower,
+    HelixPrivilegedUser,
+    HelixUser,
+} from '@twurple/api';
 import { ChatUser } from '@twurple/chat';
 import {
     mockApiClient,
@@ -11,6 +15,7 @@ import { FollowAgeCommand } from './followAgeCommand';
 import Timespan, { getAgeReport } from '../utilities/timeSpan';
 import environment from '../../configurations/environment';
 import { transientKeywords } from '../utilities/default-responses';
+import Broadcaster from '../utilities/broadcaster';
 
 jest.mock('../../configurations/environment', () => ({
     __esModule: true,
@@ -35,15 +40,27 @@ describe('Follow Age Command Tests', () => {
 
     let subject: FollowAgeCommand;
 
+    const mockBroadcaster = <unknown>{
+        getBroadcaster: jest.fn(),
+    } as jest.Mocked<Broadcaster>;
+    const broadcaster = <unknown>{
+        displayName: 'TestBroadcaster',
+    } as HelixPrivilegedUser;
+
     beforeEach(() => {
         jest.resetAllMocks();
 
         subject = new FollowAgeCommand(
             mockChatClient,
             mockApiClient,
+            mockBroadcaster,
             mockCommandResponseService,
             mockLogger,
         );
+
+        mockBroadcaster
+            .getBroadcaster
+            .mockResolvedValue(broadcaster);
     });
 
     describe('should say the follow age of the user', () => {
@@ -80,6 +97,7 @@ describe('Follow Age Command Tests', () => {
                 );
             expect(mockCommandResponseService.getCommandText)
                 .toHaveBeenCalledWith(subject.commandName);
+            expect(mockBroadcaster.getBroadcaster).toHaveBeenCalled();
             expect(mockChatClient.say)
                 .toHaveBeenCalledWith(channel, expect
                     .stringContaining(chatUser.displayName));
@@ -134,6 +152,7 @@ describe('Follow Age Command Tests', () => {
                 );
             expect(mockCommandResponseService.getCommandText)
                 .toHaveBeenCalledWith(subject.commandName);
+            expect(mockBroadcaster.getBroadcaster).toHaveBeenCalled();
             expect(mockChatClient.say)
                 .toHaveBeenCalledWith(channel, expect.stringContaining(followUser.userDisplayName));
             expect(mockChatClient.say)
@@ -144,10 +163,6 @@ describe('Follow Age Command Tests', () => {
             // Arrange
             const args: string[] = ['TargetUser'];
             const expectedApiUsername = 'targetuser';
-            const followUser = <HelixChannelFollower>{
-                userDisplayName: chatUser.displayName,
-                followDate: new Date(2000, 1, 1)
-            };
             const apiUser = <HelixUser>{
                 displayName: chatUser.displayName,
                 id: chatUser.userId,
@@ -170,8 +185,6 @@ describe('Follow Age Command Tests', () => {
             // Act
             await subject.handle(channel, command, chatUser, message, args);
 
-            const age = getAgeReport(Timespan.fromNow(followUser.followDate));
-
             // Assert
             expect(mockApiClient.users.getUserByName)
                 .toHaveBeenCalledWith(expectedApiUsername);
@@ -182,6 +195,8 @@ describe('Follow Age Command Tests', () => {
                 );
             expect(mockCommandResponseService.getCommandText)
                 .not.toHaveBeenCalled();
+            expect(mockBroadcaster.getBroadcaster)
+                .not.toHaveBeenCalled();
             expect(mockChatClient.say)
                 .not.toHaveBeenCalled();
             expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
@@ -190,10 +205,6 @@ describe('Follow Age Command Tests', () => {
             // Arrange
             const args: string[] = ['TargetUser'];
             const expectedApiUsername = 'targetuser';
-            const followUser = <HelixChannelFollower>{
-                userDisplayName: chatUser.displayName,
-                followDate: new Date(2000, 1, 1)
-            };
 
             mockApiClient
                 .users
@@ -209,6 +220,8 @@ describe('Follow Age Command Tests', () => {
             expect(mockApiClient.channels.getChannelFollowers)
                 .not.toHaveBeenCalled();
             expect(mockCommandResponseService.getCommandText)
+                .not.toHaveBeenCalled();
+            expect(mockBroadcaster.getBroadcaster)
                 .not.toHaveBeenCalled();
             expect(mockChatClient.say)
                 .not.toHaveBeenCalled();
@@ -246,6 +259,7 @@ describe('Follow Age Command Tests', () => {
                     chatUser.userId,
                 );
             expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName);
+            expect(mockBroadcaster.getBroadcaster).not.toHaveBeenCalled();
             expect(mockChatClient.say).not.toHaveBeenCalled();
             expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
         });
@@ -266,6 +280,8 @@ describe('Follow Age Command Tests', () => {
             expect(mockApiClient.channels.getChannelFollowers)
                 .not.toHaveBeenCalled();
             expect(mockCommandResponseService.getCommandText)
+                .not.toHaveBeenCalled();
+            expect(mockBroadcaster.getBroadcaster)
                 .not.toHaveBeenCalled();
             expect(mockChatClient.say)
                 .not.toHaveBeenCalled();
