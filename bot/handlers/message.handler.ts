@@ -85,13 +85,19 @@ export class MessageHandler {
         //     userTimeouts[msg.userInfo.userId].push({ name: instruction, timeout: new Date().getTime() });
         // }
 
-        // Prefer the message's originating channel (shared-chat sessions); fall back to this bot's home channel
-        const resolvedChannel = sourceChannelId
-            ? (await this.apiClient.users.getUserById(sourceChannelId))?.displayName ?? broadcaster.displayName
-            : broadcaster.displayName;
+        // Lazy: only hits the API if a command actually calls it. Prefers the message's
+        // originating channel (shared-chat sessions); falls back to this bot's home channel.
+        const resolveChannel = async (): Promise<string> => {
+            if (sourceChannelId) {
+                const user = await this.apiClient.users.getUserById(sourceChannelId);
+                return user?.displayName ?? broadcaster.displayName;
+            }
+
+            return broadcaster.displayName;
+        };
 
         await commandHandler
-            .handle(channel, instruction, chatUser, message, commandArguments, resolvedChannel)
+            .handle(channel, instruction, chatUser, message, commandArguments, resolveChannel)
             .catch((reason: any) => {
                 this.logger.error(`* Executed Message Handler :: ${message}`, { channel, user, chatUser, reason });
             });

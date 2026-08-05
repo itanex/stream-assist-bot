@@ -95,7 +95,7 @@ export class ShoutOutCommand implements ICommandHandler {
         }
     }
 
-    async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any, resolvedChannel?: string, isRaid: boolean = false): Promise<void> {
+    async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any, resolveChannel?: () => Promise<string>, isRaid: boolean = false): Promise<void> {
         // Get User from the Twitch API
         const user = await this.apiClient.users.getUserByName(args[0]);
 
