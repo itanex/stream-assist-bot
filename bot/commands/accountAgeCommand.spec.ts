@@ -50,7 +50,7 @@ describe('Account Age Command Tests', () => {
 
             mockCommandResponseService
                 .getCommandText
-                .mockReturnValue(`%${transientKeywords.speakinguser}%, %${transientKeywords.accountage}%`);
+                .mockReturnValue(`%${transientKeywords.targetuser}%, %${transientKeywords.accountage}%`);
 
             const age = getAgeReport(Timespan.fromNow(targetUser.creationDate));
 
@@ -85,7 +85,7 @@ describe('Account Age Command Tests', () => {
 
             mockCommandResponseService
                 .getCommandText
-                .mockReturnValue(`%${transientKeywords.speakinguser}%, %${transientKeywords.accountage}%`);
+                .mockReturnValue(`%${transientKeywords.targetuser}%, %${transientKeywords.accountage}%`);
 
             const age = getAgeReport(Timespan.fromNow(targetUser.creationDate));
 
