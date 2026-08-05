@@ -45,8 +45,8 @@ describe('Throw Command Tests', () => {
 
     describe('should throw something in chat', () => {
         it.each([
-            [['fish', '', '']],
-            [['fish', '', 'TargetUser']],
+            [['fish', '']],
+            [['fish', 'TargetUser']],
         ])(`input: '%s'`, async (args: string[]) => {
             // Arrange
             const subject = container
@@ -62,9 +62,9 @@ describe('Throw Command Tests', () => {
             expect(expectedChatClient.say)
                 .toHaveBeenCalledWith(channel, expect.stringContaining(args[0]));
 
-            if (args[2]) {
+            if (args[1]) {
                 expect(expectedChatClient.say)
-                    .toHaveBeenCalledWith(channel, expect.stringContaining(args[2]));
+                    .toHaveBeenCalledWith(channel, expect.stringContaining(args[1]));
             }
 
             expect(expectedLogger.info)

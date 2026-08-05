@@ -49,22 +49,22 @@ describe('Hug Command Tests', () => {
         it.each([
             [
                 <ChatUser>{ displayName: 'TestUser', userName: 'TestUser' },
-                ['', ''],
+                [''],
                 null,
             ],
             [
                 <ChatUser>{ displayName: 'TestUser', userName: 'TestUser' },
-                ['', 'TestUser'],
+                ['TestUser'],
                 <HelixUser>{ displayName: 'TestUser', id: 'TestUserId' },
             ],
             [
                 <ChatUser>{ displayName: 'TestUser', userName: 'TestUser' },
-                ['', 'TargetUser'],
+                ['TargetUser'],
                 <HelixUser>{ displayName: 'TargetUser', id: 'TestUserId' },
             ],
             [
                 <ChatUser>{ displayName: 'TestUser', userName: 'TestUser' },
-                ['', 'TargetUser'],
+                ['TargetUser'],
                 null,
             ],
         ])(`user: '%s', commandargs: '%s', target user: '%s'`, async (chatUser: ChatUser, args: string[], apiUser: HelixUser) => {
@@ -87,11 +87,11 @@ describe('Hug Command Tests', () => {
             await subject.handle(channel, command, chatUser, message, args);
 
             // Assert
-            if (args[1]) {
+            if (args[0]) {
                 expect(mockApiClient.users.getUserByName)
                     .toHaveBeenCalledTimes(1);
                 expect(mockApiClient.users.getUserByName)
-                    .toHaveBeenCalledWith(args[1]);
+                    .toHaveBeenCalledWith(args[0]);
             } else {
                 expect(mockApiClient.users.getUserByName)
                     .toHaveBeenCalledTimes(0);

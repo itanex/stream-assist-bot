@@ -9,7 +9,7 @@ import { templateResolver } from '../utilities/template-resolver';
 
 @injectable()
 export default class BrainCommand implements ICommandHandler {
-    exp: RegExp = /^!(brain)( [#@]?([a-zA-Z0-9][\w]{2,24}))?$/i;
+    exp: RegExp = /^!(brain)(?: [#@]?([a-zA-Z0-9][\w]{2,24}))?$/i;
     timeout: number = 5;
     mod: boolean = true;
     vip: boolean = true;

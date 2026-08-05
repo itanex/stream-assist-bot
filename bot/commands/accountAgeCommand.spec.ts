@@ -41,7 +41,7 @@ describe('Account Age Command Tests', () => {
                 displayName: chatUser.displayName,
                 creationDate: new Date(2000, 0, 1)
             };
-            const args = ['', ''];
+            const args = [''];
 
             mockApiClient
                 .users
@@ -75,7 +75,7 @@ describe('Account Age Command Tests', () => {
             };
 
             // mixed case + padding, proves trim + lowercase
-            const args = ['', '  TargetedUser  '];
+            const args = ['  TargetedUser  '];
             const expectedApiClientParameter = 'targeteduser';
 
             mockApiClient
@@ -122,7 +122,7 @@ describe('Account Age Command Tests', () => {
                 displayName: '',
                 creationDate: new Date(2000, 0, 1)
             };
-            const args = ['', 'irrelevant'];
+            const args = ['irrelevant'];
 
             mockApiClient
                 .users

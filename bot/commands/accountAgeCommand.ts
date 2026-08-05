@@ -11,7 +11,7 @@ import { templateResolver } from '../utilities/template-resolver';
 
 @injectable()
 export class AccountAgeCommand implements ICommandHandler {
-    exp: RegExp = /^!(accountage)( [#@]?([a-zA-Z0-9][\w]{2,24}))?$/i;
+    exp: RegExp = /^!(accountage)(?: [#@]?([a-zA-Z0-9][\w]{2,24}))?$/i;
     timeout: number = 5;
     mod: boolean = true;
     vip: boolean = true;
@@ -33,8 +33,8 @@ export class AccountAgeCommand implements ICommandHandler {
     }
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        const username = args[1]
-            ? args[1].toLocaleLowerCase().trim()
+        const username = args[0]
+            ? args[0].toLocaleLowerCase().trim()
             : userstate.userName;
 
         const user = await this.apiClient.users.getUserByName(username);

@@ -7,7 +7,7 @@ import { ICommandHandler, OnlineState } from './iCommandHandler';
 
 @injectable()
 export class HugCommand implements ICommandHandler {
-    exp: RegExp = /^!(hug|hugs)( [#@]?([a-zA-Z0-9][\w]{2,24}))?$/i;
+    exp: RegExp = /^!(hug|hugs)(?: [#@]?([a-zA-Z0-9][\w]{2,24}))?$/i;
     timeout: number = 30;
     mod: boolean = true;
     vip: boolean = true;
@@ -27,8 +27,8 @@ export class HugCommand implements ICommandHandler {
     }
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        if (args[1]) {
-            const user = await this.apiClient.users.getUserByName(args[1]);
+        if (args[0]) {
+            const user = await this.apiClient.users.getUserByName(args[0]);
 
             if (user) {
                 if (userstate.displayName !== user.displayName) {
@@ -37,7 +37,7 @@ export class HugCommand implements ICommandHandler {
                     this.chatClient.say(channel, `${userstate.displayName} hugs themself`);
                 }
             } else {
-                this.chatClient.say(channel, `${userstate.displayName} can't find ${args[1]} and decides to hug everyone`);
+                this.chatClient.say(channel, `${userstate.displayName} can't find ${args[0]} and decides to hug everyone`);
             }
         } else {
             this.chatClient.say(channel, `${userstate.displayName} hugs themself`);
