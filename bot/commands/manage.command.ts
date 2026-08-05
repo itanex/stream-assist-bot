@@ -74,29 +74,29 @@ export default class ManageCommand implements ICommandHandler {
         const [name, variant, ...rest] = compoundName.split('.');
 
         if (rest.length > 0) {
-            this.chatClient.say(channel, UnsupportedMessage(compoundName));
+            await this.chatClient.say(channel, UnsupportedMessage(compoundName));
             this.logger.warn(UnsupportedMessage(compoundName));
         } else {
             // eslint-disable-next-line default-case
             switch (subCommand.toLowerCase()) {
                 case 'add': {
                     const result = await this.commandResponseService.addCommandText(name, text, variant);
-                    this.chatClient.say(channel, InsertReplies[result](compoundName));
+                    await this.chatClient.say(channel, InsertReplies[result](compoundName));
                     break;
                 }
                 case 'edit': {
                     const result = await this.commandResponseService.setCommandText(name, text, variant);
-                    this.chatClient.say(channel, UpdateReplies[result](compoundName));
+                    await this.chatClient.say(channel, UpdateReplies[result](compoundName));
                     break;
                 }
                 case 'remove': {
                     const result = await this.commandResponseService.removeCommandText(name, variant);
-                    this.chatClient.say(channel, RemoveReplies[result](compoundName));
+                    await this.chatClient.say(channel, RemoveReplies[result](compoundName));
                     break;
                 }
                 case 'restore': {
                     const result = await this.commandResponseService.restoreCommandText(name, variant);
-                    this.chatClient.say(channel, RestoreReplies[result](compoundName));
+                    await this.chatClient.say(channel, RestoreReplies[result](compoundName));
                     break;
                 }
             }

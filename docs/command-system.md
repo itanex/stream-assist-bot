@@ -29,7 +29,7 @@ export interface ICommandHandler {
     isGlobalCommand: boolean;
     restriction: OnlineState;
     cooldownKey?(args: string[]): string;
-    handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void>;
+    handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any, resolveChannel?: () => Promise<string>): Promise<void>;
 }
 ```
 
@@ -117,9 +117,10 @@ Command response text can live in the database (`CommandResponse` table) instead
 
 ### Making a command's response editable
 
-1. Add an entry to `defaultResponses` with the command's trigger word as the key
+1. Add an entry to `defaultResponses` with the command's trigger word as the key, written with `%token%` placeholders for any dynamic content
 2. Declare `commandName` on the command class referencing that key
 3. Inject `CommandResponseService` and read the text in `handle`
+4. Build a `TransientContext` supplying a value for every token the template uses, and pass both to `templateResolver` (see [Template Rendering](#template-rendering))
 
 ### Command Families and Variants
 
@@ -131,6 +132,29 @@ Some commands respond with one of several named variants rather than a single te
 * A command reads its variant text via `CommandResponseService.getCommandText(this.commandName, variant)`, where `variant` comes from its own capture group in `exp`.
 
 Whether a `commandName` value resolves to a single fixed reponse or a family of reponses depends only on which registry it's drawn from - `defaultResponses` or `CommandFamilies` - not on a separate field.
+
+---
+
+## Template Rendering
+
+`templateResolver` (`bot/utilities/template-resolver.ts`) substitutes `%token%` placeholders in a response string against a supplied context object.
+
+```typescript
+templateResolver(template: string, context: TransientContext, logger: winston.Logger): string
+```
+
+* Placeholders use `%tokenname%` syntax, matched case-insensitively
+* `context` is a `TransientContext` - a partial record keyed by `TransientKeyword`, the union of names registered in `transientKeywords` (`bot/utilities/default-responses.ts`)
+* Token names are per-command, not a fixed shared vocabulary - each command's response template only uses the tokens that command's `context` object populates (e.g. `targetuser`, `speakinguser`, `deathtotal`)
+* If a template references a token missing from `context`, `templateResolver` logs a warning and leaves the literal `%token%` text in the output - nothing enforces that a template's tokens match what the command actually supplies, so keep both in sync by hand when editing either
+* Output longer than 500 characters (Twitch's chat message cap) is truncated to fit, with a `...` suffix, and a warning is logged
+
+### Channel and Broadcaster Identity
+
+Two different sources exist for identity-related tokens, and they are not interchangeable:
+
+* **`Broadcaster`** (`bot/utilities/broadcaster.ts`) - the bot's own configured home channel, cached for 5 minutes. Inject it directly for a static "who is this bot's broadcaster" value (e.g. `countexhaust`, `followage`).
+* **`resolveChannel`** - an optional 6th parameter on `ICommandHandler.handle()`, a `() => Promise<string>` supplied by `MessageHandler`. Resolves the channel the *specific incoming message* actually belongs to: prefers the IRC `source-room-id` tag (present during shared-chat sessions) resolved via `apiClient.users.getUserById`, falling back to the bot's home `Broadcaster` identity otherwise. It's lazy - the API lookup only happens if a command calls the function. As of now, no command implementation calls it.
 
 ---
 

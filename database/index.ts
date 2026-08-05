@@ -3,7 +3,7 @@ import ChannelPointRedeem from './models/channelPointRedeem.dbo';
 import CheerEvent from './models/cheerEvent.dbo';
 import DeathCounts from './models/deathCountRecord.dbo';
 import FollowEvent from './models/follow-event.dbo';
-import LurkingUsers from './models/lurkingUser.dbo';
+import LurkingUsers from './models/lurking-user.dbo';
 import ModeratorEvent from './models/moderatorEvent.dbo';
 import RaidEvent from './models/raid-event.dbo';
 import Raiders from './models/raiders.dbo';

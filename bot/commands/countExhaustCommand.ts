@@ -3,6 +3,9 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types';
 import { ICommandHandler, OnlineState } from './iCommandHandler';
+import { templateResolver } from '../utilities/template-resolver';
+import { TransientContext, transientKeywords } from '../utilities/default-responses';
+import Broadcaster from '../utilities/broadcaster';
 
 @injectable()
 export class CountExhaustCommand implements ICommandHandler {
@@ -19,27 +22,29 @@ export class CountExhaustCommand implements ICommandHandler {
     restriction: OnlineState = 'online';
 
     responses = [
-        `I am about to run out of toes to count on %broadcaster_name%`,
+        `I am about to run out of toes to count on %${transientKeywords.broadcaster}%`,
         `I think I need to go back to school to learn more math to count that high`,
     ];
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
+        @inject(Broadcaster) private broadcaster: Broadcaster,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         if (this.responses.length) {
-            const msg = this.tokenizeMessage(this.responses[Math.floor(Math.random() * this.responses.length)], channel);
+            const result = this.responses[Math.floor(Math.random() * this.responses.length)];
+            const broadcaster = await this.broadcaster.getBroadcaster();
 
-            this.chatClient.say(channel, msg);
+            const context: TransientContext = {
+                broadcaster: broadcaster.displayName,
+            };
 
-            this.logger.info(`* Executed ${command} in ${channel} :: ${userstate.displayName} > ${message}`);
+            await this.chatClient.say(channel, templateResolver(result, context, this.logger));
         }
-    }
 
-    tokenizeMessage(message: string, channel: string): string {
-        return message.replace('%broadcaster_name%', channel);
+        this.logger.info(`* Executed ${command} in ${channel} :: ${userstate.displayName} > ${message}`);
     }
 }

@@ -36,13 +36,13 @@ export class LastRaidCommand implements ICommandHandler {
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         await Raiders
             .getLastRaid()
-            .then(record => {
+            .then(async record => {
                 const lastDate = dayjs(record.time).fromNow();
 
                 if (record.viewerCount > 1) {
-                    this.chatClient.say(channel, `${record.raider}, raided the colony ${lastDate} with ${record.viewerCount} viewers!!!`);
+                    await this.chatClient.say(channel, `${record.raider}, raided the colony ${lastDate} with ${record.viewerCount} viewers!!!`);
                 } else {
-                    this.chatClient.say(channel, `${record.raider}, raided the colony ${lastDate}!!!`);
+                    await this.chatClient.say(channel, `${record.raider}, raided the colony ${lastDate}!!!`);
                 }
 
                 this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName}`);

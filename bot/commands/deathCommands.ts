@@ -8,8 +8,10 @@ import { ApiClient } from '@twurple/api';
 import { ICommandHandler, OnlineState } from './iCommandHandler';
 import InjectionTypes from '../../dependency-management/types';
 import { CommandTimeout } from '../types/CommandTimeout';
-import Broadcaster from '../utilities/broadcaster';
 import { DeathCounts } from '../../database';
+import { CommandName, TransientContext } from '../utilities/default-responses';
+import CommandResponseService from '../utilities/command-response.service';
+import { templateResolver } from '../utilities/template-resolver';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(isToday);
@@ -49,35 +51,37 @@ export class DeathCommand implements ICommandHandler {
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         const stream = await this.apiClient.streams.getStreamByUserName(channel.replace('#', ''));
 
-        await DeathCounts
-            .recordNewDeath(stream)
-            .then(async ([instance, created]) => {
-                let { deathCount } = instance;
+        if (stream) {
+            await DeathCounts
+                .recordNewDeath(stream)
+                .then(async ([instance, created]) => {
+                    let { deathCount } = instance;
 
-                if (!created) {
-                    // eslint-disable-next-line no-param-reassign
-                    instance.deathCount++;
-                    deathCount = instance.deathCount;
-                    await instance.save();
-                }
-
-                const ttl = Math.ceil(Math.abs(this.commandTimeout.timeout - new Date().getTime()) / 1000);
-
-                if (ttl > timeout) {
-                    this.commandTimeout = { name: 'DeathCommand', timeout: new Date().getTime() };
-
-                    if (deathCount === 1) {
-                        this.chatClient.say(channel, `We're gonna need another Timy!`);
-                    } else if (this.responses.length) {
-                        this.chatClient.say(channel, this.responses[Math.floor(Math.random() * this.responses.length)]);
+                    if (!created) {
+                        // eslint-disable-next-line no-param-reassign
+                        instance.deathCount++;
+                        deathCount = instance.deathCount;
+                        await instance.save();
                     }
-                } else if (this.responses.length && deathCount % 10 === 0) {
-                    this.commandTimeout = { name: 'DeathCommand', timeout: new Date().getTime() };
-                    this.chatClient.say(channel, this.responses[Math.floor(Math.random() * this.responses.length)]);
-                }
 
-                this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${deathCount}`);
-            });
+                    const ttl = Math.ceil(Math.abs(this.commandTimeout.timeout - new Date().getTime()) / 1000);
+
+                    if (ttl > timeout) {
+                        this.commandTimeout = { name: 'DeathCommand', timeout: new Date().getTime() };
+
+                        if (deathCount === 1) {
+                            await this.chatClient.say(channel, `We're gonna need another Timy!`);
+                        } else if (this.responses.length) {
+                            await this.chatClient.say(channel, this.responses[Math.floor(Math.random() * this.responses.length)]);
+                        }
+                    } else if (this.responses.length && deathCount % 10 === 0) {
+                        this.commandTimeout = { name: 'DeathCommand', timeout: new Date().getTime() };
+                        await this.chatClient.say(channel, this.responses[Math.floor(Math.random() * this.responses.length)]);
+                    }
+
+                    this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${deathCount}`);
+                });
+        }
     }
 }
 
@@ -105,16 +109,20 @@ export class DeathCountCommand implements ICommandHandler {
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         const stream = await this.apiClient.streams.getStreamByUserName(channel.replace('#', ''));
 
-        await DeathCounts
-            .getCurrentStreamDeathCount(stream)
-            .then(async ([instance]) => {
-                if (instance.deathCount > 1) {
-                    this.chatClient.say(channel, `We have used ${instance.deathCount} Timy today`);
-                } else {
-                    this.chatClient.say(channel, `We have used ${instance.deathCount} Timys today`);
-                }
-                this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${instance.deathCount}`);
-            });
+        if (stream) {
+            await DeathCounts
+                .getCurrentStreamDeathCount(stream)
+                .then(async ([instance]) => {
+                    if (instance.deathCount > 1) {
+                        await this.chatClient.say(channel, `We have used ${instance.deathCount} Timy today`);
+                    } else {
+                        await this.chatClient.say(channel, `We have used ${instance.deathCount} Timys today`);
+                    }
+                    this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${instance.deathCount}`);
+                });
+        }
+
+        this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName}`);
     }
 }
 
@@ -131,10 +139,12 @@ export class LastDeathCountCommmand implements ICommandHandler {
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
+    commandName: CommandName = 'lastdeathcount';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(ApiClient) private apiClient: ApiClient,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
@@ -142,25 +152,38 @@ export class LastDeathCountCommmand implements ICommandHandler {
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         const stream = await this.apiClient.streams.getStreamByUserName(channel.replace('#', ''));
 
-        await DeathCounts
-            .getLastStreamDeathCount(stream.id)
-            .then(records => {
-                const games = records
-                    .map(record => `${record.game} (${record.deathCount})`)
-                    .join(', ');
+        if (stream) {
+            await DeathCounts
+                .getLastStreamDeathCount(stream.id)
+                .then(async records => {
+                    const result = this.commandResponseService.getCommandText(this.commandName);
+                    if (result) {
+                        const games = records
+                            .map(record => `${record.game} (${record.deathCount})`)
+                            .join(', ');
 
-                const total = records
-                    .flat()
-                    .flatMap(value => value.deathCount)
-                    .reduce((prev: number, cur: number) => prev + cur);
+                        const total = records
+                            .flat()
+                            .flatMap(value => value.deathCount)
+                            .reduce((prev: number, cur: number) => prev + cur);
 
-                const date = records
-                    .map(record => record.createdAt)
-                    .shift();
+                        const date = records
+                            .map(record => record.createdAt)
+                            .shift();
 
-                // Report command result to stream
-                this.chatClient.say(channel, `During the stream on ${dayjs(date).format('ll')}, we used ${total} timys in the following game(s): ${games}`);
-            });
+                        const context: TransientContext = {
+                            deathtotal: `${total}`,
+                            streamdate: `${dayjs(date).format('ll')}`,
+                            streamcategory: games,
+                        };
+
+                        // Report command result to stream
+                        await this.chatClient.say(channel, templateResolver(result, context, this.logger));
+                    } else {
+                        this.logger.warn(`Unable to retrieve ${this.commandName} response text`);
+                    }
+                });
+        }
 
         this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName}`);
     }

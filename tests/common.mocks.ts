@@ -1,4 +1,4 @@
-import { ApiClient } from '@twurple/api';
+import { ApiClient, HelixChannelApi, HelixStreamApi, HelixUserApi } from '@twurple/api';
 import { ChatClient } from '@twurple/chat';
 import winston from 'winston';
 import CommandResponseService from '../bot/utilities/command-response.service';
@@ -8,10 +8,21 @@ export const mockChatClient = <unknown>{
 } as jest.Mocked<ChatClient>;
 
 export const mockApiClient = <unknown>{
+    users: {
+        getUserByName: jest.fn(),
+        getUserById: jest.fn(),
+    },
     streams: {
         getStreamByUserName: jest.fn(),
     },
-} as jest.Mocked<ApiClient>;
+    channels: {
+        getChannelFollowers: jest.fn(),
+    },
+} as jest.Mocked<ApiClient> & {
+    users: jest.Mocked<Pick<HelixUserApi, 'getUserByName' | 'getUserById'>>;
+    streams: jest.Mocked<Pick<HelixStreamApi, 'getStreamByUserName'>>;
+    channels: jest.Mocked<Pick<HelixChannelApi, 'getChannelFollowers'>>;
+};
 
 export const mockLogger = <unknown>{
     info: jest.fn(),

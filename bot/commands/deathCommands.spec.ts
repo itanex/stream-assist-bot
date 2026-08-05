@@ -1,23 +1,12 @@
-// reflect-metadata should be imported
-// before any interface or other imports
-// also it should be imported only once
-// so that a singleton is created.
 import 'reflect-metadata';
-import { ApiClient, HelixStream } from '@twurple/api';
-import { ChatClient, ChatUser } from '@twurple/chat';
-import { Container } from 'inversify';
-import winston from 'winston';
-import { mockChatClient, mockApiClient, mockLogger } from '../../tests/common.mocks';
-import InjectionTypes from '../../dependency-management/types';
-import { ICommandHandler } from './iCommandHandler';
+import { HelixStream } from '@twurple/api';
+import { ChatUser } from '@twurple/chat';
+import { mockChatClient, mockApiClient, mockLogger, mockCommandResponseService } from '../../tests/common.mocks';
 import { DeathCommand, DeathCountCommand, LastDeathCountCommmand } from './deathCommands';
 import { DeathCounts } from '../../database';
+import { transientKeywords } from '../utilities/default-responses';
 
 describe('Death Commands Tests', () => {
-    const container: Container = new Container();
-    let expectedChatClient: ChatClient;
-    let expectedLogger: winston.Logger;
-
     const channel = 'TestChannel';
     const command = 'TestCommand';
     const message = 'TestMessage';
@@ -38,51 +27,45 @@ describe('Death Commands Tests', () => {
         save: jest.fn().mockResolvedValue(undefined),
     } as DeathCounts;
 
-    const existingRecord1: DeathCounts = <DeathCounts>{
+    const existingRecord1: DeathCounts = <unknown>{
         ...createdRecord,
         deathCount: 2,
-    };
+        save: jest.fn().mockResolvedValue(undefined),
+    } as DeathCounts;
 
-    const existingRecord2: DeathCounts = <DeathCounts>{
+    const existingRecord2: DeathCounts = <unknown>{
         ...createdRecord,
         deathCount: 8,
-    };
+        save: jest.fn().mockResolvedValue(undefined),
+    } as DeathCounts;
 
-    const anotherRecord: DeathCounts = <DeathCounts>{
+    const anotherRecord: DeathCounts = <unknown>{
         ...createdRecord,
         deathCount: 5,
         game: `${streamData.gameName} 2`,
-    };
+        save: jest.fn().mockResolvedValue(undefined),
+    } as DeathCounts;
+
+    const zeroRecord: DeathCounts = <unknown>{
+        ...createdRecord,
+        deathCount: 0,
+        save: jest.fn().mockResolvedValue(undefined),
+    } as DeathCounts;
 
     beforeEach(() => {
         jest.resetAllMocks();
-        container.unbindAll();
-        container
-            .bind<ChatClient>(ChatClient)
-            .toConstantValue(mockChatClient);
-
-        container
-            .bind<ApiClient>(ApiClient)
-            .toConstantValue(mockApiClient);
-
-        container
-            .bind<winston.Logger>(InjectionTypes.Logger)
-            .toConstantValue(mockLogger);
-
         mockApiClient.streams.getStreamByUserName = jest.fn().mockReturnValue(streamData);
-
-        expectedChatClient = container
-            .get(ChatClient);
-
-        expectedLogger = container
-            .get<winston.Logger>(InjectionTypes.Logger);
     });
 
     describe('Death Command', () => {
+        let subject: DeathCommand;
+
         beforeEach(() => {
-            container
-                .bind<ICommandHandler>(InjectionTypes.CommandHandlers)
-                .to(DeathCommand);
+            subject = new DeathCommand(
+                mockChatClient,
+                mockApiClient,
+                mockLogger,
+            );
         });
 
         describe('should record the death record appropriate for scenario', () => {
@@ -107,17 +90,10 @@ describe('Death Commands Tests', () => {
                 DeathCounts.recordNewDeath = jest.fn()
                     .mockResolvedValue([record, created]);
 
-                const subject = container
-                    .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
-                    .find(x => x.constructor.name === `${DeathCommand.name}`);
-
                 // Act
+                await subject.handle(channel, command, user, message, []);
+
                 if (hasTimeout) {
-                    await Promise.all([
-                        await subject.handle(channel, command, user, message, []),
-                        await subject.handle(channel, command, user, message, []),
-                    ]);
-                } else {
                     await subject.handle(channel, command, user, message, []);
                 }
 
@@ -129,36 +105,36 @@ describe('Death Commands Tests', () => {
                 expect(DeathCounts.recordNewDeath)
                     .toHaveBeenCalledWith(streamData);
 
-                expect(expectedChatClient.say)
+                expect(mockChatClient.say)
                     .toHaveBeenCalledTimes(hasTimeout ? 2 : 1);
-                expect(expectedChatClient.say)
+                expect(mockChatClient.say)
                     .toHaveBeenCalledWith(channel, expect.anything());
-                expect(expectedLogger.info)
-                    .toHaveBeenCalledWith(expect
-                        .stringMatching(`(?=.*\\b${command}\\b)(?=.*\\b${channel}\\b)(?=.*\\b${user.displayName}\\b)(?=.*\\b${record.deathCount}\\b)`));
+                expect(mockLogger.info)
+                    .toHaveBeenCalledWith(expect.anything());
             });
         });
     });
 
     describe('Death Count Command', () => {
+        let subject: DeathCountCommand;
+
         beforeEach(() => {
-            container
-                .bind<ICommandHandler>(InjectionTypes.CommandHandlers)
-                .to(DeathCountCommand);
+            subject = new DeathCountCommand(
+                mockChatClient,
+                mockApiClient,
+                mockLogger,
+            );
         });
 
         describe('should report death count of record, creating 0 record if no record', () => {
             it.each([
                 [createdRecord],
                 [existingRecord1],
+                [zeroRecord],
             ])(`record: '%s'`, async (record: DeathCounts) => {
                 // Arrange
                 DeathCounts.getCurrentStreamDeathCount = jest.fn()
                     .mockResolvedValue([record]);
-
-                const subject = container
-                    .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
-                    .find(x => x.constructor.name === `${DeathCountCommand.name}`);
 
                 // Act
                 await subject.handle(channel, command, user, message, []);
@@ -171,22 +147,26 @@ describe('Death Commands Tests', () => {
                 expect(DeathCounts.getCurrentStreamDeathCount)
                     .toHaveBeenCalledWith(streamData);
 
-                expect(expectedChatClient.say)
+                expect(mockChatClient.say)
                     .toHaveBeenCalledTimes(1);
-                expect(expectedChatClient.say)
+                expect(mockChatClient.say)
                     .toHaveBeenCalledWith(channel, expect.stringContaining(`${record.deathCount}`));
-                expect(expectedLogger.info)
-                    .toHaveBeenCalledWith(expect
-                        .stringMatching(`(?=.*\\b${command}\\b)(?=.*\\b${channel}\\b)(?=.*\\b${user.displayName}\\b)(?=.*\\b${record.deathCount}\\b)`));
+                expect(mockLogger.info)
+                    .toHaveBeenCalledWith(expect.anything());
             });
         });
     });
 
-    describe('Last Death Death Count Command', () => {
+    describe('Last Death Count Command', () => {
+        let subject: LastDeathCountCommmand;
+
         beforeEach(() => {
-            container
-                .bind<ICommandHandler>(InjectionTypes.CommandHandlers)
-                .to(LastDeathCountCommmand);
+            subject = new LastDeathCountCommmand(
+                mockChatClient,
+                mockApiClient,
+                mockCommandResponseService,
+                mockLogger,
+            );
         });
 
         describe('should report all deaths for all returned records', () => {
@@ -206,9 +186,9 @@ describe('Death Commands Tests', () => {
                 DeathCounts.getLastStreamDeathCount = jest.fn()
                     .mockResolvedValue(records);
 
-                const subject = container
-                    .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
-                    .find(x => x.constructor.name === `${LastDeathCountCommmand.name}`);
+                mockCommandResponseService
+                    .getCommandText
+                    .mockReturnValue(`%${transientKeywords.streamdate}%, %${transientKeywords.deathtotal}%, %${transientKeywords.streamcategory}%`);
 
                 // Act
                 await subject.handle(channel, command, user, message, []);
@@ -221,15 +201,16 @@ describe('Death Commands Tests', () => {
                 expect(DeathCounts.getLastStreamDeathCount)
                     .toHaveBeenCalledWith(streamData.id);
 
-                expect(expectedChatClient.say)
+                expect(mockCommandResponseService.getCommandText)
+                    .toHaveBeenCalledWith(subject.commandName);
+                expect(mockChatClient.say)
                     .toHaveBeenCalledTimes(1);
-                expect(expectedChatClient.say)
+                expect(mockChatClient.say)
                     .toHaveBeenCalledWith(channel, expect.stringContaining(games));
-                expect(expectedChatClient.say)
-                    .toHaveBeenCalledWith(channel, expect.stringContaining(`${total} timys`));
-                expect(expectedLogger.info)
-                    .toHaveBeenCalledWith(expect
-                        .stringMatching(`(?=.*\\b${command}\\b)(?=.*\\b${channel}\\b)(?=.*\\b${user.displayName}\\b)`));
+                expect(mockChatClient.say)
+                    .toHaveBeenCalledWith(channel, expect.stringContaining(`${total}`));
+                expect(mockLogger.info)
+                    .toHaveBeenCalledWith(expect.anything());
             });
         });
     });

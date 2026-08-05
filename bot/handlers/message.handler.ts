@@ -1,3 +1,4 @@
+import { ApiClient } from '@twurple/api';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable, multiInject } from 'inversify';
 import winston from 'winston';
@@ -15,11 +16,10 @@ type ParsedCommand = {
 @injectable()
 export class MessageHandler {
     private readonly globalTimeouts: CommandTimeout[] = [];
-    /**
-     *
-     */
+
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
+        @inject(ApiClient) private apiClient: ApiClient,
         @multiInject(InjectionTypes.CommandHandlers) private commandHandlers: ICommandHandler[],
         @inject(Broadcaster) private broadcaster: Broadcaster,
         @inject(StreamStateService) private streamStateService: StreamStateService,
@@ -27,7 +27,7 @@ export class MessageHandler {
     ) {
     }
 
-    async handle(channel: string, user: string, message: string, chatUser: ChatUser): Promise<void> {
+    async handle(channel: string, user: string, message: string, chatUser: ChatUser, sourceChannelId?: string | null): Promise<void> {
         // Find command to execute
         const { commandHandler, commandArguments } = this.parseCommand(message);
 
@@ -57,7 +57,7 @@ export class MessageHandler {
             const period = this.timeoutPeriod(chatUser, commandHandler);
 
             if (ttl < period) {
-                this.onCommandCooldown(instruction, channel, period - ttl);
+                await this.onCommandCooldown(instruction, channel, period - ttl);
                 return;
             }
 
@@ -85,8 +85,19 @@ export class MessageHandler {
         //     userTimeouts[msg.userInfo.userId].push({ name: instruction, timeout: new Date().getTime() });
         // }
 
+        // Lazy: only hits the API if a command actually calls it. Prefers the message's
+        // originating channel (shared-chat sessions); falls back to this bot's home channel.
+        const resolveChannel = async (): Promise<string> => {
+            if (sourceChannelId) {
+                const result = await this.apiClient.users.getUserById(sourceChannelId);
+                return result?.displayName ?? broadcaster.displayName;
+            }
+
+            return broadcaster.displayName;
+        };
+
         await commandHandler
-            .handle(channel, instruction, chatUser, message, commandArguments)
+            .handle(channel, instruction, chatUser, message, commandArguments, resolveChannel)
             .catch((reason: any) => {
                 this.logger.error(`* Executed Message Handler :: ${message}`, { channel, user, chatUser, reason });
             });
@@ -163,7 +174,7 @@ export class MessageHandler {
             : command.timeout;
     }
 
-    private onCommandCooldown(instruction: string, channel: string, ttl: number): void {
-        this.chatClient.say(channel, `Sorry, the "${instruction}" command is still on cooldown. It will be ready in ${ttl} second(s)`);
+    private async onCommandCooldown(instruction: string, channel: string, ttl: number): Promise<void> {
+        await this.chatClient.say(channel, `Sorry, the "${instruction}" command is still on cooldown. It will be ready in ${ttl} second(s)`);
     }
 }

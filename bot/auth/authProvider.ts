@@ -1,5 +1,6 @@
 import { AccessToken, RefreshingAuthProvider } from '@twurple/auth';
 import fs from 'fs';
+import { UserIdResolvable } from '@twurple/api';
 import environment from '../../configurations/environment';
 import requiredScopes from '../../configurations/required-scopes';
 import logger from '../../logger/logger';
@@ -27,7 +28,7 @@ export function getAuthFailureReason(): string | null {
  * and registers the user with the authProvider.
  * Returns true if the user was successfully added, false otherwise.
  */
-export function addUserFromTokenFile(userId: string, intents: string[]): boolean {
+export function addUserFromTokenFile(userId: UserIdResolvable, intents: string[]): boolean {
     const tokenFilePath = `./local-cache/auth-tokens.${userId}.json`;
 
     if (!fs.existsSync(tokenFilePath)) {
@@ -54,13 +55,13 @@ export function addUserFromTokenFile(userId: string, intents: string[]): boolean
  * Registers the user with the authProvider directly from a token object.
  * Used after OAuth flow completes to avoid re-reading the file immediately after writing.
  */
-export function addUserFromToken(userId: string, tokenData: AccessToken, intents: string[]): void {
+export function addUserFromToken(userId: UserIdResolvable, tokenData: AccessToken, intents: string[]): void {
     authProvider.addUser(userId, tokenData, intents);
     userAuthenticated = true;
     authFailureReason = null;
 }
 
-export function writeUserTokenToFile(userId: string, tokenData: AccessToken): void {
+export function writeUserTokenToFile(userId: UserIdResolvable, tokenData: AccessToken): void {
     fs.writeFile(
         `./local-cache/auth-tokens.${userId}.json`,
         JSON.stringify(tokenData, null, 4),
@@ -73,7 +74,7 @@ export function writeUserTokenToFile(userId: string, tokenData: AccessToken): vo
     );
 }
 
-export function removeUserTokenFile(userId: string): void {
+export function removeUserTokenFile(userId: UserIdResolvable): void {
     authProvider.removeUser(userId);
 
     fs.rm(
@@ -86,7 +87,7 @@ export function removeUserTokenFile(userId: string): void {
     );
 }
 
-userAuthenticated = addUserFromTokenFile(environment.twitchBot.broadcaster.id!, ['chat', 'events']);
+userAuthenticated = addUserFromTokenFile(environment.twitchBot.broadcaster.id, ['chat', 'events']);
 
 authProvider.onRefresh(async (userId, newTokenData) => writeUserTokenToFile(userId, newTokenData));
 

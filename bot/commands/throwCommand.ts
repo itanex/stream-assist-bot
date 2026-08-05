@@ -6,7 +6,7 @@ import InjectionTypes from '../../dependency-management/types';
 
 @injectable()
 export default class ThrowCommand implements ICommandHandler {
-    exp: RegExp = /^!(throw) ([\w\s]{2,48})( [#@]?([a-zA-Z0-9][\w]{2,24}))?$/i;
+    exp: RegExp = /^!(throw) ([\w\s]{2,48})(?: [#@]?([a-zA-Z0-9][\w]{2,24}))?$/i;
     timeout: number = 5;
     mod: boolean = true;
     vip: boolean = true;
@@ -25,10 +25,10 @@ export default class ThrowCommand implements ICommandHandler {
     }
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        if (args[2]) {
-            this.chatClient.say(channel, `${userstate.displayName} throws ${args[0]} at ${args[2]}`);
+        if (args[1]) {
+            await this.chatClient.say(channel, `${userstate.displayName} throws ${args[0]} at ${args[1]}`);
         } else {
-            this.chatClient.say(channel, `${userstate.displayName} throws ${args[0]} across the room`);
+            await this.chatClient.say(channel, `${userstate.displayName} throws ${args[0]} across the room`);
         }
 
         this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);

@@ -35,7 +35,7 @@ export class DrinkCommand implements ICommandHandler {
             this.logger.warn(`* Command Text not found for ${command} in ${channel} || ${userstate.displayName} > ${message}`);
         }
 
-        this.chatClient.say(channel, commandText ?? defaultResponses.drink);
+        await this.chatClient.say(channel, commandText ?? defaultResponses.drink);
         this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }

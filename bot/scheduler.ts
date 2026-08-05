@@ -33,7 +33,7 @@ export default class Scheduler {
         };
     }
 
-    scheduleChatEvents() {
+    async scheduleChatEvents() {
         const socials = cron.schedule(
             '*/30 */1 * * *',
             async () => {
@@ -44,7 +44,7 @@ export default class Scheduler {
                 const isLive = !!(await broadcaster.getStream());
 
                 if (isLive) {
-                    this.socialsCommand.handle(
+                    await this.socialsCommand.handle(
                         `${environment.twitchBot.channel}`,
                         `${command} - Socials`,
                         this.chatUser,
@@ -54,7 +54,7 @@ export default class Scheduler {
             },
         );
 
-        socials.start();
+        await socials.start();
 
         this.logger.info(`** ${command} - Socials has been scheduled **`);
     }

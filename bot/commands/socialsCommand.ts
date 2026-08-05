@@ -41,7 +41,7 @@ export class SocialsCommand implements ICommandHandler {
         const response = this.commandResponseService.getCommandText(this.commandName, variant);
 
         if (response) {
-            this.chatClient.say(channel, response);
+            await this.chatClient.say(channel, response);
         } else {
             this.logger.warn(`Unknown Variant`, { variant, args, message });
         }

@@ -73,8 +73,8 @@ export default class AuthenticationServer implements IAuthenticationServer {
                     obtainmentTimestamp: Date.now(),
                 };
 
-                writeUserTokenToFile(environment.twitchBot.broadcaster.id!, accessToken);
-                addUserFromToken(environment.twitchBot.broadcaster.id!, accessToken, ['chat', 'events']);
+                writeUserTokenToFile(environment.twitchBot.broadcaster.id, accessToken);
+                addUserFromToken(environment.twitchBot.broadcaster.id, accessToken, ['chat', 'events']);
 
                 await this.chatBot.start();
 
@@ -119,7 +119,7 @@ export default class AuthenticationServer implements IAuthenticationServer {
             try {
                 await axios.post<AccessToken>(revokeUrl, params, requestConfig);
 
-                removeUserTokenFile(environment.twitchBot.broadcaster.id!);
+                removeUserTokenFile(environment.twitchBot.broadcaster.id);
                 this.chatBot.shutdown();
 
                 res.send(`
