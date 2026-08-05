@@ -20,6 +20,7 @@ export type CommandName =
     keyof typeof CommandFamilies;
 
 export const transientKeywords = {
+    broadcaster: 'broadcaster',
     targetuser: 'targetuser',
     speakinguser: 'speakinguser',
     percent: 'percent',
