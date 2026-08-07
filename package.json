@@ -3,7 +3,7 @@
   "version": "1.5.0",
   "description": "Twitch Bot for stream assistance, command interpretation, and additional processes.",
   "main": "app.ts",
-  "module": "module",
+  "type": "module",
   "dependencies": {
     "@sequelize/core": "7.0.0-alpha.48",
     "@twurple/api": "7.1.0",
