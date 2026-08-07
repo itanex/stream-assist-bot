@@ -11,43 +11,43 @@ export default class Subscribers extends Model {
         type: DataType.STRING(40),
         field: 'subscriber',
     })
-    subscriber: string;
+    subscriber!: string;
 
     @Column({
         type: DataType.STRING(20),
         field: 'type',
     })
-    type: SubscriptionType;
+    type!: SubscriptionType;
 
     @Column({
         type: DataType.INTEGER,
         field: 'streak',
     })
-    streak: number;
+    streak!: number;
 
     @Column({
         type: DataType.INTEGER,
         field: 'months',
     })
-    months: number;
+    months!: number;
 
     @Column({
         type: DataType.BOOLEAN,
         field: 'isPrime',
     })
-    isPrime: boolean;
+    isPrime!: boolean;
 
     @Column({
         type: DataType.STRING(40),
         field: 'plan',
     })
-    plan: string;
+    plan!: string;
 
     @Column({
         type: DataType.STRING(40),
         field: 'planName',
     })
-    planName: string;
+    planName!: string;
 
     @Column({
         type: DataType.DATE,
@@ -56,17 +56,20 @@ export default class Subscribers extends Model {
     time?: string;
 
     @ForeignKey(() => SubscriptionGiftUsers)
-    @Column({ allowNull: true })
-    giftUserId: number;
+    @Column({
+        allowNull: true,
+        type: DataType.INTEGER,
+    })
+    giftUserId!: number;
 
     @BelongsTo(() => SubscriptionGiftUsers)
-    gift: SubscriptionGiftUsers;
+    gift!: SubscriptionGiftUsers;
 
     /**
      * Get the last subscriber in the database
      * @returns The record of the last Subscriber
      */
-    static async getLastSubscriber(): Promise<Subscribers> {
+    static async getLastSubscriber(): Promise<Subscribers | null> {
         return this
             .findOne({
                 order: [['createdAt', 'DESC']],
