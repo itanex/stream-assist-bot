@@ -3,12 +3,15 @@ import { MessageHandler } from './message.handler';
 import { IRaidStreamEvent, RaidHandler } from './raid.handler';
 import { ISubscriptionHandler, SubscriptionHandler } from './subscription.handler';
 
-export {
+export type {
     IFollowStreamEvent,
+    ISubscriptionHandler,
+    IRaidStreamEvent,
+};
+
+export {
     FollowHandler,
     MessageHandler,
-    IRaidStreamEvent,
     RaidHandler,
-    ISubscriptionHandler,
     SubscriptionHandler,
 };

@@ -1,13 +1,13 @@
 import 'reflect-metadata';
 import { Container } from 'inversify';
 import winston from 'winston';
-import { Server } from 'ws';
+import { WebSocketServer } from 'ws';
 import { mockLogger } from '../../tests/common.mocks';
 import InjectionTypes from '../../dependency-management/types';
 import SocketServer from './socket.server';
 
 jest.mock('ws', () => ({
-    Server: jest.fn(),
+    WebSocketServer: jest.fn(),
     WebSocket: jest.fn(),
 }));
 
@@ -37,7 +37,7 @@ describe('SocketServer', () => {
             }),
         };
 
-        jest.mocked(Server).mockImplementation(((_options: unknown, callback?: () => void) => {
+        jest.mocked(WebSocketServer).mockImplementation(((_options: unknown, callback?: () => void) => {
             if (callback) callback();
             return mockServerInstance;
         }) as any);
@@ -74,7 +74,7 @@ describe('SocketServer', () => {
             subject.startServer();
 
             // Assert
-            expect(jest.mocked(Server)).toHaveBeenCalledWith(
+            expect(jest.mocked(WebSocketServer)).toHaveBeenCalledWith(
                 expect.objectContaining({ port: 8080 }),
                 expect.any(Function),
             );
@@ -88,7 +88,7 @@ describe('SocketServer', () => {
             subject.startServer();
 
             // Assert
-            expect(jest.mocked(Server)).toHaveBeenCalledWith(
+            expect(jest.mocked(WebSocketServer)).toHaveBeenCalledWith(
                 expect.objectContaining({ host: 'localhost' }),
                 expect.any(Function),
             );

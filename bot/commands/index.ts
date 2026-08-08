@@ -23,6 +23,11 @@ import ThrowCommand from './throwCommand';
 import { UpTimeCommand } from './upTimeCommand';
 import { WishListCommand } from './wishListCommand';
 
+export type {
+    ICommandHandler,
+    OnlineState,
+};
+
 export {
     AboutCommand,
     AccountAgeCommand,
@@ -51,6 +56,4 @@ export {
     ThrowCommand,
     UpTimeCommand,
     WishListCommand,
-    ICommandHandler,
-    OnlineState,
 };
