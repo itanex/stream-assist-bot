@@ -2,13 +2,18 @@ import { AccessToken } from '@twurple/auth';
 import axios from 'axios';
 import express, { Express } from 'express';
 import { inject, injectable } from 'inversify';
-import path from 'path';
 import winston from 'winston';
-import InjectionTypes from '../../dependency-management/types';
-import environment from '../../configurations/environment';
-import requiredScopes from '../../configurations/required-scopes';
-import { addUserFromToken, getAuthFailureReason, isUserAuthenticated, removeUserTokenFile, writeUserTokenToFile } from './authProvider';
-import ChatBot, { IChatBot } from '../chat-bot';
+import InjectionTypes from '../../dependency-management/types.js';
+import environment from '../../configurations/environment.js';
+import requiredScopes from '../../configurations/required-scopes.js';
+import {
+    addUserFromToken,
+    getAuthFailureReason,
+    isUserAuthenticated,
+    removeUserTokenFile,
+    writeUserTokenToFile,
+} from './authProvider.js';
+import ChatBot, { IChatBot } from '../chat-bot.js';
 
 export interface IAuthenticationServer {
     configure(): Promise<IAuthenticationServer>;
@@ -153,11 +158,11 @@ export default class AuthenticationServer implements IAuthenticationServer {
         });
 
         app.get('/index', (req, res) => {
-            res.sendFile('index.html', { root: __dirname });
+            res.sendFile('index.html', { root: import.meta.dirname });
         });
 
         app.get('/{*wildcard}', (req, res) => {
-            res.sendFile('index.html', { root: __dirname });
+            res.sendFile('index.html', { root: import.meta.dirname });
         });
 
         this.app = app!;

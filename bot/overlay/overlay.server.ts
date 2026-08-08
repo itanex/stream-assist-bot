@@ -3,8 +3,8 @@ import fs from 'fs';
 import { inject, injectable } from 'inversify';
 import path from 'path';
 import winston from 'winston';
-import InjectionTypes from '../../dependency-management/types';
-import environment from '../../configurations/environment';
+import InjectionTypes from '../../dependency-management/types.js';
+import environment from '../../configurations/environment.js';
 
 export interface IOverlayServer {
     configure(): IOverlayServer;
@@ -49,16 +49,16 @@ export default class OverlayServer implements IOverlayServer {
                 } else if (result = req.url.match(/([a-z0-9\\.]{1,32}.css)/)) {
                     res.setHeader('Content-Type', 'text/css');
                     res.statusCode = 200;
-                    res.end(fs.readFileSync(`${__dirname}/${result[1]}`));
+                    res.end(fs.readFileSync(`${import.meta.dirname}/${result[1]}`));
                     // eslint-disable-next-line no-cond-assign
                 } else if (result = req.url.match(/([a-z0-9\\.]{1,32}.js)/)) {
                     res.setHeader('Content-Type', 'text/js');
                     res.statusCode = 200;
-                    res.end(fs.readFileSync(`${__dirname}/${result[1]}`));
+                    res.end(fs.readFileSync(`${import.meta.dirname}/${result[1]}`));
                 } else {
                     res.setHeader('Content-Type', 'text/html');
                     res.statusCode = 200;
-                    res.end(fs.readFileSync(`${__dirname}/index.html`));
+                    res.end(fs.readFileSync(`${import.meta.dirname}/index.html`));
                 }
             } catch (e) {
                 this.logger.error(`** Overlay Web Server: Request Handling error`, e);

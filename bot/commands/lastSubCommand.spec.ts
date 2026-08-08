@@ -1,16 +1,12 @@
-// reflect-metadata should be imported
-// before any interface or other imports
-// also it should be imported only once
-// so that a singleton is created.
 import 'reflect-metadata';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import { Container } from 'inversify';
 import winston from 'winston';
-import { mockChatClient, mockLogger } from '../../tests/common.mocks';
-import InjectionTypes from '../../dependency-management/types';
-import { ICommandHandler } from './iCommandHandler';
-import { LastSubCommand } from './lastSubCommand';
-import { Subscribers, SubscriptionType } from '../../database';
+import { mockChatClient, mockLogger } from '../../tests/common.mocks.js';
+import InjectionTypes from '../../dependency-management/types.js';
+import { ICommandHandler } from './iCommandHandler.js';
+import { LastSubCommand } from './lastSubCommand.js';
+import { Subscribers, SubscriptionType } from '../../database/index.js';
 
 describe('Last Sub Command Tests', () => {
     const channel = 'TestChannel';

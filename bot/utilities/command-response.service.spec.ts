@@ -1,17 +1,17 @@
 import 'reflect-metadata';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { UniqueConstraintError } from 'sequelize';
-import Database, { IDatabaseConfiguration } from '../../database/database';
+import Database, { IDatabaseConfiguration } from '../../database/database.js';
 import CommandResponseService, {
     CommandTextValidationResult,
     CommandTextInsertResult,
     CommandTextUpdateResult,
     CommandTextRemoveResult,
     CommandTextRestoreResult,
-} from './command-response.service';
-import { mockLogger } from '../../tests/common.mocks';
-import { defaultResponses } from './default-responses';
-import { CommandResponse } from '../../database';
+} from './command-response.service.js';
+import { mockLogger } from '../../tests/common.mocks.js';
+import { defaultResponses } from './default-responses.js';
+import { CommandResponse } from '../../database/index.js';
 
 jest.mock('./default-responses', () => ({
     ...jest.requireActual('./default-responses'),

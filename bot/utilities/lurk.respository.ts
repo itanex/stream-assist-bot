@@ -1,8 +1,8 @@
 import { inject, injectable } from 'inversify';
 import { ChatUser } from '@twurple/chat';
 import winston from 'winston';
-import InjectionTypes from '../../dependency-management/types';
-import { LurkingUsers } from '../../database';
+import InjectionTypes from '../../dependency-management/types.js';
+import { LurkingUsers } from '../../database/index.js';
 
 @injectable()
 export default class LurkRespository {

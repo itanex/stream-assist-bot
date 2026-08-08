@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { ApiClient } from '@twurple/api';
-import Broadcaster from './broadcaster';
+import Broadcaster from './broadcaster.js';
 
 jest.mock('../../configurations/environment', () => ({
     __esModule: true,

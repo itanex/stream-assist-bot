@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import Broadcaster from './broadcaster';
+import Broadcaster from './broadcaster.js';
 
 @injectable()
 export default class StreamStateService {

@@ -2,8 +2,8 @@ import { ApiClient } from '@twurple/api';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import InjectionTypes from '../../dependency-management/types';
-import { ICommandHandler, OnlineState } from './iCommandHandler';
+import InjectionTypes from '../../dependency-management/types.js';
+import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 
 @injectable()
 export class HugCommand implements ICommandHandler {

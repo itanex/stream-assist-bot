@@ -1,15 +1,22 @@
 import 'reflect-metadata';
-import { ApiClient, HelixChannel, HelixPaginatedResult, HelixSchedule, HelixStream, HelixUser, HelixVideo } from '@twurple/api';
-import { HelixPaginatedScheduleResult } from '@twurple/api/lib/interfaces/endpoints/schedule.input';
+import {
+    ApiClient,
+    HelixChannel,
+    HelixPaginatedResult,
+    HelixSchedule,
+    HelixStream,
+    HelixUser,
+    HelixVideo,
+} from '@twurple/api';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
+import relativeTime from 'dayjs/plugin/relativeTime.js';
 import { Container } from 'inversify';
 import winston from 'winston';
-import { mockChatClient, mockLogger } from '../../tests/common.mocks';
-import InjectionTypes from '../../dependency-management/types';
-import { ICommandHandler } from './iCommandHandler';
-import { ShoutOutCommand } from './shoutOutCommand';
+import { mockChatClient, mockLogger } from '../../tests/common.mocks.js';
+import InjectionTypes from '../../dependency-management/types.js';
+import { ICommandHandler } from './iCommandHandler.js';
+import { ShoutOutCommand } from './shoutOutCommand.js';
 
 dayjs.extend(relativeTime);
 
@@ -260,7 +267,7 @@ describe('Shout Out Command Tests', () => {
             // Arrange
             const topic = 'TestCategoryName';
             const when = dayjs(startDate).fromNow();
-            const schedule: HelixPaginatedScheduleResult = <unknown>{
+            const schedule = <unknown>{
                 cursor: '',
                 data: {
                     segments: [{
@@ -268,7 +275,7 @@ describe('Shout Out Command Tests', () => {
                         categoryName: topic,
                     }],
                 } as HelixSchedule,
-            } as HelixPaginatedScheduleResult;
+            };
 
             mockApiClient = <unknown>{
                 schedule: {
@@ -311,12 +318,12 @@ describe('Shout Out Command Tests', () => {
             // Arrange
             const topic = 'TestCategoryName';
             const when = dayjs(startDate).fromNow();
-            const schedule: HelixPaginatedScheduleResult = <unknown>{
+            const schedule = <unknown>{
                 cursor: '',
                 data: <unknown>{
                     segments: [],
                 } as HelixSchedule,
-            } as HelixPaginatedScheduleResult;
+            };
 
             const channelDetails: HelixChannel = <unknown>{
                 gameName: topic,

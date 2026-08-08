@@ -1,10 +1,10 @@
 import 'reflect-metadata';
 import { HelixStream } from '@twurple/api';
 import { ChatUser } from '@twurple/chat';
-import { mockChatClient, mockApiClient, mockLogger, mockCommandResponseService } from '../../tests/common.mocks';
-import { DeathCommand, DeathCountCommand, LastDeathCountCommmand } from './deathCommands';
-import { DeathCounts } from '../../database';
-import { transientKeywords } from '../utilities/default-responses';
+import { mockChatClient, mockApiClient, mockLogger, mockCommandResponseService } from '../../tests/common.mocks.js';
+import { DeathCommand, DeathCountCommand, LastDeathCountCommmand } from './deathCommands.js';
+import { DeathCounts } from '../../database/index.js';
+import { transientKeywords } from '../utilities/default-responses.js';
 
 describe('Death Commands Tests', () => {
     const channel = 'TestChannel';

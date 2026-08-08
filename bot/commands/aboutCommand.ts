@@ -1,10 +1,10 @@
 import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import InjectionTypes from '../../dependency-management/types';
-import { ICommandHandler, OnlineState } from './iCommandHandler';
-import CommandResponseService from '../utilities/command-response.service';
-import { CommandName, defaultResponses } from '../utilities/default-responses';
+import InjectionTypes from '../../dependency-management/types.js';
+import { ICommandHandler, OnlineState } from './iCommandHandler.js';
+import CommandResponseService from '../utilities/command-response.service.js';
+import { CommandName, defaultResponses } from '../utilities/default-responses.js';
 
 @injectable()
 export class AboutCommand implements ICommandHandler {

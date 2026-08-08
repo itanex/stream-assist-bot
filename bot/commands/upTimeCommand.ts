@@ -1,11 +1,11 @@
 import { ChatClient, ChatUser } from '@twurple/chat';
 import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
+import relativeTime from 'dayjs/plugin/relativeTime.js';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import { ICommandHandler, OnlineState } from './iCommandHandler';
-import InjectionTypes from '../../dependency-management/types';
-import Broadcaster from '../utilities/broadcaster';
+import { ICommandHandler, OnlineState } from './iCommandHandler.js';
+import InjectionTypes from '../../dependency-management/types.js';
+import Broadcaster from '../utilities/broadcaster.js';
 
 dayjs.extend(relativeTime);
 

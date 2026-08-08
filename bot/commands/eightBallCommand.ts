@@ -5,9 +5,9 @@ import fs from 'fs';
 import axios from 'axios';
 import md5 from 'md5';
 import { WebSocket } from 'ws';
-import { ICommandHandler, OnlineState } from './iCommandHandler';
-import InjectionTypes from '../../dependency-management/types';
-import environment from '../../configurations/environment';
+import { ICommandHandler, OnlineState } from './iCommandHandler.js';
+import InjectionTypes from '../../dependency-management/types.js';
+import environment from '../../configurations/environment.js';
 
 const responses = [
     `It is certain.`,

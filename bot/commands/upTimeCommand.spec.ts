@@ -1,19 +1,15 @@
-// reflect-metadata should be imported
-// before any interface or other imports
-// also it should be imported only once
-// so that a singleton is created.
 import 'reflect-metadata';
 import { HelixPrivilegedUser, HelixStream, HelixStreamType } from '@twurple/api';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
+import relativeTime from 'dayjs/plugin/relativeTime.js';
 import { Container } from 'inversify';
 import winston from 'winston';
-import { mockChatClient, mockLogger } from '../../tests/common.mocks';
-import InjectionTypes from '../../dependency-management/types';
-import Broadcaster from '../utilities/broadcaster';
-import { ICommandHandler } from './iCommandHandler';
-import { UpTimeCommand } from './upTimeCommand';
+import { mockChatClient, mockLogger } from '../../tests/common.mocks.js';
+import InjectionTypes from '../../dependency-management/types.js';
+import Broadcaster from '../utilities/broadcaster.js';
+import { ICommandHandler } from './iCommandHandler.js';
+import { UpTimeCommand } from './upTimeCommand.js';
 
 dayjs.extend(relativeTime);
 

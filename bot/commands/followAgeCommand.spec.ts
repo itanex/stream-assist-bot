@@ -10,12 +10,12 @@ import {
     mockChatClient,
     mockCommandResponseService,
     mockLogger,
-} from '../../tests/common.mocks';
-import { FollowAgeCommand } from './followAgeCommand';
-import Timespan, { getAgeReport } from '../utilities/timeSpan';
-import environment from '../../configurations/environment';
-import { transientKeywords } from '../utilities/default-responses';
-import Broadcaster from '../utilities/broadcaster';
+} from '../../tests/common.mocks.js';
+import { FollowAgeCommand } from './followAgeCommand.js';
+import Timespan, { getAgeReport } from '../utilities/timeSpan.js';
+import environment from '../../configurations/environment.js';
+import { transientKeywords } from '../utilities/default-responses.js';
+import Broadcaster from '../utilities/broadcaster.js';
 
 jest.mock('../../configurations/environment', () => ({
     __esModule: true,

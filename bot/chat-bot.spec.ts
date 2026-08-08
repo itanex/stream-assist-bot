@@ -3,9 +3,9 @@ import { ChatClient } from '@twurple/chat';
 import { EventSubWsListener } from '@twurple/eventsub-ws';
 import { Container } from 'inversify';
 import winston from 'winston';
-import InjectionTypes from '../dependency-management/types';
-import ChatBot from './chat-bot';
-import { MessageHandler, RaidHandler, SubscriptionHandler } from './handlers';
+import InjectionTypes from '../dependency-management/types.js';
+import ChatBot from './chat-bot.js';
+import { MessageHandler, RaidHandler, SubscriptionHandler } from './handlers/index.js';
 import {
     BanEventHandler,
     ChannelPointEventHandler,
@@ -14,10 +14,10 @@ import {
     ModeratorEventHandler,
     RaidEventHandler,
     StreamEventHandler,
-} from './event-sub-handlers';
-import { isUserAuthenticated } from './auth/authProvider';
-import StreamStateService from './utilities/stream-state.service';
-import JoinGreetingHandler from './handlers/join-greeting.handler';
+} from './event-sub-handlers/index.js';
+import { isUserAuthenticated } from './auth/authProvider.js';
+import StreamStateService from './utilities/stream-state.service.js';
+import JoinGreetingHandler from './handlers/join-greeting.handler.js';
 
 jest.mock('./auth/authProvider', () => ({
     isUserAuthenticated: jest.fn(),

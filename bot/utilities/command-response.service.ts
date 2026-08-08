@@ -1,9 +1,9 @@
 import { inject, injectable } from 'inversify';
 import { UniqueConstraintError, ValidationError } from 'sequelize';
 import winston from 'winston';
-import { CommandResponse } from '../../database';
-import { defaultResponses, CommandFamilies } from './default-responses';
-import InjectionTypes from '../../dependency-management/types';
+import { CommandResponse } from '../../database/index.js';
+import { defaultResponses, CommandFamilies } from './default-responses.js';
+import InjectionTypes from '../../dependency-management/types.js';
 
 export type CommandTextValidationResult =
     'invalidInput' |

@@ -1,9 +1,9 @@
 import { AccessToken, RefreshingAuthProvider } from '@twurple/auth';
 import fs from 'fs';
 import { UserIdResolvable } from '@twurple/api';
-import environment from '../../configurations/environment';
-import requiredScopes from '../../configurations/required-scopes';
-import logger from '../../logger/logger';
+import environment from '../../configurations/environment.js';
+import requiredScopes from '../../configurations/required-scopes.js';
+import logger from '../../logger/logger.js';
 
 fs.mkdirSync('./local-cache', { recursive: true });
 

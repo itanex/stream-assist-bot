@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import Database, { IDatabaseConfiguration } from './database';
-import { mockLogger } from '../tests/common.mocks';
+import Database, { IDatabaseConfiguration } from './database.js';
+import { mockLogger } from '../tests/common.mocks.js';
 
 // ORDER MATTERS: constructing a Database rebinds every model class
 // (static sequelize ref) to the newest instance. Any test that touches

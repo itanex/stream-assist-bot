@@ -1,17 +1,17 @@
 import { ChatClient, ChatUser } from '@twurple/chat';
 import dayjs from 'dayjs';
-import localizedFormat from 'dayjs/plugin/localizedFormat';
-import isToday from 'dayjs/plugin/isToday';
+import localizedFormat from 'dayjs/plugin/localizedFormat.js';
+import isToday from 'dayjs/plugin/isToday.js';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import { ApiClient } from '@twurple/api';
-import { ICommandHandler, OnlineState } from './iCommandHandler';
-import InjectionTypes from '../../dependency-management/types';
-import { CommandTimeout } from '../types/CommandTimeout';
-import { DeathCounts } from '../../database';
-import { CommandName, TransientContext } from '../utilities/default-responses';
-import CommandResponseService from '../utilities/command-response.service';
-import { templateResolver } from '../utilities/template-resolver';
+import { ICommandHandler, OnlineState } from './iCommandHandler.js';
+import InjectionTypes from '../../dependency-management/types.js';
+import { CommandTimeout } from '../types/CommandTimeout.js';
+import { DeathCounts } from '../../database/index.js';
+import { CommandName, TransientContext } from '../utilities/default-responses.js';
+import CommandResponseService from '../utilities/command-response.service.js';
+import { templateResolver } from '../utilities/template-resolver.js';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(isToday);

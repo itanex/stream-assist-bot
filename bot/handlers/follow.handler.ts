@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import InjectionTypes from '../../dependency-management/types';
+import InjectionTypes from '../../dependency-management/types.js';
 
 export interface IFollowStreamEvent {
     handle(channel: string, username: string): Promise<void>;

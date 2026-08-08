@@ -2,7 +2,7 @@ import winston from 'winston';
 import {
     TransientContext,
     TransientKeyword,
-} from './default-responses';
+} from './default-responses.js';
 
 // Twitch's chat message character cap
 const MAX_MESSAGE_LENGTH = 500;

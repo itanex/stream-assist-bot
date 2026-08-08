@@ -1,15 +1,15 @@
 import { inject, injectable } from 'inversify';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import winston from 'winston';
-import { ICommandHandler, OnlineState } from './iCommandHandler';
-import InjectionTypes from '../../dependency-management/types';
+import { ICommandHandler, OnlineState } from './iCommandHandler.js';
+import InjectionTypes from '../../dependency-management/types.js';
 import CommandResponseService, {
     CommandTextValidationResult,
     CommandTextInsertResult,
     CommandTextUpdateResult,
     CommandTextRemoveResult,
     CommandTextRestoreResult,
-} from '../utilities/command-response.service';
+} from '../utilities/command-response.service.js';
 
 export const GenericReplies: Record<CommandTextValidationResult, (name: string) => string> = {
     invalidInput: () => 'Invalid input: both [name] and [text] are required',

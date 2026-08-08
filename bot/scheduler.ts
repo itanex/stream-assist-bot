@@ -2,10 +2,10 @@ import { ChatUser } from '@twurple/chat';
 import winston from 'winston';
 import cron from 'node-cron';
 import { inject, injectable, multiInject } from 'inversify';
-import environment from '../configurations/environment';
-import { ICommandHandler, SocialsCommand } from './commands';
-import InjectionTypes from '../dependency-management/types';
-import Broadcaster from './utilities/broadcaster';
+import environment from '../configurations/environment.js';
+import { ICommandHandler, SocialsCommand } from './commands/index.js';
+import InjectionTypes from '../dependency-management/types.js';
+import Broadcaster from './utilities/broadcaster.js';
 
 const command = 'Cron Schedule Job';
 

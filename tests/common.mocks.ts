@@ -1,7 +1,7 @@
 import { ApiClient, HelixChannelApi, HelixStreamApi, HelixUserApi } from '@twurple/api';
 import { ChatClient } from '@twurple/chat';
 import winston from 'winston';
-import CommandResponseService from '../bot/utilities/command-response.service';
+import CommandResponseService from '../bot/utilities/command-response.service.js';
 
 export const mockChatClient = <unknown>{
     say: jest.fn(),

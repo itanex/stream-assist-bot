@@ -1,14 +1,21 @@
-import { ApiClient, HelixPaginatedResult, HelixPaginatedScheduleFilter, HelixPaginatedVideoFilter, HelixUser, HelixVideo } from '@twurple/api';
+import {
+    ApiClient,
+    HelixPaginatedResult,
+    HelixPaginatedScheduleFilter,
+    HelixPaginatedVideoFilter,
+    HelixUser,
+    HelixVideo,
+} from '@twurple/api';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import dayjs from 'dayjs';
-import isToday from 'dayjs/plugin/isToday';
-import relativeTime from 'dayjs/plugin/relativeTime';
-import calendar from 'dayjs/plugin/calendar';
+import isToday from 'dayjs/plugin/isToday.js';
+import relativeTime from 'dayjs/plugin/relativeTime.js';
+import calendar from 'dayjs/plugin/calendar.js';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import { HelixPaginatedScheduleResult } from '@twurple/api/lib/interfaces/endpoints/schedule.input';
-import { ICommandHandler, OnlineState } from './iCommandHandler';
-import InjectionTypes from '../../dependency-management/types';
+// import { HelixPaginatedScheduleResult } from '@twurple/api/lib/interfaces/endpoints/schedule.input';
+import { ICommandHandler, OnlineState } from './iCommandHandler.js';
+import InjectionTypes from '../../dependency-management/types.js';
 
 dayjs.extend(isToday);
 dayjs.extend(relativeTime);
@@ -36,7 +43,7 @@ export class ShoutOutCommand implements ICommandHandler {
 
     async getLatestSchedule(user: HelixUser, channel: string, link: string) {
         // Get schedule for the user
-        const schedule: HelixPaginatedScheduleResult = await this.apiClient.schedule
+        const schedule = await this.apiClient.schedule
             .getSchedule(user.id, <HelixPaginatedScheduleFilter>{
                 startDate: `${dayjs().subtract(1, 'day').toISOString()}`,
             })

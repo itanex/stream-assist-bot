@@ -29,7 +29,7 @@ import {
     MessageHandler,
     RaidHandler,
     SubscriptionHandler,
-} from './handlers';
+} from './handlers/index.js';
 import {
     BanEventHandler,
     ChannelPointEventHandler,
@@ -38,12 +38,12 @@ import {
     ModeratorEventHandler,
     RaidEventHandler,
     StreamEventHandler,
-} from './event-sub-handlers';
-import InjectionTypes from '../dependency-management/types';
-import environment from '../configurations/environment';
-import { isUserAuthenticated } from './auth/authProvider';
-import StreamStateService from './utilities/stream-state.service';
-import JoinGreetingHandler from './handlers/join-greeting.handler';
+} from './event-sub-handlers/index.js';
+import InjectionTypes from '../dependency-management/types.js';
+import environment from '../configurations/environment.js';
+import { isUserAuthenticated } from './auth/authProvider.js';
+import StreamStateService from './utilities/stream-state.service.js';
+import JoinGreetingHandler from './handlers/join-greeting.handler.js';
 
 export interface IChatBot {
     configure: () => IChatBot;

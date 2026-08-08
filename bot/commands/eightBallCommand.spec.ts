@@ -1,7 +1,3 @@
-// reflect-metadata should be imported
-// before any interface or other imports
-// also it should be imported only once
-// so that a singleton is created.
 import 'reflect-metadata';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import { Container } from 'inversify';
@@ -9,10 +5,10 @@ import winston from 'winston';
 import fs from 'fs';
 import axios from 'axios';
 import { WebSocket as MockWebSocket } from 'ws';
-import { mockChatClient, mockLogger } from '../../tests/common.mocks';
-import InjectionTypes from '../../dependency-management/types';
-import { ICommandHandler } from './iCommandHandler';
-import { EightBallCommand } from './eightBallCommand';
+import { mockChatClient, mockLogger } from '../../tests/common.mocks.js';
+import InjectionTypes from '../../dependency-management/types.js';
+import { ICommandHandler } from './iCommandHandler.js';
+import { EightBallCommand } from './eightBallCommand.js';
 
 jest.mock('ws', () => ({
     WebSocket: jest.fn(),

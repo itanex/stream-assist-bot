@@ -2,9 +2,9 @@ import 'reflect-metadata';
 import { Container } from 'inversify';
 import winston from 'winston';
 import { WebSocketServer } from 'ws';
-import { mockLogger } from '../../tests/common.mocks';
-import InjectionTypes from '../../dependency-management/types';
-import SocketServer from './socket.server';
+import { mockLogger } from '../../tests/common.mocks.js';
+import InjectionTypes from '../../dependency-management/types.js';
+import SocketServer from './socket.server.js';
 
 jest.mock('ws', () => ({
     WebSocketServer: jest.fn(),

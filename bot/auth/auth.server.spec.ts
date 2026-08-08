@@ -3,10 +3,16 @@ import { Container } from 'inversify';
 import request from 'supertest';
 import winston from 'winston';
 import axios from 'axios';
-import InjectionTypes from '../../dependency-management/types';
-import ChatBot from '../chat-bot';
-import AuthenticationServer from './auth.server';
-import { addUserFromToken, writeUserTokenToFile, removeUserTokenFile, isUserAuthenticated, getAuthFailureReason } from './authProvider';
+import InjectionTypes from '../../dependency-management/types.js';
+import ChatBot from '../chat-bot.js';
+import AuthenticationServer from './auth.server.js';
+import {
+    addUserFromToken,
+    writeUserTokenToFile,
+    removeUserTokenFile,
+    isUserAuthenticated,
+    getAuthFailureReason,
+} from './authProvider.js';
 
 jest.mock('axios', () => ({
     __esModule: true,

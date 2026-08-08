@@ -1,6 +1,6 @@
 import { ApiClient, HelixPrivilegedUser } from '@twurple/api';
 import { inject, injectable } from 'inversify';
-import environment from '../../configurations/environment';
+import environment from '../../configurations/environment.js';
 
 const cachingTimeout = 5 * 60 * 1000;
 

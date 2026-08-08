@@ -1,11 +1,11 @@
 import 'reflect-metadata';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import { HelixPrivilegedUser } from '@twurple/api';
-import { MessageHandler } from './message.handler';
-import Broadcaster from '../utilities/broadcaster';
-import { ICommandHandler } from '../commands';
-import StreamStateService from '../utilities/stream-state.service';
-import { mockApiClient, mockLogger } from '../../tests/common.mocks';
+import { MessageHandler } from './message.handler.js';
+import Broadcaster from '../utilities/broadcaster.js';
+import { ICommandHandler } from '../commands/index.js';
+import StreamStateService from '../utilities/stream-state.service.js';
+import { mockApiClient, mockLogger } from '../../tests/common.mocks.js';
 
 const mockChatClient = <unknown>{
     say: jest.fn(),

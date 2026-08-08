@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
 import { DialectName } from '@sequelize/core';
-import InjectionTypes from '../dependency-management/types';
+import InjectionTypes from '../dependency-management/types.js';
 import {
     BanEvent,
     ChannelPointRedeem,
@@ -17,8 +17,8 @@ import {
     SubscriptionGiftUsers,
     Subscribers,
     RaidEvent,
-} from '.';
-import sqlLogger from '../logger/sql-logger';
+} from './index.js';
+import sqlLogger from '../logger/sql-logger.js';
 
 /**
  * which sequelize dialect to use

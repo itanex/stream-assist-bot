@@ -1,6 +1,6 @@
 import { Model, Table, Column, DataType } from 'sequelize-typescript';
 import dayjs from 'dayjs';
-import duration from 'dayjs/plugin/duration';
+import duration from 'dayjs/plugin/duration.js';
 import { ChatUser } from '@twurple/chat';
 
 dayjs.extend(duration);

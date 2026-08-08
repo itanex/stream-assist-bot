@@ -1,11 +1,11 @@
 import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import InjectionTypes from '../../dependency-management/types';
-import { ICommandHandler, OnlineState } from './iCommandHandler';
-import { templateResolver } from '../utilities/template-resolver';
-import { TransientContext, transientKeywords } from '../utilities/default-responses';
-import Broadcaster from '../utilities/broadcaster';
+import InjectionTypes from '../../dependency-management/types.js';
+import { ICommandHandler, OnlineState } from './iCommandHandler.js';
+import { templateResolver } from '../utilities/template-resolver.js';
+import { TransientContext, transientKeywords } from '../utilities/default-responses.js';
+import Broadcaster from '../utilities/broadcaster.js';
 
 @injectable()
 export class CountExhaustCommand implements ICommandHandler {
