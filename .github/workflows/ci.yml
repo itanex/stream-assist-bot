@@ -34,6 +34,9 @@ jobs:
             - name: Run Lint
               run: npm run lint
 
+            - name: Run Type Check (ESM)
+              run: npm run type-check
+
             - name: Run unit tests with coverage
               shell: bash
               run: |
