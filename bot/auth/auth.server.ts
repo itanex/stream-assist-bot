@@ -1,7 +1,7 @@
 import { AccessToken } from '@twurple/auth';
 import axios from 'axios';
 import express, { Express } from 'express';
-import http from 'http';
+import RateLimit from 'express-rate-limit';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
@@ -26,7 +26,6 @@ export default class AuthenticationServer implements IAuthenticationServer {
     private app: Express | null = null;
     private host: string;
     private port: number;
-    private server: http.Server | undefined;
 
     constructor(
         @inject(ChatBot) private chatBot: IChatBot,
@@ -40,6 +39,13 @@ export default class AuthenticationServer implements IAuthenticationServer {
     async configure(): Promise<IAuthenticationServer> {
         const app = express();
         app.use(express.json());
+
+        const limiter = RateLimit({
+            windowMs: 1 * 60 * 1000, // 1 minute
+            max: 100,
+        });
+
+        app.use(limiter);
 
         app.get('/auth', async (req, res) => {
             const { code } = req.query;
@@ -174,7 +180,7 @@ export default class AuthenticationServer implements IAuthenticationServer {
     }
 
     listen(): IAuthenticationServer {
-        this.server = this.app?.listen(this.port, this.host, () => {
+        this.app?.listen(this.port, this.host, () => {
             this.logger.info(`** Auth Web Server is running on http://${this.host}:${this.port}`);
 
             if (!isUserAuthenticated()) {
