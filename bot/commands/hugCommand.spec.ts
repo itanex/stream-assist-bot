@@ -1,12 +1,12 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
-import { ApiClient, HelixUser } from '@twurple/api';
-import { ChatClient, ChatUser } from '@twurple/chat';
-import { Container } from 'inversify';
-import winston from 'winston';
-import { mockChatClient, mockLogger } from '../../tests/common.mocks.js';
-import InjectionTypes from '../../dependency-management/types.js';
-import { ICommandHandler } from './iCommandHandler.js';
+import { HelixUser } from '@twurple/api';
+import { ChatUser } from '@twurple/chat';
+import {
+    mockApiClient,
+    mockChatClient,
+    mockLogger,
+} from '../../tests/common.mocks.js';
 import { HugCommand } from './hugCommand.js';
 
 describe('Hug Command Tests', () => {
@@ -15,31 +15,16 @@ describe('Hug Command Tests', () => {
     const message = 'TestMessage';
     const user = <ChatUser>{ displayName: 'TestUser' };
 
-    const container: Container = new Container();
-    let expectedChatClient: ChatClient;
-    let expectedLogger: winston.Logger;
-    let mockApiClient: ApiClient;
+    let subject: HugCommand;
 
     beforeEach(() => {
         jest.resetAllMocks();
-        container.unbindAll();
-        container
-            .bind<ChatClient>(ChatClient)
-            .toConstantValue(mockChatClient);
 
-        container
-            .bind<winston.Logger>(InjectionTypes.Logger)
-            .toConstantValue(mockLogger);
-
-        container
-            .bind<ICommandHandler>(InjectionTypes.CommandHandlers)
-            .to(HugCommand);
-
-        expectedChatClient = container
-            .get(ChatClient);
-
-        expectedLogger = container
-            .get<winston.Logger>(InjectionTypes.Logger);
+        subject = new HugCommand(
+            mockChatClient,
+            mockApiClient,
+            mockLogger,
+        );
     });
 
     describe('should hug a user in chat', () => {
@@ -64,21 +49,12 @@ describe('Hug Command Tests', () => {
                 ['TargetUser'],
                 null,
             ],
-        ])(`user: '%s', commandargs: '%s', target user: '%s'`, async (chatUser: ChatUser, args: string[], apiUser: HelixUser) => {
+        ])(`user: '%s', commandargs: '%s', target user: '%s'`, async (chatUser: ChatUser, args: string[], apiUser: HelixUser | null) => {
             // Arrange
-            mockApiClient = <unknown>{
-                users: {
-                    getUserByName: jest.fn().mockResolvedValue(apiUser),
-                },
-            } as ApiClient;
-
-            container
-                .bind<ApiClient>(ApiClient)
-                .toConstantValue(mockApiClient);
-
-            const subject = container
-                .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
-                .find(x => x.constructor.name === `${HugCommand.name}`);
+            mockApiClient
+                .users
+                .getUserByName
+                .mockResolvedValue(apiUser);
 
             // Act
             await subject.handle(channel, command, chatUser, message, args);
@@ -94,13 +70,13 @@ describe('Hug Command Tests', () => {
                     .toHaveBeenCalledTimes(0);
             }
 
-            expect(expectedChatClient.say)
+            expect(mockChatClient.say)
                 .toHaveBeenCalledTimes(1);
-            expect(expectedChatClient.say)
+            expect(mockChatClient.say)
                 .toHaveBeenCalledWith(channel, expect
                     .stringContaining(chatUser.displayName));
 
-            expect(expectedLogger.info)
+            expect(mockLogger.info)
                 .toHaveBeenCalledWith(expect
                     .stringMatching(`(?=.*\\b${command}\\b)(?=.*\\b${channel}\\b)(?=.*\\b${user.displayName}\\b)(?=.*\\b${message}\\b)`));
         });

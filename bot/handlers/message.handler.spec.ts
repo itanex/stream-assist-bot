@@ -12,7 +12,7 @@ const mockChatClient = <unknown>{
     say: jest.fn(),
 } as jest.Mocked<ChatClient>;
 
-const mockOnlineHandler = jest.fn();
+const mockOnlineHandler = jest.fn<ICommandHandler['handle']>();
 class MockOnlineCommand implements ICommandHandler {
     exp = /!(online)/i;
     timeout = 0;
@@ -28,7 +28,7 @@ class MockOnlineCommand implements ICommandHandler {
     handle = mockOnlineHandler;
 }
 
-const mockOfflineHandler = jest.fn();
+const mockOfflineHandler = jest.fn<ICommandHandler['handle']>();
 class MockOfflineCommand implements ICommandHandler {
     exp = /!(offline)/i;
     timeout = 0;
@@ -44,7 +44,7 @@ class MockOfflineCommand implements ICommandHandler {
     handle = mockOfflineHandler;
 }
 
-const mockModHandler = jest.fn();
+const mockModHandler = jest.fn<ICommandHandler['handle']>();
 class MockModCommand implements ICommandHandler {
     exp = /!(mod)/i;
     timeout = 0;
@@ -60,7 +60,7 @@ class MockModCommand implements ICommandHandler {
     handle = mockModHandler;
 }
 
-const mockVipHandler = jest.fn();
+const mockVipHandler = jest.fn<ICommandHandler['handle']>();
 class MockVipCommand implements ICommandHandler {
     exp = /!(vip)/i;
     timeout = 0;
@@ -76,7 +76,7 @@ class MockVipCommand implements ICommandHandler {
     handle = mockVipHandler;
 }
 
-const mockArtistHandler = jest.fn();
+const mockArtistHandler = jest.fn<ICommandHandler['handle']>();
 class MockArtistCommand implements ICommandHandler {
     exp = /!(artist)/i;
     timeout = 0;
@@ -92,7 +92,7 @@ class MockArtistCommand implements ICommandHandler {
     handle = mockArtistHandler;
 }
 
-const mockFounderHandler = jest.fn();
+const mockFounderHandler = jest.fn<ICommandHandler['handle']>();
 class MockFounderCommand implements ICommandHandler {
     exp = /!(founder)/i;
     timeout = 0;
@@ -108,7 +108,7 @@ class MockFounderCommand implements ICommandHandler {
     handle = mockFounderHandler;
 }
 
-const mockBroadcasterHandler = jest.fn();
+const mockBroadcasterHandler = jest.fn<ICommandHandler['handle']>();
 class MockBroadcasterCommand implements ICommandHandler {
     exp = /!(broadcaster)/i;
     timeout = 0;
@@ -124,7 +124,7 @@ class MockBroadcasterCommand implements ICommandHandler {
     handle = mockBroadcasterHandler;
 }
 
-const mockSubscriberHandler = jest.fn();
+const mockSubscriberHandler = jest.fn<ICommandHandler['handle']>();
 class MockSubscriberCommand implements ICommandHandler {
     exp = /!(subscriber)/i;
     timeout = 0;
@@ -140,7 +140,7 @@ class MockSubscriberCommand implements ICommandHandler {
     handle = mockSubscriberHandler;
 }
 
-const mockViewerHandler = jest.fn();
+const mockViewerHandler = jest.fn<ICommandHandler['handle']>();
 class MockViewerCommand implements ICommandHandler {
     exp = /!(viewer)/i;
     timeout = 0;
@@ -156,7 +156,7 @@ class MockViewerCommand implements ICommandHandler {
     handle = mockViewerHandler;
 }
 
-const mockFollowerHandler = jest.fn();
+const mockFollowerHandler = jest.fn<ICommandHandler['handle']>();
 class MockFollowerCommand implements ICommandHandler {
     exp = /!(follower)/i;
     timeout = 0;
@@ -184,8 +184,8 @@ class MockCooldownCommand implements ICommandHandler {
     viewer = true;
     isGlobalCommand = false;
     restriction = 'online' as const;
-    handle = jest.fn<ReturnType<ICommandHandler['handle']>, Parameters<ICommandHandler['handle']>>();
-    cooldownKey = jest.fn<ReturnType<Required<ICommandHandler>['cooldownKey']>, Parameters<Required<ICommandHandler>['cooldownKey']>>();
+    handle = jest.fn<ICommandHandler['handle']>();
+    cooldownKey = jest.fn<NonNullable<ICommandHandler['cooldownKey']>>();
 }
 
 const mockCooldownCommand = new MockCooldownCommand();
@@ -208,7 +208,7 @@ const mockBroadcaster = <unknown>{
     isOnline: jest.fn(),
 } as jest.Mocked<Broadcaster>;
 
-const mockIsOnline = jest.fn<boolean, []>();
+const mockIsOnline = jest.fn<() => boolean>();
 const mockStreamStateService = <unknown>{} as jest.Mocked<StreamStateService>;
 Object.defineProperty(mockStreamStateService, 'isOnline', { get: mockIsOnline });
 
@@ -222,7 +222,7 @@ describe('Message.Handler', () => {
 
         mockBroadcaster.getBroadcaster
             .mockResolvedValue(<unknown>{
-                isFollowedBy: jest.fn().mockResolvedValue(false),
+                isFollowedBy: jest.fn<HelixPrivilegedUser['isFollowedBy']>().mockResolvedValue(false),
             } as HelixPrivilegedUser);
 
         messageHandler = new MessageHandler(
@@ -357,7 +357,7 @@ describe('Message.Handler', () => {
                 const command = '!follower';
                 mockBroadcaster.getBroadcaster
                     .mockResolvedValue(<unknown>{
-                        isFollowedBy: jest.fn().mockResolvedValue(true),
+                        isFollowedBy: jest.fn<HelixPrivilegedUser['isFollowedBy']>().mockResolvedValue(true),
                     } as HelixPrivilegedUser);
 
                 mockFollowerHandler.mockResolvedValue(undefined);
@@ -473,7 +473,7 @@ describe('Message.Handler', () => {
                 // Arrange
                 mockBroadcaster.getBroadcaster
                     .mockResolvedValue(<unknown>{
-                        isFollowedBy: jest.fn().mockResolvedValue(false),
+                        isFollowedBy: jest.fn<HelixPrivilegedUser['isFollowedBy']>().mockResolvedValue(false),
                     } as HelixPrivilegedUser);
 
                 mockCooldownCommand.handle
@@ -494,7 +494,7 @@ describe('Message.Handler', () => {
 
                 mockBroadcaster.getBroadcaster
                     .mockResolvedValue(<unknown>{
-                        isFollowedBy: jest.fn().mockResolvedValue(true),
+                        isFollowedBy: jest.fn<HelixPrivilegedUser['isFollowedBy']>().mockResolvedValue(true),
                     } as HelixPrivilegedUser);
 
                 mockCooldownCommand.handle
@@ -521,7 +521,7 @@ describe('Message.Handler', () => {
 
                 mockBroadcaster.getBroadcaster
                     .mockResolvedValue(<unknown>{
-                        isFollowedBy: jest.fn().mockResolvedValue(true),
+                        isFollowedBy: jest.fn<HelixPrivilegedUser['isFollowedBy']>().mockResolvedValue(true),
                     } as HelixPrivilegedUser);
 
                 mockCooldownCommand.handle

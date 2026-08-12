@@ -1,15 +1,11 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { HelixPrivilegedUser, HelixStream, HelixStreamType } from '@twurple/api';
-import { ChatClient, ChatUser } from '@twurple/chat';
+import { ChatUser } from '@twurple/chat';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime.js';
-import { Container } from 'inversify';
-import winston from 'winston';
 import { mockChatClient, mockLogger } from '../../tests/common.mocks.js';
-import InjectionTypes from '../../dependency-management/types.js';
 import Broadcaster from '../utilities/broadcaster.js';
-import { ICommandHandler } from './iCommandHandler.js';
 import { UpTimeCommand } from './upTimeCommand.js';
 
 dayjs.extend(relativeTime);
@@ -20,11 +16,16 @@ describe('Up Time Command Tests', () => {
     const message = 'TestMessage';
     const user = <ChatUser>{ displayName: 'TestUser' };
 
-    const container: Container = new Container();
-    let expectedChatClient: ChatClient;
-    let expectedLogger: winston.Logger;
-    let mockBroadcaster: Broadcaster;
-    let mockBroadcastingUser: HelixPrivilegedUser;
+    let subject: UpTimeCommand;
+
+    const mockBroadcaster = <unknown>{
+        getBroadcaster: jest.fn(),
+    } as jest.Mocked<Broadcaster>;
+
+    const mockBroadcastingUser = <unknown>{
+        displayName: 'TestBroadcasterName',
+        getStream: jest.fn(),
+    } as jest.Mocked<HelixPrivilegedUser>;
 
     const now = new Date();
     now.setMilliseconds(0);
@@ -51,49 +52,28 @@ describe('Up Time Command Tests', () => {
 
     beforeEach(() => {
         jest.resetAllMocks();
-        container.unbindAll();
-        container
-            .bind<ChatClient>(ChatClient)
-            .toConstantValue(mockChatClient);
 
-        container
-            .bind<winston.Logger>(InjectionTypes.Logger)
-            .toConstantValue(mockLogger);
-
-        container
-            .bind<ICommandHandler>(InjectionTypes.CommandHandlers)
-            .to(UpTimeCommand);
-
-        expectedChatClient = container
-            .get(ChatClient);
-
-        expectedLogger = container
-            .get<winston.Logger>(InjectionTypes.Logger);
+        subject = new UpTimeCommand(
+            mockChatClient,
+            mockBroadcaster,
+            mockLogger,
+        );
     });
 
     it.each([
-        ['live', 'online'],
-        ['', 'offline'],
+        [<HelixStreamType>'live', 'online'],
+        [<HelixStreamType>'', 'offline'],
     ])(`when type: '%s' should say '%s'`, async (type: HelixStreamType, state: string) => {
         // Arrange
         const testStreamData = { ...streamData, type } as HelixStream;
 
-        mockBroadcastingUser = <unknown>{
-            displayName: 'TestBroadcasterName',
-            getStream: jest.fn().mockResolvedValue(testStreamData),
-        } as HelixPrivilegedUser;
+        mockBroadcastingUser
+            .getStream
+            .mockResolvedValue(testStreamData);
 
-        mockBroadcaster = <unknown>{
-            getBroadcaster: jest.fn().mockResolvedValue(mockBroadcastingUser),
-        } as Broadcaster;
-
-        container
-            .bind(Broadcaster)
-            .toConstantValue(mockBroadcaster);
-
-        const subject = container
-            .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
-            .find(x => x.constructor.name === `${UpTimeCommand.name}`);
+        mockBroadcaster
+            .getBroadcaster
+            .mockResolvedValue(mockBroadcastingUser);
 
         // Act
         await subject.handle(channel, command, user, message, []);
@@ -102,18 +82,18 @@ describe('Up Time Command Tests', () => {
         expect(mockBroadcaster.getBroadcaster).toHaveBeenCalledTimes(1);
         expect(mockBroadcastingUser.getStream).toHaveBeenCalledTimes(1);
 
-        expect(expectedChatClient.say)
+        expect(mockChatClient.say)
             .toHaveBeenCalledWith(channel, expect
                 .stringContaining(mockBroadcastingUser.displayName));
 
-        expect(expectedChatClient.say)
+        expect(mockChatClient.say)
             .toHaveBeenCalledWith(channel, expect
                 .stringContaining(dayjs(past).fromNow(true)));
 
-        expect(expectedChatClient.say)
+        expect(mockChatClient.say)
             .toHaveBeenCalledWith(channel, expect.stringContaining(state));
 
-        expect(expectedLogger.info)
+        expect(mockLogger.info)
             .toHaveBeenCalledWith(expect
                 .stringMatching(`(?=.*\\b${command}\\b)(?=.*\\b${channel}\\b)(?=.*\\b${user.displayName}\\b)(?=.*\\b${message}\\b)`));
     });

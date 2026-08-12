@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
-import { HelixStream } from '@twurple/api';
+import { HelixStream, HelixStreamApi } from '@twurple/api';
 import { ChatUser } from '@twurple/chat';
 import { mockChatClient, mockApiClient, mockLogger, mockCommandResponseService } from '../../tests/common.mocks.js';
 import { DeathCommand, DeathCountCommand, LastDeathCountCommmand } from './deathCommands.js';
@@ -25,37 +25,46 @@ describe('Death Commands Tests', () => {
         streamId: streamData.id,
         gameId: streamData.gameId,
         game: streamData.gameName,
-        save: jest.fn().mockResolvedValue(undefined),
     } as DeathCounts;
+    createdRecord.save = jest.fn<() => Promise<DeathCounts>>()
+        .mockResolvedValue(createdRecord);
 
     const existingRecord1: DeathCounts = <unknown>{
         ...createdRecord,
         deathCount: 2,
-        save: jest.fn().mockResolvedValue(undefined),
     } as DeathCounts;
+    existingRecord1.save = jest.fn<() => Promise<DeathCounts>>()
+        .mockResolvedValue(existingRecord1);
 
     const existingRecord2: DeathCounts = <unknown>{
         ...createdRecord,
         deathCount: 8,
-        save: jest.fn().mockResolvedValue(undefined),
     } as DeathCounts;
+    existingRecord2.save = jest.fn<() => Promise<DeathCounts>>()
+        .mockResolvedValue(existingRecord2);
 
     const anotherRecord: DeathCounts = <unknown>{
         ...createdRecord,
         deathCount: 5,
         game: `${streamData.gameName} 2`,
-        save: jest.fn().mockResolvedValue(undefined),
     } as DeathCounts;
+    anotherRecord.save = jest.fn<() => Promise<DeathCounts>>()
+        .mockResolvedValue(anotherRecord);
 
     const zeroRecord: DeathCounts = <unknown>{
         ...createdRecord,
         deathCount: 0,
-        save: jest.fn().mockResolvedValue(undefined),
     } as DeathCounts;
+    zeroRecord.save = jest.fn<() => Promise<DeathCounts>>()
+        .mockResolvedValue(zeroRecord);
 
     beforeEach(() => {
         jest.resetAllMocks();
-        mockApiClient.streams.getStreamByUserName = jest.fn().mockReturnValue(streamData);
+
+        mockApiClient
+            .streams
+            .getStreamByUserName = jest.fn<HelixStreamApi['getStreamByUserName']>()
+                .mockResolvedValue(streamData);
     });
 
     describe('Death Command', () => {
@@ -88,7 +97,7 @@ describe('Death Commands Tests', () => {
                 ],
             ])(`record: '%s', created: '%s', hasTimeout: '%s'`, async (record: DeathCounts, created: boolean, hasTimeout: boolean) => {
                 // Arrange
-                DeathCounts.recordNewDeath = jest.fn()
+                DeathCounts.recordNewDeath = jest.fn<() => Promise<[DeathCounts, boolean]>>()
                     .mockResolvedValue([record, created]);
 
                 // Act
@@ -134,8 +143,8 @@ describe('Death Commands Tests', () => {
                 [zeroRecord],
             ])(`record: '%s'`, async (record: DeathCounts) => {
                 // Arrange
-                DeathCounts.getCurrentStreamDeathCount = jest.fn()
-                    .mockResolvedValue([record]);
+                DeathCounts.getCurrentStreamDeathCount = jest.fn<() => Promise<[DeathCounts, boolean]>>()
+                    .mockResolvedValue([record, record.deathCount > 0]);
 
                 // Act
                 await subject.handle(channel, command, user, message, []);
@@ -184,7 +193,7 @@ describe('Death Commands Tests', () => {
                     .flatMap(value => value.deathCount)
                     .reduce((prev: number, cur: number) => prev + cur);
 
-                DeathCounts.getLastStreamDeathCount = jest.fn()
+                DeathCounts.getLastStreamDeathCount = jest.fn<() => Promise<DeathCounts[]>>()
                     .mockResolvedValue(records);
 
                 mockCommandResponseService

@@ -15,9 +15,7 @@ describe('Last Sub Command Tests', () => {
     const message = 'TestMessage';
     const user = <ChatUser>{ displayName: 'TestUser' };
 
-    const container: Container = new Container();
-    let expectedChatClient: ChatClient;
-    let expectedLogger: winston.Logger;
+    let subject: LastSubCommand;
 
     const mockSubscriber = <unknown>{
         createdAt: new Date(2020, 0, 1),
@@ -31,24 +29,11 @@ describe('Last Sub Command Tests', () => {
 
     beforeEach(() => {
         jest.resetAllMocks();
-        container.unbindAll();
-        container
-            .bind<ChatClient>(ChatClient)
-            .toConstantValue(mockChatClient);
 
-        container
-            .bind<winston.Logger>(InjectionTypes.Logger)
-            .toConstantValue(mockLogger);
-
-        container
-            .bind<ICommandHandler>(InjectionTypes.CommandHandlers)
-            .to(LastSubCommand);
-
-        expectedChatClient = container
-            .get(ChatClient);
-
-        expectedLogger = container
-            .get<winston.Logger>(InjectionTypes.Logger);
+        subject = new LastSubCommand(
+            mockChatClient,
+            mockLogger,
+        );
     });
 
     describe('should report to chat who the last subscriber was', () => {
@@ -74,26 +59,22 @@ describe('Last Sub Command Tests', () => {
             // Arrange
             mockSubscriber.type = type;
 
-            Subscribers.getLastSubscriber = jest.fn()
+            Subscribers.getLastSubscriber = jest.fn<() => Promise<Subscribers>>()
                 .mockResolvedValue(mockSubscriber);
-
-            const subject = container
-                .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
-                .find(x => x.constructor.name === `${LastSubCommand.name}`);
 
             // Act
             await subject.handle(channel, command, user, message, []);
 
             // Assert
-            expect(expectedChatClient.say)
+            expect(mockChatClient.say)
                 .toHaveBeenCalledTimes(1);
 
             includedWords.forEach(x => {
-                expect(expectedChatClient.say)
+                expect(mockChatClient.say)
                     .toHaveBeenCalledWith(channel, expect.stringContaining(x));
             });
 
-            expect(expectedLogger.info)
+            expect(mockLogger.info)
                 .toHaveBeenCalledWith(expect
                     .stringMatching(`(?=.*\\b${command}\\b)(?=.*\\b${channel}\\b)(?=.*\\b${user.displayName}\\b)`));
         });

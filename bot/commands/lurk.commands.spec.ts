@@ -165,8 +165,9 @@ describe('Lurk Commands Tests', () => {
             // Arrange
             const calledUser = <unknown>{
                 endTime: null,
-                save: jest.fn().mockResolvedValue(null),
-            } as jest.Mocked<LurkingUsers>;
+            } as LurkingUsers;
+            calledUser.save = jest.fn<() => Promise<LurkingUsers>>()
+                .mockResolvedValue(calledUser);
 
             mockLurkRepository
                 .setUserToUnlurk

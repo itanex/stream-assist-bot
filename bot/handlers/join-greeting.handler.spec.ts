@@ -10,7 +10,7 @@ const mockChatClient = {
     say: mockSay,
 } as unknown as ChatClient;
 
-const mockOnOffline = jest.fn();
+const mockOnOffline = jest.fn<(fn: () => void) => void>();
 const mockStreamingStateService: StreamStateService = {
     isOnline: false,
     onOffline: mockOnOffline,

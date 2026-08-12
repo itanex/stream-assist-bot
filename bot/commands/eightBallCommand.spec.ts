@@ -41,8 +41,8 @@ describe('Eight Ball Command Tests', () => {
 
             subject['responses'] = [response];
             // File is already cached - TTS should not be called
-            subject['fileExists'] = jest.fn().mockReturnValue(true);
-            subject['broadcastAudio'] = jest.fn().mockResolvedValue(undefined);
+            subject['fileExists'] = jest.fn<EightBallCommand['fileExists']>().mockReturnValue(true);
+            subject['broadcastAudio'] = jest.fn<EightBallCommand['broadcastAudio']>().mockReturnValue(undefined);
 
             await subject.handle(channel, command, user, message, []);
 
@@ -62,9 +62,9 @@ describe('Eight Ball Command Tests', () => {
             const response = 'TestResponse';
 
             subject['responses'] = [response];
-            subject['fileExists'] = jest.fn().mockReturnValue(false);
+            subject['fileExists'] = jest.fn<EightBallCommand['fileExists']>().mockReturnValue(false);
             subject['broadcastAudio'] = jest.fn().mockReturnValue(undefined);
-            subject['getAudioFromGoogleTTS'] = jest.fn().mockResolvedValue('MTIzNDU2Nzg=');
+            subject['getAudioFromGoogleTTS'] = jest.fn<EightBallCommand['getAudioFromGoogleTTS']>().mockResolvedValue('MTIzNDU2Nzg=');
             subject['generateFile'] = jest.fn().mockReturnValue(undefined);
 
             await subject.handle(channel, command, user, message, []);
