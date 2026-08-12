@@ -5,33 +5,15 @@ ARG NODE_VERSION=24.0.0
 FROM node:${NODE_VERSION}-alpine as base
 WORKDIR /app
 
-FROM base as dev
-# install postgress client to debug db connection
-# RUN apk --update add postgresql-client
+FROM base as build
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=package-lock.json,target=package-lock.json \
     --mount=type=cache,target=/root/.npm \
-    npm ci --include=dev
+    npm ci
 USER node
 COPY . .
-CMD npm run dev
+RUN npm run type-check
 
-FROM base as prod
+FROM build as prod
 ENV NODE_ENV production
-RUN --mount=type=bind,source=package.json,target=package.json \
-    --mount=type=bind,source=package-lock.json,target=package-lock.json \
-    --mount=type=cache,target=/root/.npm \
-    npm ci --include=dev
-USER node
-COPY . .
 CMD npm start
-
-# FROM base as test
-# ENV NODE_ENV test
-# RUN --mount=type=bind,source=package.json,target=package.json \
-#     --mount=type=bind,source=package-lock.json,target=package-lock.json \
-#     --mount=type=cache,target=/root/.npm \
-#     npm ci --include=dev
-# USER node
-# COPY . .
-# RUN npm run test

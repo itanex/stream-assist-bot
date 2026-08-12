@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  app-dryrun:
+    container_name: stream-assist-bot-dryrun
+    image: itanex/stream-assist-bot:dryrun-lean
+    env_file: .env
+    build:
+      context: .
+      dockerfile: dockerfile.dryrun # separate from the tracked dockerfile until the lean-prod change proves out
+      target: prod
+    working_dir: /app
+    restart: "no" # manual start/stop only - this is a supervised test, not a long-running service
+    ports:
+      - 18070:8070 # Overlay Server Port (offset from the live 8070)
+      - 18080:8080 # WebSocket Server Port (offset from the live 8080)
+      - 18090:8090 # Auth Web Server Port (offset from the live 8090)
+    environment:
+      # Reaches the live postgres container via its host-published port rather than
+      # joining the live compose project's network - keeps this fully standalone
+      POSTGRES_HOST: host.docker.internal
+      POSTGRES_PORT: 6432
+    volumes:
+      # Isolated from the live container's log/cache mounts - a shared auth-token
+      # file would let this process's token refresh invalidate the live one's
+      - D:/DataWorkspaces/stream-assist-bot/logs-dryrun:/app/logs
+      - D:/DataWorkspaces/stream-assist-bot/cache-dryrun/:/app/local-cache/
