@@ -13,5 +13,5 @@
   "jest.outputConfig": {
     "clearOnRun": "terminal"
   },
-  "jest.jestCommandLine": "node_modules\\.bin\\jest.cmd",
+  "jest.jestCommandLine": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
 }

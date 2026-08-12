@@ -1,19 +1,20 @@
 import 'reflect-metadata';
+import { jest } from '@jest/globals';
 import { ChatUser } from '@twurple/chat';
 import {
     mockChatClient,
     mockCommandResponseService,
     mockLogger,
-} from '../../tests/common.mocks';
+} from '../../tests/common.mocks.js';
 import {
     LurkCommand,
     UnLurkCommand,
     WhoIsLurkingCommand,
     clearLurkingUsers,
-} from './lurk.commands';
-import { LurkingUsers } from '../../database';
-import LurkRespository from '../utilities/lurk.respository';
-import { transientKeywords } from '../utilities/default-responses';
+} from './lurk.commands.js';
+import { LurkingUsers } from '../../database/index.js';
+import LurkRespository from '../utilities/lurk.respository.js';
+import { transientKeywords } from '../utilities/default-responses.js';
 
 describe('Lurk Commands Tests', () => {
     const channel = 'TestChannel';
@@ -164,8 +165,9 @@ describe('Lurk Commands Tests', () => {
             // Arrange
             const calledUser = <unknown>{
                 endTime: null,
-                save: jest.fn().mockResolvedValue(null),
-            } as jest.Mocked<LurkingUsers>;
+            } as LurkingUsers;
+            calledUser.save = jest.fn<() => Promise<LurkingUsers>>()
+                .mockResolvedValue(calledUser);
 
             mockLurkRepository
                 .setUserToUnlurk

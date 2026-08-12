@@ -2,11 +2,11 @@ import { ApiClient } from '@twurple/api';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable, multiInject } from 'inversify';
 import winston from 'winston';
-import InjectionTypes from '../../dependency-management/types';
-import { ICommandHandler } from '../commands';
-import { CommandTimeout } from '../types/CommandTimeout';
-import Broadcaster from '../utilities/broadcaster';
-import StreamStateService from '../utilities/stream-state.service';
+import InjectionTypes from '../../dependency-management/types.js';
+import { ICommandHandler } from '../commands/index.js';
+import { CommandTimeout } from '../types/CommandTimeout.js';
+import Broadcaster from '../utilities/broadcaster.js';
+import StreamStateService from '../utilities/stream-state.service.js';
 
 type ParsedCommand = {
     commandHandler: ICommandHandler | undefined,

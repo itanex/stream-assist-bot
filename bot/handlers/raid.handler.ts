@@ -3,11 +3,11 @@ import { ChatRaidInfo, ChatUser, UserNotice } from '@twurple/chat';
 import dayjs from 'dayjs';
 import { inject, injectable, multiInject, named } from 'inversify';
 import winston from 'winston';
-import environment from '../../configurations/environment';
-import { ICommandHandler, ShoutOutCommand } from '../commands';
-import InjectionTypes from '../../dependency-management/types';
-import Database from '../../database/database';
-import { Raiders } from '../../database';
+import environment from '../../configurations/environment.js';
+import { ICommandHandler, ShoutOutCommand } from '../commands/index.js';
+import InjectionTypes from '../../dependency-management/types.js';
+import Database from '../../database/database.js';
+import { Raiders } from '../../database/index.js';
 
 export interface IRaidStreamEvent {
     onRaid(channel: string, user: string, raidInfo: ChatRaidInfo, message: UserNotice): Promise<void>;

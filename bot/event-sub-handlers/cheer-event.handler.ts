@@ -1,8 +1,8 @@
 import { EventSubChannelCheerEvent } from '@twurple/eventsub-base';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import InjectionTypes from '../../dependency-management/types';
-import { CheerEvent } from '../../database';
+import InjectionTypes from '../../dependency-management/types.js';
+import { CheerEvent } from '../../database/index.js';
 
 @injectable()
 export default class CheerEventHandler {

@@ -1,27 +1,32 @@
-import { AboutCommand } from './aboutCommand';
-import { AccountAgeCommand } from './accountAgeCommand';
-import BrainCommand from './brain.command';
-import { CountExhaustCommand } from './countExhaustCommand';
-import { CuddleCommand } from './cuddle.command';
-import { DeathCommand, DeathCountCommand, LastDeathCountCommmand } from './deathCommands';
-import { DiceCommand } from './diceCommand';
-import { DivideByZeroCommand } from './DivideByZeroCommand';
-import { DrinkCommand } from './drinkCommand';
-import { EightBallCommand } from './eightBallCommand';
-import { FallCommand } from './fallCommand';
-import { FollowAgeCommand } from './followAgeCommand';
-import { HelpCommand } from './helpCommand';
-import { HugCommand } from './hugCommand';
-import { ICommandHandler, OnlineState } from './iCommandHandler';
-import { LastRaidCommand } from './lastRaidCommand';
-import { LastSubCommand } from './lastSubCommand';
-import { LurkCommand, UnLurkCommand, WhoIsLurkingCommand } from './lurk.commands';
-import ManageCommand from './manage.command';
-import { ShoutOutCommand } from './shoutOutCommand';
-import { SocialsCommand } from './socialsCommand';
-import ThrowCommand from './throwCommand';
-import { UpTimeCommand } from './upTimeCommand';
-import { WishListCommand } from './wishListCommand';
+import { AboutCommand } from './aboutCommand.js';
+import { AccountAgeCommand } from './accountAgeCommand.js';
+import BrainCommand from './brain.command.js';
+import { CountExhaustCommand } from './countExhaustCommand.js';
+import { CuddleCommand } from './cuddle.command.js';
+import { DeathCommand, DeathCountCommand, LastDeathCountCommmand } from './deathCommands.js';
+import { DiceCommand } from './diceCommand.js';
+import { DivideByZeroCommand } from './DivideByZeroCommand.js';
+import { DrinkCommand } from './drinkCommand.js';
+import { EightBallCommand } from './eightBallCommand.js';
+import { FallCommand } from './fallCommand.js';
+import { FollowAgeCommand } from './followAgeCommand.js';
+import { HelpCommand } from './helpCommand.js';
+import { HugCommand } from './hugCommand.js';
+import { ICommandHandler, OnlineState } from './iCommandHandler.js';
+import { LastRaidCommand } from './lastRaidCommand.js';
+import { LastSubCommand } from './lastSubCommand.js';
+import { LurkCommand, UnLurkCommand, WhoIsLurkingCommand } from './lurk.commands.js';
+import ManageCommand from './manage.command.js';
+import { ShoutOutCommand } from './shoutOutCommand.js';
+import { SocialsCommand } from './socialsCommand.js';
+import ThrowCommand from './throwCommand.js';
+import { UpTimeCommand } from './upTimeCommand.js';
+import { WishListCommand } from './wishListCommand.js';
+
+export type {
+    ICommandHandler,
+    OnlineState,
+};
 
 export {
     AboutCommand,
@@ -51,6 +56,4 @@ export {
     ThrowCommand,
     UpTimeCommand,
     WishListCommand,
-    ICommandHandler,
-    OnlineState,
 };

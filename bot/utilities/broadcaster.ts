@@ -1,6 +1,7 @@
 import { ApiClient, HelixPrivilegedUser } from '@twurple/api';
 import { inject, injectable } from 'inversify';
-import environment from '../../configurations/environment';
+import { type Environment } from '../../configurations/environment.js';
+import InjectionTypes from '../../dependency-management/types.js';
 
 const cachingTimeout = 5 * 60 * 1000;
 
@@ -13,6 +14,7 @@ export default class Broadcaster {
     private broadcaster: HelixPrivilegedUser | null = null;
 
     constructor(
+        @inject(InjectionTypes.Environment) private environment: Environment,
         @inject(ApiClient) private apiClient: ApiClient,
     ) {
     }
@@ -23,7 +25,7 @@ export default class Broadcaster {
      */
     async getBroadcaster(): Promise<HelixPrivilegedUser> {
         if (!this.resetBroadcasterTimer) {
-            this.broadcaster = await this.apiClient.users.getAuthenticatedUser(`${environment.twitchBot.broadcaster.id}`);
+            this.broadcaster = await this.apiClient.users.getAuthenticatedUser(`${this.environment.twitchBot.broadcaster.id}`);
 
             this.resetBroadcasterTimer = setTimeout(() => {
                 this.resetBroadcasterTimer = null;

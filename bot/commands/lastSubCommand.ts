@@ -1,17 +1,17 @@
 import { ChatClient, ChatUser } from '@twurple/chat';
 import dayjs from 'dayjs';
-import isToday from 'dayjs/plugin/isToday';
-import relativeTime from 'dayjs/plugin/relativeTime';
-import calendar from 'dayjs/plugin/calendar';
+import isToday from 'dayjs/plugin/isToday.js';
+import relativeTime from 'dayjs/plugin/relativeTime.js';
+import calendar from 'dayjs/plugin/calendar.js';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import { ICommandHandler, OnlineState } from './iCommandHandler';
-import InjectionTypes from '../../dependency-management/types';
+import { ICommandHandler, OnlineState } from './iCommandHandler.js';
+import InjectionTypes from '../../dependency-management/types.js';
 import {
     Subscribers,
     SubscriptionGiftUsers,
     SubscriptionType,
-} from '../../database';
+} from '../../database/index.js';
 
 dayjs.extend(isToday);
 dayjs.extend(relativeTime);

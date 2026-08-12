@@ -1,12 +1,13 @@
 import 'reflect-metadata';
+import { jest } from '@jest/globals';
 import { ChatUser } from '@twurple/chat';
 import {
     mockChatClient,
     mockCommandResponseService,
     mockLogger,
-} from '../../tests/common.mocks';
-import BrainCommand from './brain.command';
-import { transientKeywords } from '../utilities/default-responses';
+} from '../../tests/common.mocks.js';
+import BrainCommand from './brain.command.js';
+import { transientKeywords } from '../utilities/default-responses.js';
 
 describe('Brain Command Tests', () => {
     const channel = 'TestChannel';

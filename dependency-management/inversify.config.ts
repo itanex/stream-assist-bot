@@ -1,7 +1,3 @@
-// reflect-metadata should be imported
-// before any interface or other imports
-// also it should be imported only once
-// so that a singleton is created.
 import 'reflect-metadata';
 import { ApiClient, ApiConfig } from '@twurple/api';
 import { ChatClient, LogLevel } from '@twurple/chat';
@@ -37,10 +33,10 @@ import {
     WishListCommand,
     ICommandHandler,
     ThrowCommand,
-} from '../bot/commands';
-import logger from '../logger/logger';
-import ChatBot, { IChatBot } from '../bot/chat-bot';
-import environment from '../configurations/environment';
+} from '../bot/commands/index.js';
+import logger from '../logger/logger.js';
+import ChatBot, { type IChatBot } from '../bot/chat-bot.js';
+import environment, { type Environment } from '../configurations/environment.js';
 import {
     FollowHandler,
     IFollowStreamEvent,
@@ -49,7 +45,7 @@ import {
     MessageHandler,
     RaidHandler,
     SubscriptionHandler,
-} from '../bot/handlers';
+} from '../bot/handlers/index.js';
 import {
     BanEventHandler,
     ChannelPointEventHandler,
@@ -58,23 +54,24 @@ import {
     ModeratorEventHandler,
     RaidEventHandler,
     StreamEventHandler,
-} from '../bot/event-sub-handlers';
-import Broadcaster from '../bot/utilities/broadcaster';
-import InjectionTypes from './types';
-import Database, { IDatabaseConfiguration } from '../database/database';
-import authProvider from '../bot/auth/authProvider';
-import Scheduler from '../bot/scheduler';
-import SocketServer, { ISocketServer } from '../bot/overlay/socket.server';
-import OverlayServer, { IOverlayServer } from '../bot/overlay/overlay.server';
-import AuthenticationServer, { IAuthenticationServer } from '../bot/auth/auth.server';
-import StreamStateService from '../bot/utilities/stream-state.service';
-import JoinGreetingHandler from '../bot/handlers/join-greeting.handler';
-import CommandResponseService from '../bot/utilities/command-response.service';
-import LurkRespository from '../bot/utilities/lurk.respository';
+} from '../bot/event-sub-handlers/index.js';
+import Broadcaster from '../bot/utilities/broadcaster.js';
+import InjectionTypes from './types.js';
+import Database, { IDatabaseConfiguration } from '../database/database.js';
+import authProvider from '../bot/auth/authProvider.js';
+import Scheduler from '../bot/scheduler.js';
+import { SocketServer, ISocketServer } from '../bot/overlay/socket.server.js';
+import OverlayServer, { IOverlayServer } from '../bot/overlay/overlay.server.js';
+import AuthenticationServer, { IAuthenticationServer } from '../bot/auth/auth.server.js';
+import StreamStateService from '../bot/utilities/stream-state.service.js';
+import JoinGreetingHandler from '../bot/handlers/join-greeting.handler.js';
+import CommandResponseService from '../bot/utilities/command-response.service.js';
+import LurkRespository from '../bot/utilities/lurk.respository.js';
 
 const SAContainer = new Container();
 
 SAContainer.bind<Database>(Database).toSelf().inSingletonScope();
+SAContainer.bind<Environment>(InjectionTypes.Environment).toConstantValue(environment);
 
 SAContainer.bind<Broadcaster>(Broadcaster).toSelf().inSingletonScope();
 SAContainer.bind<StreamStateService>(StreamStateService).toSelf().inSingletonScope();

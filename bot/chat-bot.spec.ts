@@ -1,25 +1,15 @@
 import 'reflect-metadata';
+import { jest } from '@jest/globals';
 import { ChatClient } from '@twurple/chat';
 import { EventSubWsListener } from '@twurple/eventsub-ws';
-import { Container } from 'inversify';
-import winston from 'winston';
-import InjectionTypes from '../dependency-management/types';
-import ChatBot from './chat-bot';
-import { MessageHandler, RaidHandler, SubscriptionHandler } from './handlers';
-import {
-    BanEventHandler,
-    ChannelPointEventHandler,
-    CheerEventHandler,
-    FollowerEventHandler,
-    ModeratorEventHandler,
-    RaidEventHandler,
-    StreamEventHandler,
-} from './event-sub-handlers';
-import { isUserAuthenticated } from './auth/authProvider';
-import StreamStateService from './utilities/stream-state.service';
-import JoinGreetingHandler from './handlers/join-greeting.handler';
+import StreamStateService from './utilities/stream-state.service.js';
+import { mockLogger } from '../tests/common.mocks.js';
+import { type Environment } from '../configurations/environment.js';
 
-jest.mock('./auth/authProvider', () => ({
+type AuthProviderModule = typeof import('./auth/authProvider.js');
+type ChatBotModule = typeof import('./chat-bot.js');
+
+jest.unstable_mockModule('./auth/authProvider', () => ({
     isUserAuthenticated: jest.fn(),
 }));
 
@@ -53,55 +43,59 @@ const mockEventSubWsListener = <unknown>{
     onChannelRaidFrom: jest.fn(),
     onStreamOnline: jest.fn(),
     onStreamOffline: jest.fn(),
-} as EventSubWsListener;
+} as jest.Mocked<EventSubWsListener>;
 
-const mockInitialize = jest.fn();
-const mockStreamStateService = {
-    initialize: mockInitialize,
-} as unknown as StreamStateService;
-
-const mockLogger: winston.Logger = <unknown>{
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-} as winston.Logger;
+const mockStreamStateService = <unknown>{
+    initialize: jest.fn(),
+} as jest.Mocked<StreamStateService>;
 
 const emptyHandler = <unknown>{} as never;
 
+const mockEnvironment = <unknown>{
+
+} as Environment;
+
 describe('ChatBot start() guard', () => {
-    const container: Container = new Container();
-    let chatBot: ChatBot;
+    let isUserAuthenticated: jest.Mocked<AuthProviderModule['isUserAuthenticated']>;
 
-    beforeEach(() => {
+    let ChatBot: ChatBotModule['default'];
+    let subject: InstanceType<ChatBotModule['default']>;
+
+    beforeEach(async () => {
         jest.resetAllMocks();
-        container.unbindAll();
 
-        container.bind<ChatClient>(ChatClient).toConstantValue(mockChatClient);
-        container.bind<EventSubWsListener>(EventSubWsListener).toConstantValue(mockEventSubWsListener);
-        container.bind<winston.Logger>(InjectionTypes.Logger).toConstantValue(mockLogger);
-        container.bind(MessageHandler).toConstantValue(emptyHandler);
-        container.bind(RaidHandler).toConstantValue(emptyHandler);
-        container.bind(SubscriptionHandler).toConstantValue(emptyHandler);
-        container.bind(BanEventHandler).toConstantValue(emptyHandler);
-        container.bind(ChannelPointEventHandler).toConstantValue(emptyHandler);
-        container.bind(CheerEventHandler).toConstantValue(emptyHandler);
-        container.bind(FollowerEventHandler).toConstantValue(emptyHandler);
-        container.bind(ModeratorEventHandler).toConstantValue(emptyHandler);
-        container.bind(RaidEventHandler).toConstantValue(emptyHandler);
-        container.bind(StreamEventHandler).toConstantValue(emptyHandler);
-        container.bind(JoinGreetingHandler).toConstantValue(emptyHandler);
-        container.bind(StreamStateService).toConstantValue(mockStreamStateService);
-        container.bind(ChatBot).to(ChatBot);
+        ({ default: ChatBot } = await import('./chat-bot.js'));
 
-        chatBot = container.get(ChatBot);
+        isUserAuthenticated = (await import('./auth/authProvider.js'))
+            .isUserAuthenticated as jest.Mocked<AuthProviderModule['isUserAuthenticated']>;
+
+        subject = new ChatBot(
+            mockChatClient,
+            mockEventSubWsListener,
+            emptyHandler,
+            emptyHandler,
+            emptyHandler,
+            emptyHandler,
+            emptyHandler,
+            emptyHandler,
+            emptyHandler,
+            emptyHandler,
+            emptyHandler,
+            emptyHandler,
+            mockStreamStateService,
+            emptyHandler,
+            mockEnvironment,
+            mockLogger,
+        );
     });
 
     it('returns early with a warning when user is not authenticated', async () => {
         // Arrange
-        (isUserAuthenticated as jest.Mock).mockReturnValue(false);
+        isUserAuthenticated
+            .mockReturnValue(false);
 
         // Act
-        await chatBot.start();
+        await subject.start();
 
         // Assert
         expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -114,10 +108,11 @@ describe('ChatBot start() guard', () => {
 
     it('connects chat client and starts EventSub listener when user is authenticated', async () => {
         // Arrange
-        (isUserAuthenticated as jest.Mock).mockReturnValue(true);
+        isUserAuthenticated
+            .mockReturnValue(true);
 
         // Act
-        await chatBot.start();
+        await subject.start();
 
         // Assert
         expect(mockChatClient.connect).toHaveBeenCalledTimes(1);

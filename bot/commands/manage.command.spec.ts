@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { jest } from '@jest/globals';
 import { ChatUser } from '@twurple/chat';
 import ManageCommand, {
     InsertReplies,
@@ -6,14 +7,14 @@ import ManageCommand, {
     RestoreReplies,
     UnsupportedMessage,
     UpdateReplies,
-} from './manage.command';
-import { mockChatClient, mockCommandResponseService, mockLogger } from '../../tests/common.mocks';
+} from './manage.command.js';
+import { mockChatClient, mockCommandResponseService, mockLogger } from '../../tests/common.mocks.js';
 import {
     CommandTextInsertResult,
     CommandTextRemoveResult,
     CommandTextUpdateResult,
     CommandTextRestoreResult,
-} from '../utilities/command-response.service';
+} from '../utilities/command-response.service.js';
 
 /** Utility method for constructing command message inline with ManageCommand */
 const messageFn = (subcommand: string, compoundName: string, text: string = '') => `!command ${subcommand} ${compoundName} ${text}`.trim();

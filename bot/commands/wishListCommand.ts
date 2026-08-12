@@ -1,8 +1,8 @@
 import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import InjectionTypes from '../../dependency-management/types';
-import { ICommandHandler, OnlineState } from './iCommandHandler';
+import InjectionTypes from '../../dependency-management/types.js';
+import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 
 const wishListLink = 'https://jointhrone.com/u/timythetermite';
 const responses = [

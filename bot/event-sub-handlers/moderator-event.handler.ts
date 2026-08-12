@@ -1,8 +1,8 @@
 import { EventSubChannelModeratorEvent } from '@twurple/eventsub-base';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import InjectionTypes from '../../dependency-management/types';
-import { ModeratorEvent } from '../../database';
+import InjectionTypes from '../../dependency-management/types.js';
+import { ModeratorEvent } from '../../database/index.js';
 
 @injectable()
 export default class ModeratorEventHandler {

@@ -1,7 +1,7 @@
 /* eslint-disable no-extra-semi */
 /* eslint-disable semi */
 import { ChatUser } from '@twurple/chat';
-import { CommandName } from '../utilities/default-responses';
+import { CommandName } from '../utilities/default-responses.js';
 
 /** Represents the restriction state */
 export type OnlineState = 'always' | 'online' | 'offline';

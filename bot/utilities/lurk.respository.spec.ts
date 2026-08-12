@@ -1,9 +1,10 @@
+import { jest } from '@jest/globals';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { ChatUser } from '@twurple/chat';
-import Database, { IDatabaseConfiguration } from '../../database/database';
-import LurkRespository from './lurk.respository';
-import { mockLogger } from '../../tests/common.mocks';
-import { LurkingUsers } from '../../database';
+import Database, { IDatabaseConfiguration } from '../../database/database.js';
+import LurkRespository from './lurk.respository.js';
+import { mockLogger } from '../../tests/common.mocks.js';
+import { LurkingUsers } from '../../database/index.js';
 
 describe('Lurk Repository (postgres)', () => {
     let container: StartedPostgreSqlContainer;

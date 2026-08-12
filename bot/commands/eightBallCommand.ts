@@ -5,9 +5,9 @@ import fs from 'fs';
 import axios from 'axios';
 import md5 from 'md5';
 import { WebSocket } from 'ws';
-import { ICommandHandler, OnlineState } from './iCommandHandler';
-import InjectionTypes from '../../dependency-management/types';
-import environment from '../../configurations/environment';
+import { ICommandHandler, OnlineState } from './iCommandHandler.js';
+import InjectionTypes from '../../dependency-management/types.js';
+import environment from '../../configurations/environment.js';
 
 const responses = [
     `It is certain.`,
@@ -143,7 +143,7 @@ export class EightBallCommand implements ICommandHandler {
         return audio;
     }
 
-    private generateFile(buffer: Buffer, rootPath: string, filePath: string) {
+    private generateFile(buffer: Buffer, rootPath: string, filePath: string): void {
         if (!this.fileExists(filePath)) {
             if (!this.fileExists(rootPath)) {
                 fs.mkdirSync(rootPath, { recursive: true });
@@ -153,7 +153,7 @@ export class EightBallCommand implements ICommandHandler {
         }
     }
 
-    private broadcastAudio(command: string, hash: string, lang: string) {
+    private broadcastAudio(command: string, hash: string, lang: string): void {
         const ws = new WebSocket(`ws://${environment.twitchBot.websocket.host}:${environment.twitchBot.websocket.port}/`);
 
         const messageToSend = {
@@ -164,6 +164,7 @@ export class EightBallCommand implements ICommandHandler {
 
         ws.onopen = () => {
             ws.send(JSON.stringify(messageToSend));
+            ws.close();
         };
     }
 }

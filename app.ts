@@ -1,17 +1,19 @@
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import ChatBot, { IChatBot } from './bot/chat-bot';
-import SAContainer from './dependency-management/inversify.config';
-import InjectionTypes from './dependency-management/types';
-import Database from './database/database';
-import Scheduler from './bot/scheduler';
-import SocketServer, { ISocketServer } from './bot/overlay/socket.server';
-import OverlayServer, { IOverlayServer } from './bot/overlay/overlay.server';
-import AuthenticationServer, { IAuthenticationServer } from './bot/auth/auth.server';
-import { isUserAuthenticated } from './bot/auth/authProvider';
-import environment from './configurations/environment';
-import { name, version } from './package.json';
-import CommandResponseService from './bot/utilities/command-response.service';
+import ChatBot, { type IChatBot } from './bot/chat-bot.js';
+import SAContainer from './dependency-management/inversify.config.js';
+import InjectionTypes from './dependency-management/types.js';
+import Database from './database/database.js';
+import Scheduler from './bot/scheduler.js';
+import { SocketServer, type ISocketServer } from './bot/overlay/socket.server.js';
+import OverlayServer, { IOverlayServer } from './bot/overlay/overlay.server.js';
+import AuthenticationServer, { IAuthenticationServer } from './bot/auth/auth.server.js';
+import { isUserAuthenticated } from './bot/auth/authProvider.js';
+import environment from './configurations/environment.js';
+import CommandResponseService from './bot/utilities/command-response.service.js';
+import pkg from './package.json' with { type: 'json' };
+
+const { name, version } = pkg;
 
 @injectable()
 class App {

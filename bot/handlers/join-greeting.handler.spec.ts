@@ -1,15 +1,16 @@
 import 'reflect-metadata';
+import { jest } from '@jest/globals';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import winston from 'winston';
-import JoinGreetingHandler, { MOD_GREETING, VIP_GREETING } from './join-greeting.handler';
-import StreamStateService from '../utilities/stream-state.service';
+import JoinGreetingHandler, { MOD_GREETING, VIP_GREETING } from './join-greeting.handler.js';
+import StreamStateService from '../utilities/stream-state.service.js';
 
 const mockSay = jest.fn();
 const mockChatClient = {
     say: mockSay,
 } as unknown as ChatClient;
 
-const mockOnOffline = jest.fn();
+const mockOnOffline = jest.fn<(fn: () => void) => void>();
 const mockStreamingStateService: StreamStateService = {
     isOnline: false,
     onOffline: mockOnOffline,

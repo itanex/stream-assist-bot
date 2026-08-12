@@ -1,8 +1,8 @@
 import { inject, injectable } from 'inversify';
-import { RawData, Server, WebSocket } from 'ws';
+import { RawData, WebSocketServer, WebSocket } from 'ws';
 import winston from 'winston';
-import InjectionTypes from '../../dependency-management/types';
-import environment from '../../configurations/environment';
+import InjectionTypes from '../../dependency-management/types.js';
+import environment from '../../configurations/environment.js';
 
 /**
  * Used to track connected Web Socket users
@@ -17,9 +17,9 @@ export interface ISocketServer {
 
 /** Web Socket Server */
 @injectable()
-export default class SocketServer implements ISocketServer {
+export class SocketServer implements ISocketServer {
     /** Instance of the Web Socket server */
-    private server: Server | undefined;
+    private server: WebSocketServer | undefined;
     /** Configured Web Socket Host */
     private readonly host: string;
     /** Configured Web Socket Port */
@@ -36,7 +36,7 @@ export default class SocketServer implements ISocketServer {
 
     /** Initializes and starts the server */
     startServer(): void {
-        this.server = new Server({
+        this.server = new WebSocketServer({
             host: this.host,
             port: this.port,
         }, () => {

@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { IDatabaseConfiguration } from '../database/database';
+import { IDatabaseConfiguration } from '../database/database.js';
 
 dotenv.config();
 
@@ -75,5 +75,7 @@ const environment = {
         link: process.env.YOUTUBE_LINK,
     },
 };
+
+export type Environment = typeof environment;
 
 export default environment;

@@ -11,25 +11,25 @@ export default class DeathCounts extends Model {
         type: DataType.INTEGER,
         field: 'deathCount',
     })
-    deathCount: number;
+    deathCount!: number;
 
     @Column({
         type: DataType.STRING(80),
         field: 'game',
     })
-    game: string;
+    game!: string;
 
     @Column({
         type: DataType.STRING(80),
         field: 'gameId',
     })
-    gameId: string;
+    gameId!: string;
 
     @Column({
         type: DataType.STRING(80),
         field: 'streamId',
     })
-    streamId: string;
+    streamId!: string;
 
     /**
      * Finds (or Creates) the current stream's death record

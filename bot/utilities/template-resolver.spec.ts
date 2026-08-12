@@ -1,6 +1,7 @@
-import { mockLogger } from '../../tests/common.mocks';
-import { templateResolver } from './template-resolver';
-import { TransientContext } from './default-responses';
+import { jest } from '@jest/globals';
+import { mockLogger } from '../../tests/common.mocks.js';
+import { templateResolver } from './template-resolver.js';
+import { TransientContext } from './default-responses.js';
 
 describe('templateResolver', () => {
     beforeEach(() => {

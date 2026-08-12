@@ -1,8 +1,9 @@
 import 'reflect-metadata';
+import { jest } from '@jest/globals';
 import { ChatUser } from '@twurple/chat';
-import { mockChatClient, mockLogger, mockCommandResponseService } from '../../tests/common.mocks';
-import { DrinkCommand } from './drinkCommand';
-import { defaultResponses } from '../utilities/default-responses';
+import { mockChatClient, mockLogger, mockCommandResponseService } from '../../tests/common.mocks.js';
+import { DrinkCommand } from './drinkCommand.js';
+import { defaultResponses } from '../utilities/default-responses.js';
 
 describe('Drink Command Tests', () => {
     const channel = 'TestChannel';

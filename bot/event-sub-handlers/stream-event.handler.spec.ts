@@ -1,61 +1,44 @@
-// reflect-metadata should be imported
-// before any interface or other imports
-// also it should be imported only once
-// so that a singleton is created.
 import 'reflect-metadata';
+import { jest } from '@jest/globals';
 import { EventSubStreamOfflineEvent, EventSubStreamOnlineEvent } from '@twurple/eventsub-base';
-import { Container } from 'inversify';
-import winston from 'winston';
-import { mockLogger } from '../../tests/common.mocks';
-import InjectionTypes from '../../dependency-management/types';
-import StreamEventHandler from './stream-event.handler';
-import { LurkingUsers, StreamEventRecord } from '../../database';
+import { mockLogger } from '../../tests/common.mocks.js';
+import StreamEventHandler from './stream-event.handler.js';
+import { LurkingUsers, StreamEventRecord } from '../../database/index.js';
 
 describe('Stream Event Handler Tests', () => {
-    const container: Container = new Container();
-    let expectedLogger: winston.Logger;
+    let subject: StreamEventHandler;
 
     beforeEach(() => {
         jest.resetAllMocks();
-        container.unbindAll();
 
         // prevent timers from running
         jest.useFakeTimers();
 
-        container
-            .bind<winston.Logger>(InjectionTypes.Logger)
-            .toConstantValue(mockLogger);
-
-        container
-            .bind<StreamEventHandler>(StreamEventHandler)
-            .toSelf();
-
-        expectedLogger = container
-            .get<winston.Logger>(InjectionTypes.Logger);
+        subject = new StreamEventHandler(
+            mockLogger,
+        );
     });
 
     describe('Start Stream Event', () => {
         it('should not run timeout, invoke unlurk all users, and save record in db', async () => {
             // Arrange
-            const record: Partial<StreamEventRecord> = {
+            const record = <unknown>{
                 endDate: new Date(),
                 streamId: '1234',
-            };
+            } as StreamEventRecord;
 
-            const event: Partial<EventSubStreamOnlineEvent> = {
+            const event = <unknown>{
                 broadcasterId: '1234',
                 id: record.streamId,
-            };
+            } as EventSubStreamOnlineEvent;
 
-            StreamEventRecord.getLastStream = jest.fn()
+            StreamEventRecord.getLastStream = jest.fn<() => Promise<StreamEventRecord>>()
                 .mockResolvedValue(record);
-            StreamEventRecord.saveStreamStartEvent = jest.fn()
+            StreamEventRecord.saveStreamStartEvent = jest.fn<() => Promise<StreamEventRecord>>()
                 .mockResolvedValue(record);
 
-            LurkingUsers.setAllUsersToUnlurk = jest.fn();
+            LurkingUsers.setAllUsersToUnlurk = jest.fn<() => Promise<[number, LurkingUsers[]]>>();
 
-            const subject = container
-                .get<StreamEventHandler>(StreamEventHandler);
             StreamEventHandler.clearTimeoutRef = null;
 
             // Act
@@ -77,13 +60,13 @@ describe('Stream Event Handler Tests', () => {
             expect(LurkingUsers.setAllUsersToUnlurk)
                 .toHaveBeenCalledWith(record.endDate);
 
-            expect(expectedLogger.info)
+            expect(mockLogger.info)
                 .toHaveBeenCalledTimes(1);
-            expect(expectedLogger.info)
+            expect(mockLogger.info)
                 .toHaveBeenCalledWith(expect.stringContaining(`${event.id}`));
-            expect(expectedLogger.info)
+            expect(mockLogger.info)
                 .toHaveBeenCalledWith(expect.stringContaining(`${record.streamId}`));
-            expect(expectedLogger.error)
+            expect(mockLogger.error)
                 .not.toHaveBeenCalled();
         });
     });
@@ -91,20 +74,18 @@ describe('Stream Event Handler Tests', () => {
     describe('End Stream Event', () => {
         it('should not run timeout, invoke unlurk all users, and save record in db', async () => {
             // Arrange
-            const records: Partial<StreamEventRecord>[] = [{
+            const records = [<unknown>{
                 endDate: new Date(),
                 streamId: '1234',
-            }];
+            } as StreamEventRecord];
 
-            const event: Partial<EventSubStreamOfflineEvent> = {
+            const event = <unknown>{
                 broadcasterId: '1234',
-            };
+            } as EventSubStreamOfflineEvent;
 
-            StreamEventRecord.saveStreamEndEvent = jest.fn()
+            StreamEventRecord.saveStreamEndEvent = jest.fn<() => Promise<[number, StreamEventRecord[]]>>()
                 .mockResolvedValue([1, records as StreamEventRecord[]]);
 
-            const subject = container
-                .get<StreamEventHandler>(StreamEventHandler);
             StreamEventHandler.clearTimeoutRef = null;
 
             // Act
@@ -119,11 +100,11 @@ describe('Stream Event Handler Tests', () => {
             expect(StreamEventHandler.clearTimeoutRef)
                 .not.toBeNull();
 
-            expect(expectedLogger.info)
+            expect(mockLogger.info)
                 .toHaveBeenCalledTimes(1);
-            expect(expectedLogger.info)
+            expect(mockLogger.info)
                 .toHaveBeenCalledWith(expect.stringContaining('Count 1'));
-            expect(expectedLogger.error)
+            expect(mockLogger.error)
                 .not.toHaveBeenCalled();
         });
     });

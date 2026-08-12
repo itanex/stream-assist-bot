@@ -1,5 +1,5 @@
 import { Model, Column, DataType, HasMany, Table } from 'sequelize-typescript';
-import Subscribers from './subscribers.dbo';
+import Subscribers from './subscribers.dbo.js';
 
 @Table({
     tableName: 'subscriptionGiftUsers',
@@ -10,14 +10,14 @@ export default class SubscriptionGiftUsers extends Model {
         type: DataType.STRING(40),
         field: 'gifter',
     })
-    gifter: string;
+    gifter!: string;
 
     @Column({
         type: DataType.INTEGER,
         field: 'giftCount',
     })
-    giftCount: number;
+    giftCount!: number;
 
     @HasMany(() => Subscribers)
-    subscribers: Subscribers[];
+    subscribers!: Subscribers[];
 }

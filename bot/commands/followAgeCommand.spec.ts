@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { jest } from '@jest/globals';
 import {
     HelixChannelFollower,
     HelixPrivilegedUser,
@@ -10,23 +11,12 @@ import {
     mockChatClient,
     mockCommandResponseService,
     mockLogger,
-} from '../../tests/common.mocks';
-import { FollowAgeCommand } from './followAgeCommand';
-import Timespan, { getAgeReport } from '../utilities/timeSpan';
-import environment from '../../configurations/environment';
-import { transientKeywords } from '../utilities/default-responses';
-import Broadcaster from '../utilities/broadcaster';
-
-jest.mock('../../configurations/environment', () => ({
-    __esModule: true,
-    default: {
-        twitchBot: {
-            broadcaster: {
-                id: 'test-broadcaster-id',
-            },
-        },
-    },
-}));
+} from '../../tests/common.mocks.js';
+import { FollowAgeCommand } from './followAgeCommand.js';
+import Timespan, { getAgeReport } from '../utilities/timeSpan.js';
+import { type Environment } from '../../configurations/environment.js';
+import { transientKeywords } from '../utilities/default-responses.js';
+import Broadcaster from '../utilities/broadcaster.js';
 
 describe('Follow Age Command Tests', () => {
     const channel = 'TestChannel';
@@ -39,6 +29,14 @@ describe('Follow Age Command Tests', () => {
     };
 
     let subject: FollowAgeCommand;
+
+    const mockEnvironment = <unknown>{
+        twitchBot: {
+            broadcaster: {
+                id: 'test-broadcaster-id',
+            },
+        },
+    } as Environment;
 
     const mockBroadcaster = <unknown>{
         getBroadcaster: jest.fn(),
@@ -55,6 +53,7 @@ describe('Follow Age Command Tests', () => {
             mockApiClient,
             mockBroadcaster,
             mockCommandResponseService,
+            mockEnvironment,
             mockLogger,
         );
 
@@ -92,7 +91,7 @@ describe('Follow Age Command Tests', () => {
             // Assert
             expect(mockApiClient.channels.getChannelFollowers)
                 .toHaveBeenCalledWith(
-                    environment.twitchBot.broadcaster.id,
+                    mockEnvironment.twitchBot.broadcaster.id,
                     chatUser.userId,
                 );
             expect(mockCommandResponseService.getCommandText)
@@ -147,7 +146,7 @@ describe('Follow Age Command Tests', () => {
                 .toHaveBeenCalledWith(expectedApiUsername);
             expect(mockApiClient.channels.getChannelFollowers)
                 .toHaveBeenCalledWith(
-                    environment.twitchBot.broadcaster.id,
+                    mockEnvironment.twitchBot.broadcaster.id,
                     chatUser.userId,
                 );
             expect(mockCommandResponseService.getCommandText)
@@ -190,7 +189,7 @@ describe('Follow Age Command Tests', () => {
                 .toHaveBeenCalledWith(expectedApiUsername);
             expect(mockApiClient.channels.getChannelFollowers)
                 .toHaveBeenCalledWith(
-                    environment.twitchBot.broadcaster.id,
+                    mockEnvironment.twitchBot.broadcaster.id,
                     chatUser.userId,
                 );
             expect(mockCommandResponseService.getCommandText)
@@ -255,7 +254,7 @@ describe('Follow Age Command Tests', () => {
                 .not.toHaveBeenCalled();
             expect(mockApiClient.channels.getChannelFollowers)
                 .toHaveBeenCalledWith(
-                    environment.twitchBot.broadcaster.id,
+                    mockEnvironment.twitchBot.broadcaster.id,
                     chatUser.userId,
                 );
             expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName);

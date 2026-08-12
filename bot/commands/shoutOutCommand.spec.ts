@@ -1,15 +1,28 @@
 import 'reflect-metadata';
-import { ApiClient, HelixChannel, HelixPaginatedResult, HelixSchedule, HelixStream, HelixUser, HelixVideo } from '@twurple/api';
-import { HelixPaginatedScheduleResult } from '@twurple/api/lib/interfaces/endpoints/schedule.input';
+import { jest } from '@jest/globals';
+import {
+    ApiClient,
+    HelixChannel,
+    HelixChannelApi,
+    HelixPaginatedResult,
+    HelixSchedule,
+    HelixScheduleApi,
+    HelixStream,
+    HelixStreamApi,
+    HelixUser,
+    HelixUserApi,
+    HelixVideo,
+    HelixVideoApi,
+} from '@twurple/api';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
+import relativeTime from 'dayjs/plugin/relativeTime.js';
 import { Container } from 'inversify';
 import winston from 'winston';
-import { mockChatClient, mockLogger } from '../../tests/common.mocks';
-import InjectionTypes from '../../dependency-management/types';
-import { ICommandHandler } from './iCommandHandler';
-import { ShoutOutCommand } from './shoutOutCommand';
+import { mockChatClient, mockLogger } from '../../tests/common.mocks.js';
+import InjectionTypes from '../../dependency-management/types.js';
+import { ICommandHandler } from './iCommandHandler.js';
+import { ShoutOutCommand } from './shoutOutCommand.js';
 
 dayjs.extend(relativeTime);
 
@@ -94,7 +107,7 @@ describe('Shout Out Command Tests', () => {
             // Arrange
             mockApiClient = <unknown>{
                 users: {
-                    getUserByName: jest.fn().mockResolvedValue(null),
+                    getUserByName: jest.fn<HelixUserApi['getUserByName']>().mockResolvedValue(null),
                 },
             } as ApiClient;
 
@@ -128,7 +141,7 @@ describe('Shout Out Command Tests', () => {
             // Arrange
             mockApiClient = <unknown>{
                 users: {
-                    getUserByName: jest.fn().mockResolvedValue(apiUser),
+                    getUserByName: jest.fn<HelixUserApi['getUserByName']>().mockResolvedValue(apiUser),
                 },
             } as ApiClient;
 
@@ -142,8 +155,8 @@ describe('Shout Out Command Tests', () => {
                 .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
                 .find(x => x.constructor.name === `${ShoutOutCommand.name}`) as ShoutOutCommand;
 
-            subject.getUserStream = jest.fn().mockResolvedValue(null);
-            subject.getLatestSchedule = jest.fn().mockResolvedValue(null);
+            subject.getUserStream = jest.fn<ShoutOutCommand['getUserStream']>().mockResolvedValue(undefined);
+            subject.getLatestSchedule = jest.fn<ShoutOutCommand['getLatestSchedule']>().mockResolvedValue(undefined);
 
             // Act
             await subject.handle(channel, command, user, message, args, undefined, isRaid);
@@ -179,7 +192,7 @@ describe('Shout Out Command Tests', () => {
             [<HelixStream>{ type: '', gameName: 'TestGameName' }],
         ])(`should say something in chat about user '%s'`, async (stream: HelixStream | null) => {
             // Arrange
-            apiUser.getStream = jest.fn().mockResolvedValue(stream);
+            apiUser.getStream = jest.fn<HelixUser['getStream']>().mockResolvedValue(stream);
 
             mockApiClient = {} as ApiClient;
 
@@ -217,12 +230,12 @@ describe('Shout Out Command Tests', () => {
             // Arrange
             mockApiClient = <unknown>{
                 schedule: {
-                    getSchedule: jest.fn().mockRejectedValue({
+                    getSchedule: jest.fn<HelixScheduleApi['getSchedule']>().mockRejectedValue({
                         statusCode: 404,
                     }),
                 },
                 videos: {
-                    getVideosByUser: jest.fn().mockRejectedValue(null),
+                    getVideosByUser: jest.fn<HelixVideoApi['getVideosByUser']>().mockRejectedValue(null),
                 },
             } as ApiClient;
 
@@ -260,7 +273,7 @@ describe('Shout Out Command Tests', () => {
             // Arrange
             const topic = 'TestCategoryName';
             const when = dayjs(startDate).fromNow();
-            const schedule: HelixPaginatedScheduleResult = <unknown>{
+            const schedule: Awaited<ReturnType<HelixScheduleApi['getSchedule']>> = {
                 cursor: '',
                 data: {
                     segments: [{
@@ -268,11 +281,11 @@ describe('Shout Out Command Tests', () => {
                         categoryName: topic,
                     }],
                 } as HelixSchedule,
-            } as HelixPaginatedScheduleResult;
+            };
 
             mockApiClient = <unknown>{
                 schedule: {
-                    getSchedule: jest.fn().mockResolvedValue(schedule),
+                    getSchedule: jest.fn<HelixScheduleApi['getSchedule']>().mockResolvedValue(schedule),
                 },
             } as ApiClient;
 
@@ -311,12 +324,12 @@ describe('Shout Out Command Tests', () => {
             // Arrange
             const topic = 'TestCategoryName';
             const when = dayjs(startDate).fromNow();
-            const schedule: HelixPaginatedScheduleResult = <unknown>{
+            const schedule: Awaited<ReturnType<HelixScheduleApi['getSchedule']>> = {
                 cursor: '',
                 data: <unknown>{
                     segments: [],
                 } as HelixSchedule,
-            } as HelixPaginatedScheduleResult;
+            };
 
             const channelDetails: HelixChannel = <unknown>{
                 gameName: topic,
@@ -330,13 +343,13 @@ describe('Shout Out Command Tests', () => {
 
             mockApiClient = <unknown>{
                 schedule: {
-                    getSchedule: jest.fn().mockResolvedValue(schedule),
+                    getSchedule: jest.fn<HelixScheduleApi['getSchedule']>().mockResolvedValue(schedule),
                 },
                 channels: {
-                    getChannelInfoById: jest.fn().mockResolvedValue(channelDetails),
+                    getChannelInfoById: jest.fn<HelixChannelApi['getChannelInfoById']>().mockResolvedValue(channelDetails),
                 },
                 videos: {
-                    getVideosByUser: jest.fn().mockResolvedValue(videos),
+                    getVideosByUser: jest.fn<HelixVideoApi['getVideosByUser']>().mockResolvedValue(videos),
                 },
             } as ApiClient;
 

@@ -1,8 +1,9 @@
 import 'reflect-metadata';
-import StreamStateService from './stream-state.service';
-import Broadcaster from './broadcaster';
+import { jest } from '@jest/globals';
+import StreamStateService from './stream-state.service.js';
+import Broadcaster from './broadcaster.js';
 
-const mockIsOnline = jest.fn();
+const mockIsOnline = jest.fn<() => Promise<boolean>>();
 const mockBroadcaster = {
     getBroadcaster: jest.fn(),
     isOnline: mockIsOnline,

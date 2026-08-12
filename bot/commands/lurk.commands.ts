@@ -1,12 +1,12 @@
 import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import InjectionTypes from '../../dependency-management/types';
-import { ICommandHandler, OnlineState } from './iCommandHandler';
-import { CommandName, defaultResponses, TransientContext } from '../utilities/default-responses';
-import CommandResponseService from '../utilities/command-response.service';
-import { templateResolver } from '../utilities/template-resolver';
-import LurkRespository from '../utilities/lurk.respository';
+import InjectionTypes from '../../dependency-management/types.js';
+import { ICommandHandler, OnlineState } from './iCommandHandler.js';
+import { CommandName, defaultResponses, TransientContext } from '../utilities/default-responses.js';
+import CommandResponseService from '../utilities/command-response.service.js';
+import { templateResolver } from '../utilities/template-resolver.js';
+import LurkRespository from '../utilities/lurk.respository.js';
 
 @injectable()
 export class LurkCommand implements ICommandHandler {

@@ -9,12 +9,12 @@ import {
 import dayjs from 'dayjs';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import InjectionTypes from '../../dependency-management/types';
+import InjectionTypes from '../../dependency-management/types.js';
 import {
     Subscribers,
     SubscriptionGiftUsers,
     SubscriptionType,
-} from '../../database';
+} from '../../database/index.js';
 
 export interface ISubscriptionHandler {
     onSubscribe(channel: string, user: string, subInfo: ChatSubInfo, message: UserNotice): Promise<void>;
