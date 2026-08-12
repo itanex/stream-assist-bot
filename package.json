@@ -55,10 +55,8 @@
     "ts-jest": "29.4.11"
   },
   "scripts": {
-    "predev": "tsc --noEmit",
     "prestart": "tsc --noEmit",
     "start": "tsx app.ts",
-    "dev": "tsx app.ts",
     "lint": "eslint . --ext .ts",
     "lint-fix": "eslint . --ext .ts --fix",
     "type-check": "tsc --noEmit",
