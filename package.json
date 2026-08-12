@@ -62,10 +62,10 @@
     "lint": "eslint . --ext .ts",
     "lint-fix": "eslint . --ext .ts --fix",
     "type-check": "tsc --noEmit",
-    "test": "jest --no-cache --detectOpenHandles",
-    "test-coverage": "jest  --no-cache --coverage=true --detectOpenHandles",
-    "test-specific": "jest --no-cache --detectOpenHandles --watch ./bot/commands/eightballcommand.spec.ts",
-    "test-dev": "jest  --no-cache --coverage=true --detectOpenHandles --watch",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --no-cache --detectOpenHandles",
+    "test-coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --no-cache --coverage=true --detectOpenHandles",
+    "test-specific": "node --experimental-vm-modules node_modules/jest/bin/jest.js --no-cache --detectOpenHandles --watch ./bot/commands/eightballcommand.spec.ts",
+    "test-dev": "node --experimental-vm-modules node_modules/jest/bin/jest.js --no-cache --coverage=true --detectOpenHandles --watch",
     "release": "release-it"
   },
   "keywords": [

@@ -17,7 +17,7 @@ export interface ISocketServer {
 
 /** Web Socket Server */
 @injectable()
-export default class SocketServer implements ISocketServer {
+export class SocketServer implements ISocketServer {
     /** Instance of the Web Socket server */
     private server: WebSocketServer | undefined;
     /** Configured Web Socket Host */

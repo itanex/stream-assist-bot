@@ -24,8 +24,8 @@ import {
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import {
-    IRaidStreamEvent,
-    ISubscriptionHandler,
+    type IRaidStreamEvent,
+    type ISubscriptionHandler,
     MessageHandler,
     RaidHandler,
     SubscriptionHandler,
@@ -40,7 +40,7 @@ import {
     StreamEventHandler,
 } from './event-sub-handlers/index.js';
 import InjectionTypes from '../dependency-management/types.js';
-import environment from '../configurations/environment.js';
+import { type Environment } from '../configurations/environment.js';
 import { isUserAuthenticated } from './auth/authProvider.js';
 import StreamStateService from './utilities/stream-state.service.js';
 import JoinGreetingHandler from './handlers/join-greeting.handler.js';
@@ -77,6 +77,7 @@ export default class ChatBot implements IChatBot {
         @inject(StreamEventHandler) private streamEventHandler: StreamEventHandler,
         @inject(StreamStateService) private streamStateService: StreamStateService,
         @inject(JoinGreetingHandler) private joinGreetingHandler: JoinGreetingHandler,
+        @inject(InjectionTypes.Environment) private environment: Environment,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
         this.logger.info(`** Chat Bot initialized **`);
@@ -125,28 +126,28 @@ export default class ChatBot implements IChatBot {
 
         // Event Sub API registration
         this.eventSubWsListener.onChannelRedemptionAdd(
-            `${environment.twitchBot.broadcaster.id}`,
+            `${this.environment.twitchBot.broadcaster.id}`,
             async (event: EventSubChannelRedemptionAddEvent): Promise<void> => {
                 await this.channelPointEventHandler.onChannelPointRedeem(event);
             },
         );
 
         this.eventSubWsListener.onChannelCheer(
-            `${environment.twitchBot.broadcaster.id}`,
+            `${this.environment.twitchBot.broadcaster.id}`,
             async (event: EventSubChannelCheerEvent): Promise<void> => {
                 await this.cheerEventHandler.onCheer(event);
             },
         );
 
         this.eventSubWsListener.onChannelBan(
-            `${environment.twitchBot.broadcaster.id}`,
+            `${this.environment.twitchBot.broadcaster.id}`,
             async (event: EventSubChannelBanEvent): Promise<void> => {
                 await this.banEventHandler.onBanEvent(event);
             },
         );
 
         this.eventSubWsListener.onChannelUnban(
-            `${environment.twitchBot.broadcaster.id}`,
+            `${this.environment.twitchBot.broadcaster.id}`,
             async (event: EventSubChannelUnbanEvent): Promise<void> => {
                 await this.banEventHandler.onUnbanEvent(event);
             },
@@ -155,43 +156,43 @@ export default class ChatBot implements IChatBot {
         // Requires that a moderator with permission is part of the subscription
         // Using the broadcaster as that user
         this.eventSubWsListener.onChannelFollow(
-            `${environment.twitchBot.broadcaster.id}`,
-            `${environment.twitchBot.broadcaster.id}`,
+            `${this.environment.twitchBot.broadcaster.id}`,
+            `${this.environment.twitchBot.broadcaster.id}`,
             async (event: EventSubChannelFollowEvent): Promise<void> => {
                 await this.followerEventHandler.follow(event);
             },
         );
 
         this.eventSubWsListener.onChannelModeratorAdd(
-            `${environment.twitchBot.broadcaster.id}`,
+            `${this.environment.twitchBot.broadcaster.id}`,
             async (event: EventSubChannelModeratorEvent): Promise<void> => {
                 await this.moderatorEventHandler.addModerator(event);
             },
         );
 
         this.eventSubWsListener.onChannelModeratorRemove(
-            `${environment.twitchBot.broadcaster.id}`,
+            `${this.environment.twitchBot.broadcaster.id}`,
             async (event: EventSubChannelModeratorEvent): Promise<void> => {
                 await this.moderatorEventHandler.removeModerator(event);
             },
         );
 
         this.eventSubWsListener.onChannelRaidTo(
-            `${environment.twitchBot.broadcaster.id}`,
+            `${this.environment.twitchBot.broadcaster.id}`,
             async (event: EventSubChannelRaidEvent): Promise<void> => {
                 await this.raidEventHandler.raid(event);
             },
         );
 
         this.eventSubWsListener.onChannelRaidFrom(
-            `${environment.twitchBot.broadcaster.id}`,
+            `${this.environment.twitchBot.broadcaster.id}`,
             async (event: EventSubChannelRaidEvent): Promise<void> => {
                 await this.raidEventHandler.raid(event);
             },
         );
 
         this.eventSubWsListener.onStreamOnline(
-            `${environment.twitchBot.broadcaster.id}`,
+            `${this.environment.twitchBot.broadcaster.id}`,
             async (event: EventSubStreamOnlineEvent): Promise<void> => {
                 await this.streamEventHandler.streamOnline(event);
                 this.streamStateService.setOnline();
@@ -199,7 +200,7 @@ export default class ChatBot implements IChatBot {
         );
 
         this.eventSubWsListener.onStreamOffline(
-            `${environment.twitchBot.broadcaster.id}`,
+            `${this.environment.twitchBot.broadcaster.id}`,
             async (event: EventSubStreamOfflineEvent): Promise<void> => {
                 await this.streamEventHandler.streamOffline(event);
                 this.streamStateService.setOffline();

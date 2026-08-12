@@ -4,7 +4,7 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import InjectionTypes from '../../dependency-management/types.js';
-import environment from '../../configurations/environment.js';
+import { type Environment } from '../../configurations/environment.js';
 import Timespan, { getAgeReport } from '../utilities/timeSpan.js';
 import { CommandName, TransientContext } from '../utilities/default-responses.js';
 import CommandResponseService from '../utilities/command-response.service.js';
@@ -31,6 +31,7 @@ export class FollowAgeCommand implements ICommandHandler {
         @inject(ApiClient) private apiClient: ApiClient,
         @inject(Broadcaster) private broadcaster: Broadcaster,
         @inject(CommandResponseService) private commandResponseService: CommandResponseService,
+        @inject(InjectionTypes.Environment) private environment: Environment,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
@@ -56,7 +57,7 @@ export class FollowAgeCommand implements ICommandHandler {
 
         if (followingUser) {
             const follower = await this.apiClient.channels
-                .getChannelFollowers(environment.twitchBot.broadcaster.id, followingUser.id);
+                .getChannelFollowers(this.environment.twitchBot.broadcaster.id, followingUser.id);
 
             if (follower.data[0]) {
                 const result = this.commandResponseService.getCommandText(this.commandName);

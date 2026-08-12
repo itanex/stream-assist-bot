@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { jest } from '@jest/globals';
 import { EventSubStreamOfflineEvent, EventSubStreamOnlineEvent } from '@twurple/eventsub-base';
 import { Container } from 'inversify';
 import winston from 'winston';

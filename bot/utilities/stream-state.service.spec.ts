@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { jest } from '@jest/globals';
 import StreamStateService from './stream-state.service.js';
 import Broadcaster from './broadcaster.js';
 

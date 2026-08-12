@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { mockLogger } from '../../tests/common.mocks.js';
 import { templateResolver } from './template-resolver.js';
 import { TransientContext } from './default-responses.js';

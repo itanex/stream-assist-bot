@@ -19,6 +19,9 @@ export function isUserAuthenticated(): boolean {
     return userAuthenticated;
 }
 
+/**
+ * Returns current cached failure reason
+ */
 export function getAuthFailureReason(): string | null {
     return authFailureReason;
 }

@@ -1,10 +1,11 @@
 import { AccessToken } from '@twurple/auth';
 import axios from 'axios';
 import express, { Express } from 'express';
+import http from 'http';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
-import environment from '../../configurations/environment.js';
+import { type Environment } from '../../configurations/environment.js';
 import requiredScopes from '../../configurations/required-scopes.js';
 import {
     addUserFromToken,
@@ -13,7 +14,7 @@ import {
     removeUserTokenFile,
     writeUserTokenToFile,
 } from './authProvider.js';
-import ChatBot, { IChatBot } from '../chat-bot.js';
+import ChatBot, { type IChatBot } from '../chat-bot.js';
 
 export interface IAuthenticationServer {
     configure(): Promise<IAuthenticationServer>;
@@ -25,9 +26,11 @@ export default class AuthenticationServer implements IAuthenticationServer {
     private app: Express | null = null;
     private host: string;
     private port: number;
+    private server: http.Server | undefined;
 
     constructor(
         @inject(ChatBot) private chatBot: IChatBot,
+        @inject(InjectionTypes.Environment) private environment: Environment,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
         this.host = environment.twitchBot.auth.host;
@@ -43,8 +46,8 @@ export default class AuthenticationServer implements IAuthenticationServer {
             const tokenUrl = `https://id.twitch.tv/oauth2/token`;
 
             const params = new URLSearchParams();
-            params.append('client_id', environment.twitchBot.clientId!);
-            params.append('client_secret', environment.twitchBot.clientSecret!);
+            params.append('client_id', this.environment.twitchBot.clientId!);
+            params.append('client_secret', this.environment.twitchBot.clientSecret!);
             params.append('code', `${code}`);
             params.append('grant_type', 'authorization_code');
             params.append('redirect_uri', `http://localhost:${this.port}/auth`);
@@ -78,13 +81,13 @@ export default class AuthenticationServer implements IAuthenticationServer {
                     obtainmentTimestamp: Date.now(),
                 };
 
-                writeUserTokenToFile(environment.twitchBot.broadcaster.id, accessToken);
-                addUserFromToken(environment.twitchBot.broadcaster.id, accessToken, ['chat', 'events']);
+                writeUserTokenToFile(this.environment.twitchBot.broadcaster.id, accessToken);
+                addUserFromToken(this.environment.twitchBot.broadcaster.id, accessToken, ['chat', 'events']);
 
                 await this.chatBot.start();
 
                 const localRevokeUrl = `http://localhost:${this.port}/revoke`
-                    + `?userId=${environment.twitchBot.broadcaster.id}`
+                    + `?userId=${this.environment.twitchBot.broadcaster.id}`
                     + `&token=${token.data.access_token}`;
 
                 res.send(`
@@ -112,7 +115,7 @@ export default class AuthenticationServer implements IAuthenticationServer {
             const revokeUrl = `https://id.twitch.tv/oauth2/revoke`;
 
             const params = new URLSearchParams();
-            params.append('client_id', environment.twitchBot.clientId!);
+            params.append('client_id', this.environment.twitchBot.clientId!);
             params.append('token', `${token}`);
 
             const requestConfig = {
@@ -124,7 +127,7 @@ export default class AuthenticationServer implements IAuthenticationServer {
             try {
                 await axios.post<AccessToken>(revokeUrl, params, requestConfig);
 
-                removeUserTokenFile(environment.twitchBot.broadcaster.id);
+                removeUserTokenFile(this.environment.twitchBot.broadcaster.id);
                 this.chatBot.shutdown();
 
                 res.send(`
@@ -148,7 +151,7 @@ export default class AuthenticationServer implements IAuthenticationServer {
 
         app.get('/auth-url', (req, res) => {
             let authorizeUrl = `https://id.twitch.tv/oauth2/authorize?`;
-            authorizeUrl += `client_id=${environment.twitchBot.clientId}`;
+            authorizeUrl += `client_id=${this.environment.twitchBot.clientId}`;
             authorizeUrl += `&response_type=code`;
             authorizeUrl += `&force_verify=true`;
             authorizeUrl += `&redirect_uri=http://localhost:${this.port}/auth`;
@@ -171,7 +174,7 @@ export default class AuthenticationServer implements IAuthenticationServer {
     }
 
     listen(): IAuthenticationServer {
-        this.app?.listen(this.port, this.host, () => {
+        this.server = this.app?.listen(this.port, this.host, () => {
             this.logger.info(`** Auth Web Server is running on http://${this.host}:${this.port}`);
 
             if (!isUserAuthenticated()) {

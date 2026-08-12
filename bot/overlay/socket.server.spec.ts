@@ -1,17 +1,16 @@
 import 'reflect-metadata';
-import { Container } from 'inversify';
-import winston from 'winston';
-import { WebSocketServer } from 'ws';
+import { jest } from '@jest/globals';
 import { mockLogger } from '../../tests/common.mocks.js';
-import InjectionTypes from '../../dependency-management/types.js';
-import SocketServer from './socket.server.js';
 
-jest.mock('ws', () => ({
+type WsModule = typeof import('ws');
+type SocketServerModule = typeof import('./socket.server.js');
+
+jest.unstable_mockModule('ws', () => ({
     WebSocketServer: jest.fn(),
     WebSocket: jest.fn(),
 }));
 
-jest.mock('../../configurations/environment', () => ({
+jest.unstable_mockModule('../../configurations/environment.js', () => ({
     __esModule: true,
     default: {
         twitchBot: {
@@ -25,34 +24,41 @@ jest.mock('../../configurations/environment', () => ({
 
 describe('SocketServer', () => {
     let serverHandlers: Record<string, Function>;
-    let mockServerInstance: { on: jest.Mock };
 
-    beforeEach(() => {
+    let mockWebSocketServer: jest.MockedClass<WsModule['WebSocketServer']>;
+
+    let SocketServer: SocketServerModule['SocketServer'];
+    let subject: InstanceType<SocketServerModule['SocketServer']>;
+
+    beforeEach(async () => {
+        jest.resetModules();
         jest.resetAllMocks();
 
-        serverHandlers = {};
-        mockServerInstance = {
-            on: jest.fn((event: string, handler: Function) => {
-                serverHandlers[event] = handler;
-            }),
-        };
+        mockWebSocketServer = (await import('ws'))
+            .WebSocketServer as jest.MockedClass<WsModule['WebSocketServer']>;
 
-        jest.mocked(WebSocketServer).mockImplementation(((_options: unknown, callback?: () => void) => {
-            if (callback) callback();
-            return mockServerInstance;
-        }) as any);
+        ({ SocketServer } = await import('./socket.server.js'));
+
+        subject = new SocketServer(
+            mockLogger,
+        );
+
+        serverHandlers = {};
+
+        mockWebSocketServer
+            .mockImplementation(((_options: unknown, callback?: () => void) => {
+                if (callback) callback();
+                return mockWebSocketServer;
+            }) as any);
+
+        mockWebSocketServer.on = jest.fn((event: string, handler: Function) => {
+            serverHandlers[event] = handler;
+        }) as any;
     });
 
     afterEach(() => {
         jest.restoreAllMocks();
     });
-
-    function buildSubject(): SocketServer {
-        const container = new Container();
-        container.bind<winston.Logger>(InjectionTypes.Logger).toConstantValue(mockLogger);
-        container.bind(SocketServer).to(SocketServer);
-        return container.get(SocketServer);
-    }
 
     function createMockWebSocket() {
         const wsHandlers: Record<string, Function> = {};
@@ -68,13 +74,11 @@ describe('SocketServer', () => {
     describe('startServer()', () => {
         it('starts the server on the configured port without modification', () => {
             // Arrange
-            const subject = buildSubject();
-
             // Act
             subject.startServer();
 
             // Assert
-            expect(jest.mocked(WebSocketServer)).toHaveBeenCalledWith(
+            expect(mockWebSocketServer).toHaveBeenCalledWith(
                 expect.objectContaining({ port: 8080 }),
                 expect.any(Function),
             );
@@ -82,13 +86,11 @@ describe('SocketServer', () => {
 
         it('starts the server on the configured host', () => {
             // Arrange
-            const subject = buildSubject();
-
             // Act
             subject.startServer();
 
             // Assert
-            expect(jest.mocked(WebSocketServer)).toHaveBeenCalledWith(
+            expect(jest.mocked(mockWebSocketServer)).toHaveBeenCalledWith(
                 expect.objectContaining({ host: 'localhost' }),
                 expect.any(Function),
             );
@@ -96,8 +98,6 @@ describe('SocketServer', () => {
 
         it('logs startup message containing the configured port', () => {
             // Arrange
-            const subject = buildSubject();
-
             // Act
             subject.startServer();
 
@@ -111,7 +111,6 @@ describe('SocketServer', () => {
     describe('connection handling', () => {
         it('tracks connected user so they receive broadcast messages', () => {
             // Arrange
-            const subject = buildSubject();
             subject.startServer();
 
             const mockWs1 = createMockWebSocket();
@@ -129,7 +128,6 @@ describe('SocketServer', () => {
 
         it('removes user on close so they no longer receive broadcast messages', () => {
             // Arrange
-            const subject = buildSubject();
             subject.startServer();
 
             const mockWs1 = createMockWebSocket();
@@ -149,7 +147,6 @@ describe('SocketServer', () => {
 
         it('logs when a connection closes', () => {
             // Arrange
-            const subject = buildSubject();
             subject.startServer();
 
             const mockWs = createMockWebSocket();
@@ -168,7 +165,6 @@ describe('SocketServer', () => {
     describe('message broadcasting', () => {
         it('broadcasts a valid message to all connected users', () => {
             // Arrange
-            const subject = buildSubject();
             subject.startServer();
 
             const mockWs1 = createMockWebSocket();
@@ -187,7 +183,6 @@ describe('SocketServer', () => {
 
         it('logs error and does not broadcast when message is missing required fields', () => {
             // Arrange
-            const subject = buildSubject();
             subject.startServer();
 
             const mockWs = createMockWebSocket();
@@ -206,7 +201,6 @@ describe('SocketServer', () => {
 
         it('logs error when message cannot be parsed as JSON', () => {
             // Arrange
-            const subject = buildSubject();
             subject.startServer();
 
             const mockWs = createMockWebSocket();
@@ -227,7 +221,6 @@ describe('SocketServer', () => {
     describe('error handling', () => {
         it('logs server-level errors', () => {
             // Arrange
-            const subject = buildSubject();
             subject.startServer();
 
             const error = new Error('Server error');
@@ -244,7 +237,6 @@ describe('SocketServer', () => {
 
         it('logs websocket-level errors', () => {
             // Arrange
-            const subject = buildSubject();
             subject.startServer();
 
             const mockWs = createMockWebSocket();

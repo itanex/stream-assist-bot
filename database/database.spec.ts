@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { jest } from '@jest/globals';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import Database, { IDatabaseConfiguration } from './database.js';
 import { mockLogger } from '../tests/common.mocks.js';

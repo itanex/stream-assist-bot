@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { jest } from '@jest/globals';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import { Container } from 'inversify';
 import winston from 'winston';

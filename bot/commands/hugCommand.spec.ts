@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { jest } from '@jest/globals';
 import { ApiClient, HelixUser } from '@twurple/api';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import { Container } from 'inversify';

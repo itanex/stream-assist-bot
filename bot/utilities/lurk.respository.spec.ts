@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { ChatUser } from '@twurple/chat';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';

@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { jest } from '@jest/globals';
 import { ChatUser } from '@twurple/chat';
 import { mockChatClient, mockLogger, mockCommandResponseService } from '../../tests/common.mocks.js';
 import { DivideByZeroCommand } from './DivideByZeroCommand.js';

@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { jest } from '@jest/globals';
 import { HelixPrivilegedUser, HelixStream, HelixStreamType } from '@twurple/api';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import dayjs from 'dayjs';

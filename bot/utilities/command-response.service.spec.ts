@@ -1,21 +1,26 @@
 import 'reflect-metadata';
+import { jest } from '@jest/globals';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { UniqueConstraintError } from 'sequelize';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
-import CommandResponseService, {
-    CommandTextValidationResult,
-    CommandTextInsertResult,
-    CommandTextUpdateResult,
-    CommandTextRemoveResult,
-    CommandTextRestoreResult,
+import {
+    type CommandTextValidationResult,
+    type CommandTextInsertResult,
+    type CommandTextUpdateResult,
+    type CommandTextRemoveResult,
+    type CommandTextRestoreResult,
 } from './command-response.service.js';
 import { mockLogger } from '../../tests/common.mocks.js';
-import { defaultResponses } from './default-responses.js';
 import { CommandResponse } from '../../database/index.js';
 
-jest.mock('./default-responses', () => ({
-    ...jest.requireActual('./default-responses'),
-    CommandFamilies: { testcommand: 'testcommand' },
+type CommandResponseServiceModule = typeof import('./command-response.service.js');
+type MockDefaultResponses = { testResponse: string };
+type MockCommandFamilies = { testCommand: string };
+
+jest.unstable_mockModule('./default-responses', () => ({
+    __esModule: true,
+    CommandFamilies: { testCommand: 'testcommand' },
+    defaultResponses: { testResponse: 'Test about response' },
 }));
 
 describe('CommandResponse.Service (postgres)', () => {
@@ -25,13 +30,17 @@ describe('CommandResponse.Service (postgres)', () => {
     const defaultVariant = '';
     const validText = 'Edited Text';
     const validName = 'ValidName';
-    const testCommand = 'testcommand';
+    const testCommand = 'testCommand';
     const testVariants = [
         'variant1',
         'variant2',
     ];
 
-    let subject: CommandResponseService;
+    let CommandResponseService: CommandResponseServiceModule['default'];
+    let CommandFamilies: jest.MockedObject<MockCommandFamilies>;
+    let defaultResponses: jest.MockedObject<MockDefaultResponses>;
+
+    let subject: InstanceType<CommandResponseServiceModule['default']>;
 
     /** Utility to generate variant based text for testing */
     const textFn = (cmd: string, variant: string = defaultVariant) => `test-text: ${cmd}.${variant}`;
@@ -67,13 +76,23 @@ describe('CommandResponse.Service (postgres)', () => {
             password: container.getPassword(),
             port: container.getPort(),
         };
+
+        ({ default: CommandResponseService } = await import('./command-response.service.js'));
+
+        ({
+            defaultResponses,
+            CommandFamilies,
+        } = await import('./default-responses.js') as unknown as {
+            defaultResponses: MockDefaultResponses;
+            CommandFamilies: MockCommandFamilies;
+        });
     }, 120_000);
 
     afterAll(async () => {
         await container.stop();
     });
 
-    beforeEach(() => {
+    beforeEach(async () => {
         jest.resetAllMocks();
     });
 
@@ -100,19 +119,19 @@ describe('CommandResponse.Service (postgres)', () => {
             it('seeds row, gets installed default', async () => {
                 // Arrange - beforeEach()
                 // Act
-                const result = subject.getCommandText('about');
+                const result = subject.getCommandText('testResponse');
 
                 // Assert
-                expect(result).toBe(defaultResponses.about);
+                expect(result).toBe(defaultResponses.testResponse);
             });
             it('should not seed twice', async () => {
                 // Arrange - beforeEach()
                 // Act
                 await subject.initialize();
-                await subject.setCommandText('about', validText);
+                await subject.setCommandText('testResponse', validText);
                 await subject.initialize();
-                const result = subject.getCommandText('about');
-                const rowCount = await CommandResponse.count({ where: { commandName: 'about' } });
+                const result = subject.getCommandText('testResponse');
+                const rowCount = await CommandResponse.count({ where: { commandName: 'testResponse' } });
 
                 // Assert
                 expect(result).toBe(validText);

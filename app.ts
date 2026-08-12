@@ -1,11 +1,11 @@
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import ChatBot, { IChatBot } from './bot/chat-bot.js';
+import ChatBot, { type IChatBot } from './bot/chat-bot.js';
 import SAContainer from './dependency-management/inversify.config.js';
 import InjectionTypes from './dependency-management/types.js';
 import Database from './database/database.js';
 import Scheduler from './bot/scheduler.js';
-import SocketServer, { ISocketServer } from './bot/overlay/socket.server.js';
+import { SocketServer, type ISocketServer } from './bot/overlay/socket.server.js';
 import OverlayServer, { IOverlayServer } from './bot/overlay/overlay.server.js';
 import AuthenticationServer, { IAuthenticationServer } from './bot/auth/auth.server.js';
 import { isUserAuthenticated } from './bot/auth/authProvider.js';

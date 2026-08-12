@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { jest } from '@jest/globals';
 import { ChatUser } from '@twurple/chat';
 import { HelixPrivilegedUser } from '@twurple/api';
 import { mockChatClient, mockLogger } from '../../tests/common.mocks.js';

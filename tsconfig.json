@@ -1,18 +1,24 @@
 {
-  "compilerOptions": {
-    "target": "es2017",
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
-    "noImplicitOverride": true,
-    "types": [
-      "jest"
-    ],
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-  },
-  "exclude": ["node_modules"]
+    "compilerOptions": {
+        "target": "es2017",
+        "lib": [
+            "ES2022",
+            "DOM"
+        ],
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "noImplicitOverride": true,
+        "types": [
+            "jest"
+        ],
+        "esModuleInterop": true,
+        "resolveJsonModule": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+    },
+    "exclude": [
+        "node_modules"
+    ]
 }

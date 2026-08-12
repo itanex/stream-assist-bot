@@ -35,8 +35,8 @@ import {
     ThrowCommand,
 } from '../bot/commands/index.js';
 import logger from '../logger/logger.js';
-import ChatBot, { IChatBot } from '../bot/chat-bot.js';
-import environment from '../configurations/environment.js';
+import ChatBot, { type IChatBot } from '../bot/chat-bot.js';
+import environment, { type Environment } from '../configurations/environment.js';
 import {
     FollowHandler,
     IFollowStreamEvent,
@@ -60,7 +60,7 @@ import InjectionTypes from './types.js';
 import Database, { IDatabaseConfiguration } from '../database/database.js';
 import authProvider from '../bot/auth/authProvider.js';
 import Scheduler from '../bot/scheduler.js';
-import SocketServer, { ISocketServer } from '../bot/overlay/socket.server.js';
+import { SocketServer, ISocketServer } from '../bot/overlay/socket.server.js';
 import OverlayServer, { IOverlayServer } from '../bot/overlay/overlay.server.js';
 import AuthenticationServer, { IAuthenticationServer } from '../bot/auth/auth.server.js';
 import StreamStateService from '../bot/utilities/stream-state.service.js';
@@ -71,6 +71,7 @@ import LurkRespository from '../bot/utilities/lurk.respository.js';
 const SAContainer = new Container();
 
 SAContainer.bind<Database>(Database).toSelf().inSingletonScope();
+SAContainer.bind<Environment>(InjectionTypes.Environment).toConstantValue(environment);
 
 SAContainer.bind<Broadcaster>(Broadcaster).toSelf().inSingletonScope();
 SAContainer.bind<StreamStateService>(StreamStateService).toSelf().inSingletonScope();

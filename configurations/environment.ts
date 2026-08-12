@@ -76,4 +76,6 @@ const environment = {
     },
 };
 
+export type Environment = typeof environment;
+
 export default environment;

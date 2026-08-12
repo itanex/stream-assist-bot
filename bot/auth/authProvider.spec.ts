@@ -1,8 +1,13 @@
-/* eslint-disable global-require */
 import 'reflect-metadata';
+import { jest } from '@jest/globals';
 import fs from 'fs';
+import { mockLogger } from '../../tests/common.mocks.js';
 
-jest.mock('@twurple/auth', () => ({
+type TwurpleAuthModule = typeof import('@twurple/auth');
+type AuthProviderModule = typeof import('./authProvider.js');
+type LoggerModule = typeof import('../../logger/logger.js');
+
+jest.unstable_mockModule('@twurple/auth', () => ({
     __esModule: true,
     RefreshingAuthProvider: jest.fn().mockImplementation(() => ({
         addUser: jest.fn(),
@@ -11,12 +16,7 @@ jest.mock('@twurple/auth', () => ({
     })),
 }));
 
-jest.mock('../../logger/logger', () => ({
-    __esModule: true,
-    default: { info: jest.fn(), error: jest.fn(), warn: jest.fn() },
-}));
-
-jest.mock('../../configurations/environment', () => ({
+jest.unstable_mockModule('../../configurations/environment.js', () => ({
     __esModule: true,
     default: {
         twitchBot: {
@@ -27,9 +27,14 @@ jest.mock('../../configurations/environment', () => ({
     },
 }));
 
-jest.mock('../../configurations/required-scopes', () => ({
+jest.unstable_mockModule('../../configurations/required-scopes', () => ({
     __esModule: true,
     default: ['chat:read', 'chat:edit'],
+}));
+
+jest.unstable_mockModule('../../logger/logger.js', () => ({
+    _esModule: true,
+    default: mockLogger,
 }));
 
 const TEST_USER_ID = 'spec-test-123';
@@ -47,40 +52,50 @@ const validToken = {
 const waitForIO = () => new Promise(resolve => { setTimeout(resolve, IO_SETTLE_MS); });
 
 describe('authProvider', () => {
-    let addUserFromTokenFile: (userId: string, intents: string[]) => boolean;
-    let addUserFromToken: (userId: string, tokenData: object, intents: string[]) => void;
-    let writeUserTokenToFile: (userId: string, tokenData: object) => void;
-    let removeUserTokenFile: (userId: string) => void;
-    let isUserAuthenticated: () => boolean;
-    let getAuthFailureReason: () => string | null;
-    let mockProviderAddUser: jest.Mock;
-    let mockProviderRemoveUser: jest.Mock;
-    let mockLogger: { info: jest.Mock; error: jest.Mock; warn: jest.Mock };
+    let mockProviderAddUser: jest.MockedFunction<InstanceType<TwurpleAuthModule['RefreshingAuthProvider']>['addUser']>;
+    let mockProviderRemoveUser: jest.MockedFunction<InstanceType<TwurpleAuthModule['RefreshingAuthProvider']>['removeUser']>;
 
-    beforeEach(() => {
+    let Logger: LoggerModule['default'];
+
+    let RefreshingAuthProvider: jest.MockedClass<TwurpleAuthModule['RefreshingAuthProvider']>;
+
+    let addUserFromToken: AuthProviderModule['addUserFromToken'];
+    let writeUserTokenToFile: AuthProviderModule['writeUserTokenToFile'];
+    let removeUserTokenFile: AuthProviderModule['removeUserTokenFile'];
+    let isUserAuthenticated: AuthProviderModule['isUserAuthenticated'];
+    let getAuthFailureReason: AuthProviderModule['getAuthFailureReason'];
+    let addUserFromTokenFile: AuthProviderModule['addUserFromTokenFile'];
+
+    beforeEach(async () => {
+        jest.resetModules();
+        jest.resetAllMocks();
+
+        RefreshingAuthProvider = (await import('@twurple/auth'))
+            .RefreshingAuthProvider as jest.MockedClass<TwurpleAuthModule['RefreshingAuthProvider']>;
+
+        ({
+            addUserFromToken,
+            writeUserTokenToFile,
+            removeUserTokenFile,
+            isUserAuthenticated,
+            getAuthFailureReason,
+            addUserFromTokenFile,
+        } = await import('./authProvider.js'));
+
+        ({ default: Logger } = await import('../../logger/logger.js'));
+
         if (fs.existsSync(TEST_TOKEN_PATH)) {
             fs.rmSync(TEST_TOKEN_PATH);
         }
 
-        jest.resetModules();
-        jest.resetAllMocks();
-
-        const module = require('./authProvider');
-        addUserFromTokenFile = module.addUserFromTokenFile;
-        addUserFromToken = module.addUserFromToken;
-        writeUserTokenToFile = module.writeUserTokenToFile;
-        removeUserTokenFile = module.removeUserTokenFile;
-        isUserAuthenticated = module.isUserAuthenticated;
-        getAuthFailureReason = module.getAuthFailureReason;
-
-        const { RefreshingAuthProvider } = require('@twurple/auth');
         // mock.results tracks return values of the constructor; mock.instances tracks `this`,
         // which is not the same as the object returned by mockImplementation
-        const lastResult = RefreshingAuthProvider.mock.results[RefreshingAuthProvider.mock.results.length - 1];
-        mockProviderAddUser = lastResult?.value?.addUser;
-        mockProviderRemoveUser = lastResult?.value?.removeUser;
+        const lastResult = RefreshingAuthProvider.mock.results.at(-1);
 
-        mockLogger = require('../../logger/logger').default;
+        if (lastResult?.type === 'return') {
+            mockProviderAddUser = lastResult.value.addUser;
+            mockProviderRemoveUser = lastResult.value.removeUser;
+        }
     });
 
     afterEach(() => {

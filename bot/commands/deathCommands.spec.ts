@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { jest } from '@jest/globals';
 import { HelixStream } from '@twurple/api';
 import { ChatUser } from '@twurple/chat';
 import { mockChatClient, mockApiClient, mockLogger, mockCommandResponseService } from '../../tests/common.mocks.js';
