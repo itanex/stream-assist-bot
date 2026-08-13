@@ -141,7 +141,11 @@ export class MessageHandler {
             return true;
         }
 
-        if (command.mod && user.isMod) {
+        if (command.leadMod && user.isLeadMod) {
+            return true;
+        }
+
+        if (command.mod && (user.isMod || user.isLeadMod)) {
             return true;
         }
 

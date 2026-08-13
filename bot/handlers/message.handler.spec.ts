@@ -16,6 +16,7 @@ const mockOnlineHandler = jest.fn<ICommandHandler['handle']>();
 class MockOnlineCommand implements ICommandHandler {
     exp = /!(online)/i;
     timeout = 0;
+    leadMod = false;
     mod = false;
     vip = false;
     artist = false;
@@ -32,6 +33,7 @@ const mockOfflineHandler = jest.fn<ICommandHandler['handle']>();
 class MockOfflineCommand implements ICommandHandler {
     exp = /!(offline)/i;
     timeout = 0;
+    leadMod = false;
     mod = false;
     vip = false;
     artist = false;
@@ -44,10 +46,28 @@ class MockOfflineCommand implements ICommandHandler {
     handle = mockOfflineHandler;
 }
 
+const mockLeadModHandler = jest.fn<ICommandHandler['handle']>();
+class MockLeadModCommand implements ICommandHandler {
+    exp = /!(leadmod)/i;
+    timeout = 0;
+    leadMod = true;
+    mod = false;
+    vip = false;
+    artist = false;
+    founder = false;
+    subscriber = false;
+    follower = false;
+    viewer = false;
+    isGlobalCommand = false;
+    restriction = 'always' as const;
+    handle = mockLeadModHandler;
+}
+
 const mockModHandler = jest.fn<ICommandHandler['handle']>();
 class MockModCommand implements ICommandHandler {
     exp = /!(mod)/i;
     timeout = 0;
+    leadMod = false;
     mod = true;
     vip = false;
     artist = false;
@@ -64,6 +84,7 @@ const mockVipHandler = jest.fn<ICommandHandler['handle']>();
 class MockVipCommand implements ICommandHandler {
     exp = /!(vip)/i;
     timeout = 0;
+    leadMod = false;
     mod = false;
     vip = true;
     artist = false;
@@ -80,6 +101,7 @@ const mockArtistHandler = jest.fn<ICommandHandler['handle']>();
 class MockArtistCommand implements ICommandHandler {
     exp = /!(artist)/i;
     timeout = 0;
+    leadMod = false;
     mod = false;
     vip = false;
     artist = true;
@@ -96,6 +118,7 @@ const mockFounderHandler = jest.fn<ICommandHandler['handle']>();
 class MockFounderCommand implements ICommandHandler {
     exp = /!(founder)/i;
     timeout = 0;
+    leadMod = false;
     mod = false;
     vip = false;
     artist = false;
@@ -112,6 +135,7 @@ const mockBroadcasterHandler = jest.fn<ICommandHandler['handle']>();
 class MockBroadcasterCommand implements ICommandHandler {
     exp = /!(broadcaster)/i;
     timeout = 0;
+    leadMod = false;
     mod = false;
     vip = false;
     artist = false;
@@ -128,6 +152,7 @@ const mockSubscriberHandler = jest.fn<ICommandHandler['handle']>();
 class MockSubscriberCommand implements ICommandHandler {
     exp = /!(subscriber)/i;
     timeout = 0;
+    leadMod = false;
     mod = false;
     vip = false;
     artist = false;
@@ -144,6 +169,7 @@ const mockViewerHandler = jest.fn<ICommandHandler['handle']>();
 class MockViewerCommand implements ICommandHandler {
     exp = /!(viewer)/i;
     timeout = 0;
+    leadMod = false;
     mod = false;
     vip = false;
     artist = false;
@@ -160,6 +186,7 @@ const mockFollowerHandler = jest.fn<ICommandHandler['handle']>();
 class MockFollowerCommand implements ICommandHandler {
     exp = /!(follower)/i;
     timeout = 0;
+    leadMod = false;
     mod = false;
     vip = false;
     artist = false;
@@ -175,6 +202,7 @@ class MockFollowerCommand implements ICommandHandler {
 class MockCooldownCommand implements ICommandHandler {
     exp = /!(cooldown)/i;
     timeout = 300;
+    leadMod = false;
     mod = false;
     vip = false;
     artist = false;
@@ -192,6 +220,7 @@ const mockCooldownCommand = new MockCooldownCommand();
 const mockCommandHandlers = [
     new MockOnlineCommand(),
     new MockOfflineCommand(),
+    new MockLeadModCommand(),
     new MockModCommand(),
     new MockVipCommand(),
     new MockArtistCommand(),
@@ -278,12 +307,14 @@ describe('Message.Handler', () => {
 
             it.each`
                 role           | command          | userFlags                   | handler
+                ${'leadmod'}   | ${'!leadmod'}    | ${{ isLeadMod: true }}      | ${mockLeadModHandler}
+                ${'leadmod'}   | ${'!mod'}        | ${{ isLeadMod: true }}      | ${mockModHandler}
                 ${'mod'}       | ${'!mod'}        | ${{ isMod: true }}          | ${mockModHandler}
                 ${'vip'}       | ${'!vip'}        | ${{ isVip: true }}          | ${mockVipHandler}
                 ${'artist'}    | ${'!artist'}     | ${{ isArtist: true }}       | ${mockArtistHandler}
                 ${'founder'}   | ${'!founder'}    | ${{ isFounder: true }}      | ${mockFounderHandler}
                 ${'subscriber'}| ${'!subscriber'} | ${{ isSubscriber: true }}   | ${mockSubscriberHandler}
-            `('Executes $role command when user has the $role role', async ({ command, userFlags, handler }) => {
+            `('Executes $command command when user has the $role role', async ({ command, userFlags, handler }) => {
                 // Arrange
                 const user = userFlags as unknown as ChatUser;
 
@@ -296,13 +327,16 @@ describe('Message.Handler', () => {
                 expect(handler).toHaveBeenCalled();
             });
             it.each`
-                role           | command          | userFlags                   | handler
+                role           | command          | userFlags                    | handler
+                ${'leadmod'}   | ${'!leadmod'}    | ${{ isLeadMod: false }}      | ${mockLeadModHandler}
+                ${'leadmod'}   | ${'!mod'}        | ${{ isLeadMod: false }}      | ${mockModHandler}
+                ${'mod'}       | ${'!leadmod'}    | ${{ isMod: false }}          | ${mockLeadModHandler}
                 ${'mod'}       | ${'!mod'}        | ${{ isMod: false }}          | ${mockModHandler}
                 ${'vip'}       | ${'!vip'}        | ${{ isVip: false }}          | ${mockVipHandler}
                 ${'artist'}    | ${'!artist'}     | ${{ isArtist: false }}       | ${mockArtistHandler}
                 ${'founder'}   | ${'!founder'}    | ${{ isFounder: false }}      | ${mockFounderHandler}
                 ${'subscriber'}| ${'!subscriber'} | ${{ isSubscriber: false }}   | ${mockSubscriberHandler}
-            `('Skips $role command when user does not have the $role role', async ({ command, userFlags, handler }) => {
+            `('Skips $command command when user does not have the $role role', async ({ command, userFlags, handler }) => {
                 // Arrange
                 const user = userFlags as unknown as ChatUser;
 
