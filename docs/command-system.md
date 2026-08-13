@@ -19,6 +19,7 @@ export interface ICommandHandler {
     exp: RegExp;
     commandName?: CommandName;
     timeout: number;
+    leadMod?: boolean;
     mod: boolean;
     vip: boolean;
     artist: boolean;
@@ -40,6 +41,7 @@ export interface ICommandHandler {
 | `exp` | `RegExp` | Pattern matched against the raw chat message. The first capture group is the command name; subsequent groups become `args`. |
 | `commandName` | `CommandName?` | Key into the database-backed response text - either a `defaultResponses` key (single fixed text) or a `CommandFamilies` key (multiple variants). Omit for commands with computed or fixed responses. |
 | `timeout` | `number` | Cooldown period in seconds. Privileged users (mod, VIP, subscriber, etc.) receive half this duration. |
+| `leadMod` | `boolean` | (optional) Allow channel lead moderators. |
 | `mod` | `boolean` | Allow channel moderators. |
 | `vip` | `boolean` | Allow VIPs. |
 | `artist` | `boolean` | Allow users with the Artist channel role. |
@@ -61,7 +63,8 @@ Authorization is role-based. A command declares which roles are permitted via it
 
 | Flag | Twurple property | Notes |
 |---|---|---|
-| `mod` | `ChatUser.isMod` | Covers Lead Mod - Twurple does not distinguish |
+| `leadMod` | `ChatUser.isLeadMod` | Channel Lead Moderator |
+| `mod` | `ChatUser.isMod` | Channel Moderator |
 | `vip` | `ChatUser.isVip` | |
 | `artist` | `ChatUser.isArtist` | Channel Artist badge |
 | `founder` | `ChatUser.isFounder` | A permanent badge from early subscription - the holder may no longer be subscribed or following |
@@ -80,6 +83,8 @@ Broadcaster (`ChatUser.isBroadcaster`) always passes regardless of flags.
 
 ```
 broadcaster          -> always authorized
+leadMod flag + isLeadMod     -> authorized
+mod flag + isLeadMod     -> authorized
 mod flag + isMod     -> authorized
 vip flag + isVip     -> authorized
 artist flag + isArtist -> authorized
@@ -245,6 +250,7 @@ export class MyCommand implements ICommandHandler {
 - `follower: true` - requires following; set this for community participation commands
 - `subscriber: true` + `founder: true` - subscriber-exclusive perks
 - `vip: true` - high-trust viewer privilege
+- `leadMod: true` - lead moderation or privileged commands; exclude subscriber/follower/viewer
 - `mod: true` - moderation or privileged commands; exclude subscriber/follower/viewer
 - Multiple flags can be `true` simultaneously (a mod can also be a subscriber - both paths authorize them)
 
