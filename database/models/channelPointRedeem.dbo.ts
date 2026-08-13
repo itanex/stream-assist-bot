@@ -16,7 +16,7 @@ export default class ChannelPointRedeem extends Model {
         type: DataType.UUID,
         allowNull: false,
     })
-    eventId: string;
+    eventId!: string;
 
     /**
      * The ID of the broadcaster.
@@ -24,7 +24,7 @@ export default class ChannelPointRedeem extends Model {
     @Column({
         type: DataType.STRING(20),
     })
-    broadcasterId: string;
+    broadcasterId!: string;
 
     /**
      * The name of the broadcaster.
@@ -32,7 +32,7 @@ export default class ChannelPointRedeem extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    broadcasterName: string;
+    broadcasterName!: string;
 
     /**
      * The display name of the broadcaster.
@@ -40,7 +40,7 @@ export default class ChannelPointRedeem extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    broadcasterDisplayName: string;
+    broadcasterDisplayName!: string;
 
     /**
      * The ID of the user.
@@ -48,7 +48,7 @@ export default class ChannelPointRedeem extends Model {
     @Column({
         type: DataType.STRING(20),
     })
-    userId: string;
+    userId!: string;
 
     /**
      * The name of the user.
@@ -56,7 +56,7 @@ export default class ChannelPointRedeem extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    userName: string;
+    userName!: string;
 
     /**
      * The display name of the user.
@@ -64,7 +64,7 @@ export default class ChannelPointRedeem extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    userDisplayName: string;
+    userDisplayName!: string;
 
     /**
      * The input text given by the user.
@@ -74,7 +74,7 @@ export default class ChannelPointRedeem extends Model {
     @Column({
         type: DataType.STRING(255),
     })
-    input: string;
+    input!: string;
 
     /**
      * The status of the redemption.
@@ -82,7 +82,7 @@ export default class ChannelPointRedeem extends Model {
     @Column({
         type: DataType.STRING(20),
     })
-    status: string;
+    status!: string;
 
     /**
      * The ID of the reward that was redeemed.
@@ -90,7 +90,7 @@ export default class ChannelPointRedeem extends Model {
     @Column({
         type: DataType.UUID,
     })
-    rewardId: string;
+    rewardId!: string;
 
     /**
      * The title of the reward that was redeemed.
@@ -98,7 +98,7 @@ export default class ChannelPointRedeem extends Model {
     @Column({
         type: DataType.STRING(255),
     })
-    rewardTitle: string;
+    rewardTitle!: string;
 
     /**
      * The cost of the reward that was redeemed.
@@ -106,7 +106,7 @@ export default class ChannelPointRedeem extends Model {
     @Column({
         type: DataType.INTEGER,
     })
-    rewardCost: number;
+    rewardCost!: number;
 
     /**
      * The description of the reward that was redeemed.
@@ -114,7 +114,7 @@ export default class ChannelPointRedeem extends Model {
     @Column({
         type: DataType.STRING(255),
     })
-    rewardPrompt: string;
+    rewardPrompt!: string;
 
     /**
      * The time when the user redeemed the reward.
@@ -122,7 +122,7 @@ export default class ChannelPointRedeem extends Model {
     @Column({
         type: DataType.DATE,
     })
-    redemptionDate: Date;
+    redemptionDate!: Date;
 
     /**
      * Saves the event record into the database as per the mapping results required
@@ -153,8 +153,8 @@ export default class ChannelPointRedeem extends Model {
 }
 
 class ChannelReward {
-    id: string;
-    title: string;
-    cost: number;
-    prompt: string;
+    id!: string;
+    title!: string;
+    cost!: number;
+    prompt!: string;
 }

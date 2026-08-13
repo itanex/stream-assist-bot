@@ -82,9 +82,9 @@ export class ShoutOutCommand implements ICommandHandler {
                 const diff = when.diff(dayjs(), `day`);
 
                 if (Math.abs(diff) < 10) {
-                    await this.chatClient.say(channel, `@${user.displayName} was last streaming '${channelDetails.gameName}' ${when.fromNow()} - ${link}`);
+                    await this.chatClient.say(channel, `@${user.displayName} was last streaming '${channelDetails!.gameName}' ${when.fromNow()} - ${link}`);
                 } else {
-                    await this.chatClient.say(channel, `@${user.displayName} was last streaming '${channelDetails.gameName}' - ${link}`);
+                    await this.chatClient.say(channel, `@${user.displayName} was last streaming '${channelDetails!.gameName}' - ${link}`);
                 }
             } else {
                 await this.chatClient.say(channel, `Check out @${user.displayName} at ${link}`);

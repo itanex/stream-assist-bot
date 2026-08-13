@@ -7,7 +7,7 @@ import { LurkingUsers, StreamEventRecord } from '../../database/index.js';
 @injectable()
 export default class StreamEventHandler {
     /** NodeJS.Timeout Reference */
-    static clearTimeoutRef = null;
+    static clearTimeoutRef: NodeJS.Timeout | null = null;
 
     constructor(
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
@@ -30,7 +30,9 @@ export default class StreamEventHandler {
             // Clean up lurking users on fresh stream...
             const lastStream = await StreamEventRecord.getLastStream(event.broadcasterId);
 
-            await LurkingUsers.setAllUsersToUnlurk(lastStream.endDate);
+            if (lastStream) {
+                await LurkingUsers.setAllUsersToUnlurk(lastStream.endDate);
+            }
         }
 
         return StreamEventRecord

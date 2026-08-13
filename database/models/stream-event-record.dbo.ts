@@ -16,7 +16,7 @@ export default class StreamEventRecord extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    streamId: string;
+    streamId!: string;
 
     /**
      * The type of the stream going live.
@@ -24,7 +24,7 @@ export default class StreamEventRecord extends Model {
     @Column({
         type: DataType.STRING(20),
     })
-    type: string;
+    type!: string;
 
     /**
      * The date and time when the stream was started.
@@ -33,7 +33,7 @@ export default class StreamEventRecord extends Model {
         type: DataType.DATE,
         allowNull: false,
     })
-    startDate: Date;
+    startDate!: Date;
 
     /**
      * The date and time when the stream was ended.
@@ -50,7 +50,7 @@ export default class StreamEventRecord extends Model {
     @Column({
         type: DataType.STRING(20),
     })
-    broadcasterId: string;
+    broadcasterId!: string;
 
     /**
      * The name of the broadcaster.
@@ -58,7 +58,7 @@ export default class StreamEventRecord extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    broadcasterName: string;
+    broadcasterName!: string;
 
     /**
      * The display name of the broadcaster.
@@ -66,14 +66,14 @@ export default class StreamEventRecord extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    broadcasterDisplayName: string;
+    broadcasterDisplayName!: string;
 
     /**
      * Gets the last stream in the DB for the provided broadcaster
      * @param broadcasterId the broadcaster to get the stream record of
      * @returns the found stream record
      */
-    static async getLastStream(broadcasterId: string): Promise<StreamEventRecord> {
+    static async getLastStream(broadcasterId: string): Promise<StreamEventRecord | null> {
         return this
             .findOne({
                 where: {
@@ -94,7 +94,7 @@ export default class StreamEventRecord extends Model {
             streamId: event.id,
             type: event.type,
             startDate: event.startDate,
-            endDate: null,
+            endDate: null!,
             broadcasterId: event.broadcasterId,
             broadcasterName: event.broadcasterName,
             broadcasterDisplayName: event.broadcasterDisplayName,

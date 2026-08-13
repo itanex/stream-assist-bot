@@ -15,7 +15,7 @@ export default class FollowEvent extends Model {
     @Column({
         type: DataType.DATE,
     })
-    followDate: Date;
+    followDate!: Date;
 
     /**
      * The ID of the broadcaster.
@@ -23,7 +23,7 @@ export default class FollowEvent extends Model {
     @Column({
         type: DataType.STRING(20),
     })
-    broadcasterId: string;
+    broadcasterId!: string;
 
     /**
      * The name of the broadcaster.
@@ -31,7 +31,7 @@ export default class FollowEvent extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    broadcasterName: string;
+    broadcasterName!: string;
 
     /**
      * The display name of the broadcaster.
@@ -39,7 +39,7 @@ export default class FollowEvent extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    broadcasterDisplayName: string;
+    broadcasterDisplayName!: string;
 
     /**
      * The ID of the following user.
@@ -47,7 +47,7 @@ export default class FollowEvent extends Model {
     @Column({
         type: DataType.STRING(20),
     })
-    userId: string;
+    userId!: string;
 
     /**
      * The name of the following user.
@@ -55,7 +55,7 @@ export default class FollowEvent extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    userName: string;
+    userName!: string;
 
     /**
      * The display name of the following user.
@@ -63,7 +63,7 @@ export default class FollowEvent extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    userDisplayName: string;
+    userDisplayName!: string;
 
     /**
      * Records the event of a user following the specific channel (broadcaster)

@@ -1,11 +1,7 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
-import { ChatClient, ChatUser } from '@twurple/chat';
-import { Container } from 'inversify';
-import winston from 'winston';
+import { ChatUser } from '@twurple/chat';
 import { mockChatClient, mockLogger } from '../../tests/common.mocks.js';
-import InjectionTypes from '../../dependency-management/types.js';
-import { ICommandHandler } from './iCommandHandler.js';
 import { DiceCommand, RollResult } from './diceCommand.js';
 
 describe('Dice Command Tests', () => {
@@ -14,30 +10,15 @@ describe('Dice Command Tests', () => {
     const message = 'TestMessage';
     const user = <ChatUser>{ displayName: 'TestUser' };
 
-    const container: Container = new Container();
-    let expectedChatClient: ChatClient;
-    let expectedLogger: winston.Logger;
+    let subject: DiceCommand;
 
     beforeEach(() => {
         jest.resetAllMocks();
-        container.unbindAll();
-        container
-            .bind<ChatClient>(ChatClient)
-            .toConstantValue(mockChatClient);
 
-        container
-            .bind<winston.Logger>(InjectionTypes.Logger)
-            .toConstantValue(mockLogger);
-
-        container
-            .bind<ICommandHandler>(InjectionTypes.CommandHandlers)
-            .to(DiceCommand);
-
-        expectedChatClient = container
-            .get(ChatClient);
-
-        expectedLogger = container
-            .get<winston.Logger>(InjectionTypes.Logger);
+        subject = new DiceCommand(
+            mockChatClient,
+            mockLogger,
+        );
     });
 
     describe('should provide results of dice rolls', () => {
@@ -46,12 +27,8 @@ describe('Dice Command Tests', () => {
             [['2d6', '2', '6'], [2, 6], { rolls: [1, 3], total: 4 }],
         ])(`input: '%s', '%s'`, async (args: string[], call: number[], rollDiceResult: RollResult) => {
             // Arrange
-            const subject = container
-                .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
-                .find(x => x.constructor.name === `${DiceCommand.name}`);
-
             // override private method so we can have a consistent assertion
-            subject['rollDice'] = jest.fn().mockReturnValue(rollDiceResult);
+            subject['rollDice'] = jest.fn<DiceCommand['rollDice']>().mockReturnValue(rollDiceResult);
 
             // Act
             await subject.handle(channel, command, user, message, args);
@@ -60,13 +37,13 @@ describe('Dice Command Tests', () => {
             expect(subject['rollDice'])
                 .toHaveBeenCalledWith(call[0], call[1]);
 
-            expect(expectedChatClient.say)
+            expect(mockChatClient.say)
                 .toHaveBeenCalledTimes(1);
-            expect(expectedChatClient.say)
+            expect(mockChatClient.say)
                 .toHaveBeenCalledWith(channel, expect.stringContaining(`[ ${rollDiceResult.rolls.join(', ')} ]`));
-            expect(expectedChatClient.say)
+            expect(mockChatClient.say)
                 .toHaveBeenCalledWith(channel, expect.stringContaining(`total ${rollDiceResult.total}`));
-            expect(expectedLogger.info)
+            expect(mockLogger.info)
                 .toHaveBeenCalledWith(expect
                     .stringMatching(`(?=.*\\b${command}\\b)(?=.*\\b${channel}\\b)(?=.*\\b${user.displayName}\\b)(?=.*\\b${message}\\b)`));
         });
@@ -74,10 +51,6 @@ describe('Dice Command Tests', () => {
 
     it('should create (private)RollResult for provided values', () => {
         // Arrange
-        const subject = container
-            .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
-            .find(x => x.constructor.name === `${DiceCommand.name}`);
-
         // Act
         const actual: RollResult = subject['rollDice'](2, 6);
 

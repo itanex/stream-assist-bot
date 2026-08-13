@@ -13,7 +13,7 @@ export interface IOverlayServer {
 
 @injectable()
 export default class OverlayServer implements IOverlayServer {
-    private server: Server;
+    private server!: Server;
     /** Configured Web Host */
     private host: string;
     /** Configured Web Port */
@@ -32,7 +32,7 @@ export default class OverlayServer implements IOverlayServer {
             let result: any = null;
             try {
                 // eslint-disable-next-line no-cond-assign
-                if (result = req.url.match(/\/audio\/([a-f0-9]{32}\.[a-z]{2})/)) {
+                if (result = req.url!.match(/\/audio\/([a-f0-9]{32}\.[a-z]{2})/)) {
                     const filePath = path.resolve(process.cwd(), this.rootPath, `${result[1]}.mp3`);
 
                     if (fs.existsSync(filePath)) {
@@ -46,12 +46,12 @@ export default class OverlayServer implements IOverlayServer {
                     res.end();
 
                     // eslint-disable-next-line no-cond-assign
-                } else if (result = req.url.match(/([a-z0-9\\.]{1,32}.css)/)) {
+                } else if (result = req.url!.match(/([a-z0-9\\.]{1,32}.css)/)) {
                     res.setHeader('Content-Type', 'text/css');
                     res.statusCode = 200;
                     res.end(fs.readFileSync(`${import.meta.dirname}/${result[1]}`));
                     // eslint-disable-next-line no-cond-assign
-                } else if (result = req.url.match(/([a-z0-9\\.]{1,32}.js)/)) {
+                } else if (result = req.url!.match(/([a-z0-9\\.]{1,32}.js)/)) {
                     res.setHeader('Content-Type', 'text/js');
                     res.statusCode = 200;
                     res.end(fs.readFileSync(`${import.meta.dirname}/${result[1]}`));

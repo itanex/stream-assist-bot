@@ -27,7 +27,7 @@
     "sequelize-typescript": "2.1.6",
     "tedious": "19.2.1",
     "tsx": "4.23.11",
-    "typescript": "5.9.2",
+    "typescript": "^6.0.3",
     "uuid": "11.1.1",
     "winston": "3.13.0",
     "winston-daily-rotate-file": "5.0.0",

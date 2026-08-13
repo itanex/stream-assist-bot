@@ -15,7 +15,7 @@ export default class RaidEvent extends Model {
     @Column({
         type: DataType.DATE,
     })
-    raidDate: Date;
+    raidDate!: Date;
 
     /**
      * The amount of viewers in the raid.
@@ -23,7 +23,7 @@ export default class RaidEvent extends Model {
     @Column({
         type: DataType.INTEGER,
     })
-    viewers: number;
+    viewers!: number;
 
     /**
      * The ID of the broadcaster.
@@ -31,7 +31,7 @@ export default class RaidEvent extends Model {
     @Column({
         type: DataType.STRING(20),
     })
-    raidingBroadcasterId: string;
+    raidingBroadcasterId!: string;
 
     /**
      * The name of the broadcaster.
@@ -39,7 +39,7 @@ export default class RaidEvent extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    raidingBroadcasterName: string;
+    raidingBroadcasterName!: string;
 
     /**
      * The display name of the broadcaster.
@@ -47,7 +47,7 @@ export default class RaidEvent extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    raidingBroadcasterDisplayName: string;
+    raidingBroadcasterDisplayName!: string;
 
     /**
      * The ID of the raiding user.
@@ -55,7 +55,7 @@ export default class RaidEvent extends Model {
     @Column({
         type: DataType.STRING(20),
     })
-    raidedBroadcasterId: string;
+    raidedBroadcasterId!: string;
 
     /**
      * The name of the raiding user.
@@ -63,7 +63,7 @@ export default class RaidEvent extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    raidedBroadcasterName: string;
+    raidedBroadcasterName!: string;
 
     /**
      * The display name of the raiding user.
@@ -71,7 +71,7 @@ export default class RaidEvent extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    raidedBroadcasterDisplayName: string;
+    raidedBroadcasterDisplayName!: string;
 
     /**
      * Records the event of the raiding broadcaster and the raided broadcaster

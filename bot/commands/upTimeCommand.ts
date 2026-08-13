@@ -33,9 +33,9 @@ export class UpTimeCommand implements ICommandHandler {
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         const broadcaster = await this.broadcaster.getBroadcaster();
         const stream = await broadcaster.getStream();
-        const startDate = dayjs(stream.startDate);
+        const startDate = dayjs(stream!.startDate);
 
-        if (stream.type === 'live') {
+        if (stream!.type === 'live') {
             await this.chatClient.say(channel, `${(broadcaster.displayName)} has been online for ${startDate.fromNow(true)}`);
         } else {
             await this.chatClient.say(channel, `${(broadcaster.displayName)} has been offline for ${startDate.fromNow(true)}`);

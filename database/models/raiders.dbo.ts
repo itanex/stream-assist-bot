@@ -27,7 +27,7 @@ export default class Raiders extends Model {
      * Gets the last raid record from the database
      * @returns the raider record of the last raid
      */
-    static async getLastRaid(): Promise<Raiders> {
+    static async getLastRaid(): Promise<Raiders | null> {
         return this
             .findOne({
                 order: [['time', 'DESC']],
