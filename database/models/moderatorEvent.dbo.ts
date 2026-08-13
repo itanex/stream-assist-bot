@@ -12,13 +12,13 @@ export default class ModeratorEvent extends Model {
     @Column({
         type: DataType.DATE,
     })
-    addDate: Date;
+    addDate!: Date;
 
     @Column({
         type: DataType.DATE,
         allowNull: true,
     })
-    removeDate: Date;
+    removeDate!: Date;
 
     /**
      * The ID of the broadcaster.
@@ -26,7 +26,7 @@ export default class ModeratorEvent extends Model {
     @Column({
         type: DataType.STRING(20),
     })
-    broadcasterId: string;
+    broadcasterId!: string;
 
     /**
      * The name of the broadcaster.
@@ -34,7 +34,7 @@ export default class ModeratorEvent extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    broadcasterName: string;
+    broadcasterName!: string;
 
     /**
      * The display name of the broadcaster.
@@ -42,7 +42,7 @@ export default class ModeratorEvent extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    broadcasterDisplayName: string;
+    broadcasterDisplayName!: string;
 
     /**
      * The ID of the user target of the moderator event.
@@ -50,7 +50,7 @@ export default class ModeratorEvent extends Model {
     @Column({
         type: DataType.STRING(20),
     })
-    userId: string;
+    userId!: string;
 
     /**
      * The name of the user target of the moderator event.
@@ -58,7 +58,7 @@ export default class ModeratorEvent extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    userName: string;
+    userName!: string;
 
     /**
      * The display name of the user target of the moderator event.
@@ -66,7 +66,7 @@ export default class ModeratorEvent extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    userDisplayName: string;
+    userDisplayName!: string;
 
     /**
      * Maps add moderator event to DBO and saves a new event in the database
@@ -76,7 +76,7 @@ export default class ModeratorEvent extends Model {
     static async addUserAsMod(event: EventSubChannelModeratorEvent): Promise<ModeratorEvent> {
         const record: Partial<ModeratorEvent> = {
             addDate: new Date(),
-            removeDate: null,
+            removeDate: null!,
             broadcasterId: event.broadcasterId,
             broadcasterName: event.broadcasterName,
             broadcasterDisplayName: event.broadcasterDisplayName,

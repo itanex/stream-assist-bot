@@ -93,7 +93,7 @@ export default class DeathCounts extends Model {
             order by "createdAt" Asc
         `;
 
-        return this.sequelize.query<DeathCounts>(lastStreamDeaths, {
+        return this.sequelize!.query<DeathCounts>(lastStreamDeaths, {
             type: QueryTypes.SELECT,
             bind: {
                 streamId,

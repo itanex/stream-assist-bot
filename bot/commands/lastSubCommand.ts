@@ -41,24 +41,24 @@ export class LastSubCommand implements ICommandHandler {
         await Subscribers
             .getLastSubscriber()
             .then(async record => {
-                const lastDate = dayjs(record.createdAt).fromNow();
+                const lastDate = dayjs(record!.createdAt).fromNow();
 
                 // eslint-disable-next-line default-case
-                switch (record.type) {
+                switch (record!.type) {
                     case SubscriptionType.NewSub:
-                        await this.chatClient.say(channel, `${record.subscriber}, subscribed as a new member of the colony ${lastDate}`);
+                        await this.chatClient.say(channel, `${record!.subscriber}, subscribed as a new member of the colony ${lastDate}`);
                         break;
                     case SubscriptionType.PrimeSub:
-                        await this.chatClient.say(channel, `${record.subscriber}, subscibed using their Prime Sub ${lastDate}`);
+                        await this.chatClient.say(channel, `${record!.subscriber}, subscibed using their Prime Sub ${lastDate}`);
                         break;
                     case SubscriptionType.ReSub:
-                        await this.chatClient.say(channel, `${record.subscriber} continued their colony membership ${lastDate}`);
+                        await this.chatClient.say(channel, `${record!.subscriber} continued their colony membership ${lastDate}`);
                         break;
                     case SubscriptionType.GiftSub:
-                        await this.chatClient.say(channel, `${record.gift.gifter} gifted, ${record.subscriber}, recruiting them into the colony ${lastDate}`);
+                        await this.chatClient.say(channel, `${record!.gift.gifter} gifted, ${record!.subscriber}, recruiting them into the colony ${lastDate}`);
                         break;
                     case SubscriptionType.CommunitySub:
-                        await this.chatClient.say(channel, `${record.gift.gifter} gifted ${record.gift.giftCount} memberships into the colony ${lastDate}`);
+                        await this.chatClient.say(channel, `${record!.gift.gifter} gifted ${record!.gift.giftCount} memberships into the colony ${lastDate}`);
                         break;
                 }
             });

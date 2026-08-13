@@ -13,17 +13,17 @@ export default class CheerEvent extends Model {
     @Column({
         type: DataType.INTEGER,
     })
-    bits: Number;
+    bits!: Number;
 
     @Column({
         type: DataType.BOOLEAN,
     })
-    isAnonymous: boolean;
+    isAnonymous!: boolean;
 
     @Column({
         type: DataType.STRING(255),
     })
-    message: string;
+    message!: string;
 
     /**
      * The ID of the broadcaster.
@@ -31,7 +31,7 @@ export default class CheerEvent extends Model {
     @Column({
         type: DataType.STRING(20),
     })
-    broadcasterId: string;
+    broadcasterId!: string;
 
     /**
      * The name of the broadcaster.
@@ -39,7 +39,7 @@ export default class CheerEvent extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    broadcasterName: string;
+    broadcasterName!: string;
 
     /**
      * The display name of the broadcaster.
@@ -47,7 +47,7 @@ export default class CheerEvent extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    broadcasterDisplayName: string;
+    broadcasterDisplayName!: string;
 
     /**
      * The ID of the user.
@@ -55,7 +55,7 @@ export default class CheerEvent extends Model {
     @Column({
         type: DataType.STRING(20),
     })
-    userId: string;
+    userId!: string;
 
     /**
      * The name of the user.
@@ -63,7 +63,7 @@ export default class CheerEvent extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    userName: string;
+    userName!: string;
 
     /**
      * The display name of the user.
@@ -71,7 +71,7 @@ export default class CheerEvent extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    userDisplayName: string;
+    userDisplayName!: string;
 
     /**
      * Saves the event record into the database as per the mapping results required
@@ -86,9 +86,9 @@ export default class CheerEvent extends Model {
             broadcasterId: event.broadcasterId,
             broadcasterName: event.broadcasterName,
             broadcasterDisplayName: event.broadcasterDisplayName,
-            userId: event.userId,
-            userName: event.userName,
-            userDisplayName: event.userDisplayName,
+            userId: event.userId!,
+            userName: event.userName!,
+            userDisplayName: event.userDisplayName!,
         };
 
         return CheerEvent

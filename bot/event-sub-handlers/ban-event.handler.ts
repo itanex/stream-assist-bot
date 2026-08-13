@@ -27,8 +27,8 @@ export default class BanEventHandler {
             .catch((reason: any) => {
                 this.logger.error(`Unable to store Unban Event in DB >> ${reason}`);
             })
-            .then((record: BanEvent) => {
-                this.logger.info(`Unban Event: ${record.userDisplayName} - ${record.reason}`);
+            .then((record: BanEvent | void) => {
+                this.logger.info(`Unban Event: ${record!.userDisplayName} - ${record!.reason}`);
             });
     }
 }

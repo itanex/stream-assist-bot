@@ -15,7 +15,7 @@ export default class BanEvent extends Model {
     @Column({
         type: DataType.STRING(255),
     })
-    reason: string;
+    reason!: string;
 
     /**
      * The date and time when the user was banned or put in a timeout.
@@ -23,7 +23,7 @@ export default class BanEvent extends Model {
     @Column({
         type: DataType.DATE,
     })
-    startDate: Date;
+    startDate!: Date;
 
     /**
      * If it is a timeout, the date and time when the timeout will end. Will be null if permanent ban.
@@ -31,7 +31,7 @@ export default class BanEvent extends Model {
     @Column({
         type: DataType.DATE,
     })
-    endDate: Date;
+    endDate!: Date;
 
     /**
      * Whether the ban is permanent.
@@ -39,7 +39,7 @@ export default class BanEvent extends Model {
     @Column({
         type: DataType.BOOLEAN,
     })
-    isPermanent: boolean;
+    isPermanent!: boolean;
 
     /**
     * The ID of the moderator.
@@ -47,7 +47,7 @@ export default class BanEvent extends Model {
     @Column({
         type: DataType.STRING(20),
     })
-    moderatorId: string;
+    moderatorId!: string;
 
     /**
     * The name of the moderator.
@@ -55,7 +55,7 @@ export default class BanEvent extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    moderatorName: string;
+    moderatorName!: string;
 
     /**
     * The display name of the moderator.
@@ -63,7 +63,7 @@ export default class BanEvent extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    moderatorDisplayName: string;
+    moderatorDisplayName!: string;
 
     /**
     * The ID of the broadcaster.
@@ -71,7 +71,7 @@ export default class BanEvent extends Model {
     @Column({
         type: DataType.STRING(20),
     })
-    broadcasterId: string;
+    broadcasterId!: string;
 
     /**
     * The name of the broadcaster.
@@ -79,7 +79,7 @@ export default class BanEvent extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    broadcasterName: string;
+    broadcasterName!: string;
 
     /**
     * The display name of the broadcaster.
@@ -87,7 +87,7 @@ export default class BanEvent extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    broadcasterDisplayName: string;
+    broadcasterDisplayName!: string;
 
     /**
     * The ID of the user being banned/unbanned.
@@ -95,7 +95,7 @@ export default class BanEvent extends Model {
     @Column({
         type: DataType.STRING(20),
     })
-    userId: string;
+    userId!: string;
 
     /**
     * The name of the user being banned/unbanned.
@@ -103,7 +103,7 @@ export default class BanEvent extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    userName: string;
+    userName!: string;
 
     /**
     * The display name of the user being banned/unbanned.
@@ -111,7 +111,7 @@ export default class BanEvent extends Model {
     @Column({
         type: DataType.STRING(40),
     })
-    userDisplayName: string;
+    userDisplayName!: string;
 
     /**
      * Saves the Event Sub Ban Event into the database
@@ -122,7 +122,7 @@ export default class BanEvent extends Model {
         const record: Partial<BanEvent> = {
             reason: event.reason,
             startDate: event.startDate,
-            endDate: event.endDate,
+            endDate: event.endDate!,
             isPermanent: event.isPermanent,
             moderatorId: event.moderatorId,
             moderatorName: event.moderatorName,
@@ -147,7 +147,7 @@ export default class BanEvent extends Model {
     static async saveUnbanEvent(event: EventSubChannelUnbanEvent): Promise<BanEvent> {
         const record: Partial<BanEvent> = {
             reason: 'SYS-UNBAN - Event',
-            startDate: null,
+            startDate: null!,
             endDate: new Date(),
             isPermanent: false,
             moderatorId: event.moderatorId,
