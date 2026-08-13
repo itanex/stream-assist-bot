@@ -13,6 +13,7 @@ export interface ICommandHandler {
     commandName?: CommandName;
     /** The timeout in seconds for this command */
     timeout: number;
+    leadMod?: boolean;
     mod: boolean;
     vip: boolean;
     artist: boolean;
