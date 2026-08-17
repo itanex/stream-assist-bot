@@ -9,21 +9,21 @@ import {
     type CommandTextUpdateResult,
     type CommandTextRemoveResult,
     type CommandTextRestoreResult,
-} from './command-response.service.js';
+} from './command-response.repository.js';
 import { mockLogger } from '../../tests/common.mocks.js';
 import { CommandResponse } from '../../database/index.js';
 
-type CommandResponseServiceModule = typeof import('./command-response.service.js');
+type CommandResponseRepositoryModule = typeof import('./command-response.repository.js');
 type MockDefaultResponses = { testResponse: string };
 type MockCommandFamilies = { testCommand: string };
 
-jest.unstable_mockModule('./default-responses', () => ({
+jest.unstable_mockModule('../utilities/default-responses', () => ({
     __esModule: true,
     CommandFamilies: { testCommand: 'testcommand' },
     defaultResponses: { testResponse: 'Test about response' },
 }));
 
-describe('CommandResponse.Service (postgres)', () => {
+describe('CommandResponse.Repository (postgres)', () => {
     let container: StartedPostgreSqlContainer;
     let databaseConfiguration: IDatabaseConfiguration;
 
@@ -36,11 +36,11 @@ describe('CommandResponse.Service (postgres)', () => {
         'variant2',
     ];
 
-    let CommandResponseService: CommandResponseServiceModule['default'];
+    let CommandResponseRepository: CommandResponseRepositoryModule['default'];
     let CommandFamilies: jest.MockedObject<MockCommandFamilies>;
     let defaultResponses: jest.MockedObject<MockDefaultResponses>;
 
-    let subject: InstanceType<CommandResponseServiceModule['default']>;
+    let subject: InstanceType<CommandResponseRepositoryModule['default']>;
 
     /** Utility to generate variant based text for testing */
     const textFn = (cmd: string, variant: string = defaultVariant) => `test-text: ${cmd}.${variant}`;
@@ -77,12 +77,12 @@ describe('CommandResponse.Service (postgres)', () => {
             port: container.getPort(),
         };
 
-        ({ default: CommandResponseService } = await import('./command-response.service.js'));
+        ({ default: CommandResponseRepository } = await import('./command-response.repository.js'));
 
         ({
             defaultResponses,
             CommandFamilies,
-        } = await import('./default-responses.js') as unknown as {
+        } = await import('../utilities/default-responses.js') as unknown as {
             defaultResponses: MockDefaultResponses;
             CommandFamilies: MockCommandFamilies;
         });
@@ -102,7 +102,7 @@ describe('CommandResponse.Service (postgres)', () => {
         beforeAll(async () => {
             database = new Database(databaseConfiguration, mockLogger);
             await database.initialize();
-            subject = new CommandResponseService(mockLogger);
+            subject = new CommandResponseRepository(mockLogger);
         });
 
         afterAll(async () => {

@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { ChatUser } from '@twurple/chat';
-import { mockChatClient, mockLogger, mockCommandResponseService } from '../../tests/common.mocks.js';
+import { mockChatClient, mockLogger, mockCommandResponseRepository } from '../../tests/common.mocks.js';
 import { AboutCommand } from './aboutCommand.js';
 import { defaultResponses } from '../utilities/default-responses.js';
 
@@ -20,14 +20,14 @@ describe('About Command Tests', () => {
 
         subject = new AboutCommand(
             mockChatClient,
-            mockCommandResponseService,
+            mockCommandResponseRepository,
             mockLogger,
         );
     });
 
     it('says the configured text in chat', async () => {
         // Arrange
-        mockCommandResponseService
+        mockCommandResponseRepository
             .getCommandText
             .mockReturnValue(configuredText);
 
@@ -41,7 +41,7 @@ describe('About Command Tests', () => {
 
     it('says the default text and logs a warning when no text is configured', async () => {
         // Arrange
-        mockCommandResponseService
+        mockCommandResponseRepository
             .getCommandText
             .mockReturnValue(undefined);
 

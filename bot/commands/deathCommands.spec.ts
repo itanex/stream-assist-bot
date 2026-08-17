@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { HelixStream, HelixStreamApi } from '@twurple/api';
 import { ChatUser } from '@twurple/chat';
-import { mockChatClient, mockApiClient, mockLogger, mockCommandResponseService } from '../../tests/common.mocks.js';
+import { mockChatClient, mockApiClient, mockLogger, mockCommandResponseRepository } from '../../tests/common.mocks.js';
 import { DeathCommand, DeathCountCommand, LastDeathCountCommmand } from './deathCommands.js';
 import { DeathCounts } from '../../database/index.js';
 import { transientKeywords } from '../utilities/default-responses.js';
@@ -174,7 +174,7 @@ describe('Death Commands Tests', () => {
             subject = new LastDeathCountCommmand(
                 mockChatClient,
                 mockApiClient,
-                mockCommandResponseService,
+                mockCommandResponseRepository,
                 mockLogger,
             );
         });
@@ -196,7 +196,7 @@ describe('Death Commands Tests', () => {
                 DeathCounts.getLastStreamDeathCount = jest.fn<() => Promise<DeathCounts[]>>()
                     .mockResolvedValue(records);
 
-                mockCommandResponseService
+                mockCommandResponseRepository
                     .getCommandText
                     .mockReturnValue(`%${transientKeywords.streamdate}%, %${transientKeywords.deathtotal}%, %${transientKeywords.streamcategory}%`);
 
@@ -211,7 +211,7 @@ describe('Death Commands Tests', () => {
                 expect(DeathCounts.getLastStreamDeathCount)
                     .toHaveBeenCalledWith(streamData.id);
 
-                expect(mockCommandResponseService.getCommandText)
+                expect(mockCommandResponseRepository.getCommandText)
                     .toHaveBeenCalledWith(subject.commandName);
                 expect(mockChatClient.say)
                     .toHaveBeenCalledTimes(1);

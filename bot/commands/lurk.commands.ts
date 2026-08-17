@@ -4,7 +4,7 @@ import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import { CommandName, defaultResponses, TransientContext } from '../utilities/default-responses.js';
-import CommandResponseService from '../utilities/command-response.service.js';
+import CommandResponseRepository from '../repositories/command-response.repository.js';
 import { templateResolver } from '../utilities/template-resolver.js';
 import LurkRespository from '../utilities/lurk.respository.js';
 
@@ -25,7 +25,7 @@ export class LurkCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
+        @inject(CommandResponseRepository) private commandResponseRepository: CommandResponseRepository,
         @inject(LurkRespository) private lurkRespository: LurkRespository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
@@ -35,7 +35,7 @@ export class LurkCommand implements ICommandHandler {
         const [user, created] = await this.lurkRespository.setUserToLurk(userstate);
 
         if (created) {
-            const result = this.commandResponseService.getCommandText(this.commandName);
+            const result = this.commandResponseRepository.getCommandText(this.commandName);
 
             const context: TransientContext = {
                 speakinguser: user.displayName,
@@ -66,7 +66,7 @@ export class UnLurkCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
+        @inject(CommandResponseRepository) private commandResponseRepository: CommandResponseRepository,
         @inject(LurkRespository) private lurkRespository: LurkRespository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
@@ -76,7 +76,7 @@ export class UnLurkCommand implements ICommandHandler {
         const unlurkedUser = await this.lurkRespository.setUserToUnlurk(userstate);
 
         if (unlurkedUser) {
-            const result = this.commandResponseService.getCommandText(this.commandName);
+            const result = this.commandResponseRepository.getCommandText(this.commandName);
             const context: TransientContext = {
                 speakinguser: unlurkedUser.displayName,
                 lurkduration: unlurkedUser.duration().humanize(),

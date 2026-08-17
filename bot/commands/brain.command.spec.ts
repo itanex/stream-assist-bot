@@ -3,7 +3,7 @@ import { jest } from '@jest/globals';
 import { ChatUser } from '@twurple/chat';
 import {
     mockChatClient,
-    mockCommandResponseService,
+    mockCommandResponseRepository,
     mockLogger,
 } from '../../tests/common.mocks.js';
 import BrainCommand from './brain.command.js';
@@ -22,7 +22,7 @@ describe('Brain Command Tests', () => {
 
         subject = new BrainCommand(
             mockChatClient,
-            mockCommandResponseService,
+            mockCommandResponseRepository,
             mockLogger,
         );
     });
@@ -32,7 +32,7 @@ describe('Brain Command Tests', () => {
             // Arrange
             const args: string[] = [];
 
-            mockCommandResponseService
+            mockCommandResponseRepository
                 .getCommandText
                 .mockReturnValue(`%${transientKeywords.targetuser}%, %${transientKeywords.percent}%`);
 
@@ -50,7 +50,7 @@ describe('Brain Command Tests', () => {
                 'RandomChannelUser',
             ];
 
-            mockCommandResponseService
+            mockCommandResponseRepository
                 .getCommandText
                 .mockReturnValue(`%${transientKeywords.targetuser}%, %${transientKeywords.percent}%`);
 
@@ -66,7 +66,7 @@ describe('Brain Command Tests', () => {
             // Arrange
             const args: string[] = [];
 
-            mockCommandResponseService
+            mockCommandResponseRepository
                 .getCommandText
                 .mockReturnValue(undefined);
 

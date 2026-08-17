@@ -5,7 +5,7 @@ import { ChatUser } from '@twurple/chat';
 import {
     mockApiClient,
     mockChatClient,
-    mockCommandResponseService,
+    mockCommandResponseRepository,
     mockLogger,
 } from '../../tests/common.mocks.js';
 import { AccountAgeCommand } from './accountAgeCommand.js';
@@ -25,7 +25,7 @@ describe('Account Age Command Tests', () => {
         subject = new AccountAgeCommand(
             mockChatClient,
             mockApiClient,
-            mockCommandResponseService,
+            mockCommandResponseRepository,
             mockLogger,
         );
     });
@@ -49,7 +49,7 @@ describe('Account Age Command Tests', () => {
                 .getUserByName
                 .mockResolvedValue(targetUser);
 
-            mockCommandResponseService
+            mockCommandResponseRepository
                 .getCommandText
                 .mockReturnValue(`%${transientKeywords.targetuser}%, %${transientKeywords.accountage}%`);
 
@@ -60,7 +60,7 @@ describe('Account Age Command Tests', () => {
 
             // Assert
             expect(mockApiClient.users.getUserByName).toHaveBeenCalledWith(targetUser.displayName);
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName);
+            expect(mockCommandResponseRepository.getCommandText).toHaveBeenCalledWith(subject.commandName);
 
             expect(mockChatClient.say)
                 .toHaveBeenCalledWith(channel, expect.stringContaining(targetUser.displayName));
@@ -84,7 +84,7 @@ describe('Account Age Command Tests', () => {
                 .getUserByName
                 .mockResolvedValue(targetUser);
 
-            mockCommandResponseService
+            mockCommandResponseRepository
                 .getCommandText
                 .mockReturnValue(`%${transientKeywords.targetuser}%, %${transientKeywords.accountage}%`);
 
@@ -95,7 +95,7 @@ describe('Account Age Command Tests', () => {
 
             // Assert
             expect(mockApiClient.users.getUserByName).toHaveBeenCalledWith(expectedApiClientParameter);
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName);
+            expect(mockCommandResponseRepository.getCommandText).toHaveBeenCalledWith(subject.commandName);
 
             expect(mockChatClient.say)
                 .toHaveBeenCalledWith(channel, expect.stringContaining(targetUser.displayName));
@@ -130,7 +130,7 @@ describe('Account Age Command Tests', () => {
                 .getUserByName
                 .mockResolvedValue(targetUser);
 
-            mockCommandResponseService
+            mockCommandResponseRepository
                 .getCommandText
                 .mockReturnValue(undefined);
 
@@ -139,7 +139,7 @@ describe('Account Age Command Tests', () => {
 
             // Assert
             expect(mockApiClient.users.getUserByName).toHaveBeenCalled();
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName);
+            expect(mockCommandResponseRepository.getCommandText).toHaveBeenCalledWith(subject.commandName);
             expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(subject.commandName));
             expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
         });

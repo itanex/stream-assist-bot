@@ -7,7 +7,7 @@ import InjectionTypes from '../../dependency-management/types.js';
 import { type Environment } from '../../configurations/environment.js';
 import Timespan, { getAgeReport } from '../utilities/timeSpan.js';
 import { CommandName, TransientContext } from '../utilities/default-responses.js';
-import CommandResponseService from '../utilities/command-response.service.js';
+import CommandResponseRepository from '../repositories/command-response.repository.js';
 import { templateResolver } from '../utilities/template-resolver.js';
 import Broadcaster from '../utilities/broadcaster.js';
 
@@ -30,7 +30,7 @@ export class FollowAgeCommand implements ICommandHandler {
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(ApiClient) private apiClient: ApiClient,
         @inject(Broadcaster) private broadcaster: Broadcaster,
-        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
+        @inject(CommandResponseRepository) private commandResponseRepository: CommandResponseRepository,
         @inject(InjectionTypes.Environment) private environment: Environment,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
@@ -60,7 +60,7 @@ export class FollowAgeCommand implements ICommandHandler {
                 .getChannelFollowers(this.environment.twitchBot.broadcaster.id, followingUser.id);
 
             if (follower.data[0]) {
-                const result = this.commandResponseService.getCommandText(this.commandName);
+                const result = this.commandResponseRepository.getCommandText(this.commandName);
 
                 if (result) {
                     const context: TransientContext = {

@@ -3,7 +3,7 @@ import { ChatClient, ChatUser } from '@twurple/chat';
 import winston from 'winston';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import InjectionTypes from '../../dependency-management/types.js';
-import CommandResponseService from '../utilities/command-response.service.js';
+import CommandResponseRepository from '../repositories/command-response.repository.js';
 import { CommandName, TransientContext } from '../utilities/default-responses.js';
 import { templateResolver } from '../utilities/template-resolver.js';
 
@@ -24,13 +24,13 @@ export default class BrainCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
+        @inject(CommandResponseRepository) private commandResponseRepository: CommandResponseRepository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        const result = this.commandResponseService.getCommandText(this.commandName);
+        const result = this.commandResponseRepository.getCommandText(this.commandName);
 
         if (result) {
             const targetuser = args[0]

@@ -65,7 +65,7 @@ import OverlayServer, { IOverlayServer } from '../bot/overlay/overlay.server.js'
 import AuthenticationServer, { IAuthenticationServer } from '../bot/auth/auth.server.js';
 import StreamStateService from '../bot/utilities/stream-state.service.js';
 import JoinGreetingHandler from '../bot/handlers/join-greeting.handler.js';
-import CommandResponseService from '../bot/utilities/command-response.service.js';
+import CommandResponseRepository from '../bot/repositories/command-response.repository.js';
 import LurkRespository from '../bot/utilities/lurk.respository.js';
 
 const SAContainer = new Container();
@@ -75,7 +75,7 @@ SAContainer.bind<Environment>(InjectionTypes.Environment).toConstantValue(enviro
 
 SAContainer.bind<Broadcaster>(Broadcaster).toSelf().inSingletonScope();
 SAContainer.bind<StreamStateService>(StreamStateService).toSelf().inSingletonScope();
-SAContainer.bind<CommandResponseService>(CommandResponseService).toSelf().inSingletonScope();
+SAContainer.bind<CommandResponseRepository>(CommandResponseRepository).toSelf().inSingletonScope();
 SAContainer.bind<LurkRespository>(LurkRespository).toSelf().inSingletonScope();
 
 SAContainer.bind<IChatBot>(ChatBot).toSelf().inSingletonScope();

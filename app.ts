@@ -10,7 +10,7 @@ import OverlayServer, { IOverlayServer } from './bot/overlay/overlay.server.js';
 import AuthenticationServer, { IAuthenticationServer } from './bot/auth/auth.server.js';
 import { isUserAuthenticated } from './bot/auth/authProvider.js';
 import environment from './configurations/environment.js';
-import CommandResponseService from './bot/utilities/command-response.service.js';
+import CommandResponseRepository from './bot/repositories/command-response.repository.js';
 import pkg from './package.json' with { type: 'json' };
 
 const { name, version } = pkg;
@@ -24,7 +24,7 @@ class App {
         @inject(SocketServer) private socketServer: ISocketServer,
         @inject(OverlayServer) private overlayServer: IOverlayServer,
         @inject(AuthenticationServer) private authServer: IAuthenticationServer,
-        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
+        @inject(CommandResponseRepository) private commandResponseRepository: CommandResponseRepository,
         @inject(InjectionTypes.Logger) public logger: winston.Logger,
     ) {
         this.logger.info(`** Application initialized **`);
@@ -43,7 +43,7 @@ class App {
             this.scheduler.scheduleChatEvents(),
         ]);
 
-        await this.commandResponseService.initialize();
+        await this.commandResponseRepository.initialize();
 
         this.authServer.listen();
         this.overlayServer.listen();

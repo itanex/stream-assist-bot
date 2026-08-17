@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { ChatUser } from '@twurple/chat';
-import { mockChatClient, mockLogger, mockCommandResponseService } from '../../tests/common.mocks.js';
+import { mockChatClient, mockLogger, mockCommandResponseRepository } from '../../tests/common.mocks.js';
 import { SocialsCommand } from './socialsCommand.js';
 
 const messageFn = (
@@ -24,7 +24,7 @@ describe('Socials Command Tests', () => {
 
         subject = new SocialsCommand(
             mockChatClient,
-            mockCommandResponseService,
+            mockCommandResponseRepository,
             mockLogger,
         );
     });
@@ -38,7 +38,7 @@ describe('Socials Command Tests', () => {
             const result = subject.cooldownKey(args);
 
             // Assert
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName, args[0]);
+            expect(mockCommandResponseRepository.getCommandText).toHaveBeenCalledWith(subject.commandName, args[0]);
             expect(result).toBe(SocialsCommand.name);
         });
         it(`should present 'commandName' as the key (Unknown Variant)`, () => {
@@ -49,20 +49,20 @@ describe('Socials Command Tests', () => {
             const result = subject.cooldownKey(args);
 
             // Assert
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName, args[0]);
+            expect(mockCommandResponseRepository.getCommandText).toHaveBeenCalledWith(subject.commandName, args[0]);
             expect(result).toBe(SocialsCommand.name);
         });
         it('should present `commandName.variant` as the key (Known Variant)', () => {
             // Arrange
             const args = ['variant'];
-            mockCommandResponseService.getCommandText
+            mockCommandResponseRepository.getCommandText
                 .mockReturnValue('valid text...');
 
             // Act
             const result = subject.cooldownKey(args);
 
             // Assert
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName, args[0]);
+            expect(mockCommandResponseRepository.getCommandText).toHaveBeenCalledWith(subject.commandName, args[0]);
             expect(result).toBe(`${SocialsCommand.name}:${args[0]}`);
         });
     });
@@ -76,14 +76,14 @@ describe('Socials Command Tests', () => {
                 subcommand,
             ];
 
-            mockCommandResponseService.getCommandText
+            mockCommandResponseRepository.getCommandText
                 .mockReturnValue(response);
 
             // Act
             await subject.handle(channel, command, user, message, args);
 
             // Assert
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName, args[0]);
+            expect(mockCommandResponseRepository.getCommandText).toHaveBeenCalledWith(subject.commandName, args[0]);
             expect(mockChatClient.say).toHaveBeenCalledWith(channel, response);
             expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
         });
@@ -98,14 +98,14 @@ describe('Socials Command Tests', () => {
                 subcommand,
             ];
 
-            mockCommandResponseService.getCommandText
+            mockCommandResponseRepository.getCommandText
                 .mockReturnValue(response);
 
             // Act
             await subject.handle(channel, command, user, message, args);
 
             // Assert
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName, args[0]);
+            expect(mockCommandResponseRepository.getCommandText).toHaveBeenCalledWith(subject.commandName, args[0]);
             expect(mockChatClient.say).not.toHaveBeenCalled();
             expect(mockLogger.warn).toHaveBeenCalledWith(warnMessage, expect.anything());
             expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());

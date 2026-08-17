@@ -10,7 +10,7 @@ import InjectionTypes from '../../dependency-management/types.js';
 import { CommandTimeout } from '../types/CommandTimeout.js';
 import { DeathCounts } from '../../database/index.js';
 import { CommandName, TransientContext } from '../utilities/default-responses.js';
-import CommandResponseService from '../utilities/command-response.service.js';
+import CommandResponseRepository from '../repositories/command-response.repository.js';
 import { templateResolver } from '../utilities/template-resolver.js';
 
 dayjs.extend(localizedFormat);
@@ -144,7 +144,7 @@ export class LastDeathCountCommmand implements ICommandHandler {
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(ApiClient) private apiClient: ApiClient,
-        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
+        @inject(CommandResponseRepository) private commandResponseRepository: CommandResponseRepository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
@@ -156,7 +156,7 @@ export class LastDeathCountCommmand implements ICommandHandler {
             await DeathCounts
                 .getLastStreamDeathCount(stream.id)
                 .then(async records => {
-                    const result = this.commandResponseService.getCommandText(this.commandName);
+                    const result = this.commandResponseRepository.getCommandText(this.commandName);
                     if (result) {
                         const games = records
                             .map(record => `${record.game} (${record.deathCount})`)

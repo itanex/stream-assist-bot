@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
-import CommandResponseService from '../utilities/command-response.service.js';
+import CommandResponseRepository from '../repositories/command-response.repository.js';
 import { CommandName, defaultResponses } from '../utilities/default-responses.js';
 
 @injectable()
@@ -23,13 +23,13 @@ export class AboutCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
+        @inject(CommandResponseRepository) private commandResponseRepository: CommandResponseRepository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        const commandText = this.commandResponseService.getCommandText(this.commandName);
+        const commandText = this.commandResponseRepository.getCommandText(this.commandName);
 
         if (!commandText) {
             this.logger.warn(`* Command Text not found for ${command} in ${channel} || ${userstate.displayName} > ${message}`);

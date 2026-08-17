@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { UniqueConstraintError, ValidationError } from 'sequelize';
 import winston from 'winston';
 import { CommandResponse } from '../../database/index.js';
-import { defaultResponses, CommandFamilies } from './default-responses.js';
+import { defaultResponses, CommandFamilies } from '../utilities/default-responses.js';
 import InjectionTypes from '../../dependency-management/types.js';
 
 export type CommandTextValidationResult =
@@ -34,7 +34,7 @@ type ResponseEntry = { variant: string; text: string };
 const cacheKey = (name: string, variant: string = ''): string => (variant ? `${name}.${variant}` : name);
 
 @injectable()
-export default class CommandResponseService {
+export default class CommandResponseRepository {
     private responseCache = new Map<string, ResponseEntry>();
 
     constructor(

@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { HelixUser } from '@twurple/api';
 import { ChatUser } from '@twurple/chat';
-import { mockApiClient, mockChatClient, mockCommandResponseService, mockLogger } from '../../tests/common.mocks.js';
+import { mockApiClient, mockChatClient, mockCommandResponseRepository, mockLogger } from '../../tests/common.mocks.js';
 import { CuddleCommand } from './cuddle.command.js';
 import { transientKeywords } from '../utilities/default-responses.js';
 
@@ -20,7 +20,7 @@ describe('Cuddle Command Tests', () => {
         subject = new CuddleCommand(
             mockChatClient,
             mockApiClient,
-            mockCommandResponseService,
+            mockCommandResponseRepository,
             mockLogger,
         );
     });
@@ -35,7 +35,7 @@ describe('Cuddle Command Tests', () => {
             .getUserByName
             .mockResolvedValue(targetUser);
 
-        mockCommandResponseService
+        mockCommandResponseRepository
             .getCommandText
             .mockReturnValue(`%${transientKeywords.speakinguser}%, %${transientKeywords.targetuser}%`);
 
@@ -49,7 +49,7 @@ describe('Cuddle Command Tests', () => {
             .toHaveBeenCalledWith(channel, expect.stringContaining(user.displayName));
         expect(mockChatClient.say)
             .toHaveBeenCalledWith(channel, expect.stringContaining(targetUser.displayName));
-        expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName);
+        expect(mockCommandResponseRepository.getCommandText).toHaveBeenCalledWith(subject.commandName);
         expect(mockLogger.info)
             .toHaveBeenCalledWith(expect.anything());
     });
@@ -63,7 +63,7 @@ describe('Cuddle Command Tests', () => {
         // Assert
         expect(mockApiClient.users.getUserByName).not.toHaveBeenCalled();
         expect(mockChatClient.say).not.toHaveBeenCalled();
-        expect(mockCommandResponseService.getCommandText).not.toHaveBeenCalled();
+        expect(mockCommandResponseRepository.getCommandText).not.toHaveBeenCalled();
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(message));
     });
     it('should return; only log invocation (target user not found)', async () => {
@@ -82,7 +82,7 @@ describe('Cuddle Command Tests', () => {
         expect(mockApiClient.users.getUserByName)
             .toHaveBeenCalledWith(args[0]?.toLocaleLowerCase().trim());
         expect(mockChatClient.say).not.toHaveBeenCalled();
-        expect(mockCommandResponseService.getCommandText).not.toHaveBeenCalled();
+        expect(mockCommandResponseRepository.getCommandText).not.toHaveBeenCalled();
         expect(mockLogger.info).toHaveBeenCalled();
     });
     it('should return; only log invocation (target user == chat user)', async () => {
@@ -101,7 +101,7 @@ describe('Cuddle Command Tests', () => {
         expect(mockApiClient.users.getUserByName)
             .toHaveBeenCalledWith(args[0]?.toLocaleLowerCase().trim());
         expect(mockChatClient.say).toHaveBeenCalledTimes(0);
-        expect(mockCommandResponseService.getCommandText).not.toHaveBeenCalled();
+        expect(mockCommandResponseRepository.getCommandText).not.toHaveBeenCalled();
         expect(mockLogger.info).toHaveBeenCalled();
     });
     it(`logs a warning and says nothing in chat, (CommandReponse: undefined)`, async () => {
@@ -114,7 +114,7 @@ describe('Cuddle Command Tests', () => {
             .getUserByName
             .mockResolvedValue(targetUser);
 
-        mockCommandResponseService
+        mockCommandResponseRepository
             .getCommandText
             .mockReturnValue(undefined);
 
@@ -123,7 +123,7 @@ describe('Cuddle Command Tests', () => {
 
         // Assert
         expect(mockChatClient.say).not.toHaveBeenCalled();
-        expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName);
+        expect(mockCommandResponseRepository.getCommandText).toHaveBeenCalledWith(subject.commandName);
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(subject.commandName));
         expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
     });

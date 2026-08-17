@@ -9,7 +9,7 @@ import { ChatUser } from '@twurple/chat';
 import {
     mockApiClient,
     mockChatClient,
-    mockCommandResponseService,
+    mockCommandResponseRepository,
     mockLogger,
 } from '../../tests/common.mocks.js';
 import { FollowAgeCommand } from './followAgeCommand.js';
@@ -52,7 +52,7 @@ describe('Follow Age Command Tests', () => {
             mockChatClient,
             mockApiClient,
             mockBroadcaster,
-            mockCommandResponseService,
+            mockCommandResponseRepository,
             mockEnvironment,
             mockLogger,
         );
@@ -79,7 +79,7 @@ describe('Follow Age Command Tests', () => {
                     total: 1,
                 });
 
-            mockCommandResponseService
+            mockCommandResponseRepository
                 .getCommandText
                 .mockReturnValue(`%${transientKeywords.targetuser}%, %${transientKeywords.followage}%`);
 
@@ -94,7 +94,7 @@ describe('Follow Age Command Tests', () => {
                     mockEnvironment.twitchBot.broadcaster.id,
                     chatUser.userId,
                 );
-            expect(mockCommandResponseService.getCommandText)
+            expect(mockCommandResponseRepository.getCommandText)
                 .toHaveBeenCalledWith(subject.commandName);
             expect(mockBroadcaster.getBroadcaster).toHaveBeenCalled();
             expect(mockChatClient.say)
@@ -132,7 +132,7 @@ describe('Follow Age Command Tests', () => {
                     total: 1,
                 });
 
-            mockCommandResponseService
+            mockCommandResponseRepository
                 .getCommandText
                 .mockReturnValue(`%${transientKeywords.targetuser}%, %${transientKeywords.followage}%`);
 
@@ -149,7 +149,7 @@ describe('Follow Age Command Tests', () => {
                     mockEnvironment.twitchBot.broadcaster.id,
                     chatUser.userId,
                 );
-            expect(mockCommandResponseService.getCommandText)
+            expect(mockCommandResponseRepository.getCommandText)
                 .toHaveBeenCalledWith(subject.commandName);
             expect(mockBroadcaster.getBroadcaster).toHaveBeenCalled();
             expect(mockChatClient.say)
@@ -192,7 +192,7 @@ describe('Follow Age Command Tests', () => {
                     mockEnvironment.twitchBot.broadcaster.id,
                     chatUser.userId,
                 );
-            expect(mockCommandResponseService.getCommandText)
+            expect(mockCommandResponseRepository.getCommandText)
                 .not.toHaveBeenCalled();
             expect(mockBroadcaster.getBroadcaster)
                 .not.toHaveBeenCalled();
@@ -218,7 +218,7 @@ describe('Follow Age Command Tests', () => {
                 .toHaveBeenCalledWith(expectedApiUsername);
             expect(mockApiClient.channels.getChannelFollowers)
                 .not.toHaveBeenCalled();
-            expect(mockCommandResponseService.getCommandText)
+            expect(mockCommandResponseRepository.getCommandText)
                 .not.toHaveBeenCalled();
             expect(mockBroadcaster.getBroadcaster)
                 .not.toHaveBeenCalled();
@@ -242,7 +242,7 @@ describe('Follow Age Command Tests', () => {
                     total: 1,
                 });
 
-            mockCommandResponseService
+            mockCommandResponseRepository
                 .getCommandText
                 .mockReturnValue(undefined);
 
@@ -257,7 +257,7 @@ describe('Follow Age Command Tests', () => {
                     mockEnvironment.twitchBot.broadcaster.id,
                     chatUser.userId,
                 );
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName);
+            expect(mockCommandResponseRepository.getCommandText).toHaveBeenCalledWith(subject.commandName);
             expect(mockBroadcaster.getBroadcaster).not.toHaveBeenCalled();
             expect(mockChatClient.say).not.toHaveBeenCalled();
             expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
@@ -278,7 +278,7 @@ describe('Follow Age Command Tests', () => {
                 .not.toHaveBeenCalled();
             expect(mockApiClient.channels.getChannelFollowers)
                 .not.toHaveBeenCalled();
-            expect(mockCommandResponseService.getCommandText)
+            expect(mockCommandResponseRepository.getCommandText)
                 .not.toHaveBeenCalled();
             expect(mockBroadcaster.getBroadcaster)
                 .not.toHaveBeenCalled();

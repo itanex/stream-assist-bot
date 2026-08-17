@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 import { ApiClient, HelixChannelApi, HelixStreamApi, HelixUserApi } from '@twurple/api';
 import { ChatClient } from '@twurple/chat';
 import winston from 'winston';
-import CommandResponseService from '../bot/utilities/command-response.service.js';
+import CommandResponseRepository from '../bot/repositories/command-response.repository.js';
 
 export const mockChatClient = <unknown>{
     say: jest.fn(),
@@ -32,11 +32,11 @@ export const mockLogger = <unknown>{
     error: jest.fn(),
 } as jest.Mocked<winston.Logger>;
 
-export const mockCommandResponseService = <unknown>{
+export const mockCommandResponseRepository = <unknown>{
     initialize: jest.fn(),
     addCommandText: jest.fn(),
     getCommandText: jest.fn(),
     setCommandText: jest.fn(),
     removeCommandText: jest.fn(),
     restoreCommandText: jest.fn(),
-} as jest.Mocked<CommandResponseService>;
+} as jest.Mocked<CommandResponseRepository>;

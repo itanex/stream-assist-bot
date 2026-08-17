@@ -116,15 +116,15 @@ The cooldown chat message always names the command (its class name), regardless 
 Command response text can live in the database (`CommandResponse` table) instead of the class, making it editable at runtime without a redeploy.
 
 * Default text is declared in `bot/utilities/default-responses.ts`. `CommandName` is derived from its keys plus `CommandFamilies`' keys, so a command's `commandName` must have a matching entry in one of the two or the build fails.
-* On startup, `CommandResponseService.initialize()` seeds any missing rows from the defaults. Existing rows are never overwritten - edits survive restarts.
+* On startup, `CommandResponseRepository.initialize()` seeds any missing rows from the defaults. Existing rows are never overwritten - edits survive restarts.
 * Responses are cached in memory at startup and kept in sync on writes. Reads never hit the database per-message. Rows edited directly in the database are not visible until restart.
-* A command reads its response via `CommandResponseService.getCommandText(this.commandName)`, falling back to its `defaultResponses` entry if the lookup misses.
+* A command reads its response via `CommandResponseRepository.getCommandText(this.commandName)`, falling back to its `defaultResponses` entry if the lookup misses.
 
 ### Making a command's response editable
 
 1. Add an entry to `defaultResponses` with the command's trigger word as the key, written with `%token%` placeholders for any dynamic content
 2. Declare `commandName` on the command class referencing that key
-3. Inject `CommandResponseService` and read the text in `handle`
+3. Inject `CommandResponseRepository` and read the text in `handle`
 4. Build a `TransientContext` supplying a value for every token the template uses, and pass both to `templateResolver` (see [Template Rendering](#template-rendering))
 
 ### Command Families and Variants
@@ -133,8 +133,8 @@ Some commands respond with one of several named variants rather than a single te
 
 * Families are declared in the `CommandFamilies` registry (`bot/utilities/default-responses.ts`). A command sets `commandName` to one of these registered names.
 * Unlike single-reponse commands, family variants are never seeded from `defaultResponses` - that seed path only populates single-reponse commands. Family variant rows exist only once created via the `add` verb (see [Editing Reponses from Chat](#editing-reponses-from-chat)).
-* `CommandResponseService.getCommandText(commandName, variant?)` takes an optional `variant`. Omitting it looks up the base/empty-variant entry for that name.
-* A command reads its variant text via `CommandResponseService.getCommandText(this.commandName, variant)`, where `variant` comes from its own capture group in `exp`.
+* `CommandResponseRepository.getCommandText(commandName, variant?)` takes an optional `variant`. Omitting it looks up the base/empty-variant entry for that name.
+* A command reads its variant text via `CommandResponseRepository.getCommandText(this.commandName, variant)`, where `variant` comes from its own capture group in `exp`.
 
 Whether a `commandName` value resolves to a single fixed reponse or a family of reponses depends only on which registry it's drawn from - `defaultResponses` or `CommandFamilies` - not on a separate field.
 
@@ -176,7 +176,7 @@ Two different sources exist for identity-related tokens, and they are not interc
     !cmd remove <name>.<variant>
     !cmd restore <name>.<variant>
 
-* `<name>` is a `commandName` value - either a `defaultResponses` key or a `CommandFamilies` key; `<name>.<variant>` targets a specific family variant (e.g. `socials.discord`). The dot-compound form is chat-input only - `name` and `variant` are split apart before reaching `CommandResponseService`, storage never holds dotted keys.
+* `<name>` is a `commandName` value - either a `defaultResponses` key or a `CommandFamilies` key; `<name>.<variant>` targets a specific family variant (e.g. `socials.discord`). The dot-compound form is chat-input only - `name` and `variant` are split apart before reaching `CommandResponseRepository`, storage never holds dotted keys.
 * `add` creates a new response row. `<name>` must be a registered `CommandFamilies` name, and `<variant>` is required and cannot be empty - `add` cannot create a base/single-response entry.
 * `edit` updates an existing row - a family variant or a single-response command. Only commands with an existing response row are editable - anything else replies "does not have an editable text"
 * `remove` soft-deletes an existing family variant row and evicts it from cache. `<variant>` is required and cannot be empty - baseline/single-response rows (`defaultResponses` entries) cannot be removed from chat.

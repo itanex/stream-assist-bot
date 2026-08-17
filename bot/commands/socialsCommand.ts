@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
-import CommandResponseService from '../utilities/command-response.service.js';
+import CommandResponseRepository from '../repositories/command-response.repository.js';
 import { CommandName } from '../utilities/default-responses.js';
 
 @injectable()
@@ -23,14 +23,14 @@ export class SocialsCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
+        @inject(CommandResponseRepository) private commandResponseRepository: CommandResponseRepository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
     cooldownKey(args: string[]): string {
         const [variant] = args as string[];
-        const isKnown = !!this.commandResponseService.getCommandText(this.commandName, variant);
+        const isKnown = !!this.commandResponseRepository.getCommandText(this.commandName, variant);
 
         return !!variant && isKnown ? `${SocialsCommand.name}:${variant}` : SocialsCommand.name;
     }
@@ -38,7 +38,7 @@ export class SocialsCommand implements ICommandHandler {
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         const [variant] = args as string[];
 
-        const response = this.commandResponseService.getCommandText(this.commandName, variant);
+        const response = this.commandResponseRepository.getCommandText(this.commandName, variant);
 
         if (response) {
             await this.chatClient.say(channel, response);
