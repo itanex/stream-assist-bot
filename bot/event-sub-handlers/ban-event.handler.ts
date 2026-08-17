@@ -3,15 +3,17 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { BanEvent } from '../../database/index.js';
+import BanEventRepository from '../repositories/ban-event.repository.js';
 
 @injectable()
 export default class BanEventHandler {
     constructor(
+        @inject(BanEventRepository) private banEventRepository: BanEventRepository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) { }
 
     async onBanEvent(event: EventSubChannelBanEvent): Promise<void> {
-        return BanEvent
+        return this.banEventRepository
             .saveBanEvent(event)
             .catch((reason: any) => {
                 this.logger.error(`Unable to store Ban Event in DB >> ${reason}`);
@@ -22,7 +24,7 @@ export default class BanEventHandler {
     }
 
     async onUnbanEvent(event: EventSubChannelUnbanEvent): Promise<void> {
-        return BanEvent
+        return this.banEventRepository
             .saveUnbanEvent(event)
             .catch((reason: any) => {
                 this.logger.error(`Unable to store Unban Event in DB >> ${reason}`);

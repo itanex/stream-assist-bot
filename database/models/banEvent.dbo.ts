@@ -1,4 +1,3 @@
-import { EventSubChannelBanEvent, EventSubChannelUnbanEvent } from '@twurple/eventsub-base';
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
 
 @Table({
@@ -112,56 +111,4 @@ export default class BanEvent extends Model {
         type: DataType.STRING(40),
     })
     userDisplayName!: string;
-
-    /**
-     * Saves the Event Sub Ban Event into the database
-     * @param event The Ban Event received from the Event Sub
-     * @returns The recorded Ban Event database record
-     */
-    static async saveBanEvent(event: EventSubChannelBanEvent): Promise<BanEvent> {
-        const record: Partial<BanEvent> = {
-            reason: event.reason,
-            startDate: event.startDate,
-            endDate: event.endDate!,
-            isPermanent: event.isPermanent,
-            moderatorId: event.moderatorId,
-            moderatorName: event.moderatorName,
-            moderatorDisplayName: event.moderatorDisplayName,
-            broadcasterId: event.broadcasterId,
-            broadcasterName: event.broadcasterName,
-            broadcasterDisplayName: event.broadcasterDisplayName,
-            userId: event.userId,
-            userName: event.userName,
-            userDisplayName: event.userDisplayName,
-        };
-
-        return this
-            .create(record);
-    }
-
-    /**
-     * Saves the Event Sub Unban Event into the database
-     * @param event The Unban Event received from the Event Sub
-     * @returns The recorded Unban Event database record
-     */
-    static async saveUnbanEvent(event: EventSubChannelUnbanEvent): Promise<BanEvent> {
-        const record: Partial<BanEvent> = {
-            reason: 'SYS-UNBAN - Event',
-            startDate: null!,
-            endDate: new Date(),
-            isPermanent: false,
-            moderatorId: event.moderatorId,
-            moderatorName: event.moderatorName,
-            moderatorDisplayName: event.moderatorDisplayName,
-            broadcasterId: event.broadcasterId,
-            broadcasterName: event.broadcasterName,
-            broadcasterDisplayName: event.broadcasterDisplayName,
-            userId: event.userId,
-            userName: event.userName,
-            userDisplayName: event.userDisplayName,
-        };
-
-        return this
-            .create(record);
-    }
 }

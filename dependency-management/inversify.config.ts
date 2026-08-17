@@ -65,6 +65,7 @@ import OverlayServer, { IOverlayServer } from '../bot/overlay/overlay.server.js'
 import AuthenticationServer, { IAuthenticationServer } from '../bot/auth/auth.server.js';
 import StreamStateService from '../bot/utilities/stream-state.service.js';
 import JoinGreetingHandler from '../bot/handlers/join-greeting.handler.js';
+import BanEventRepository from '../bot/repositories/ban-event.repository.js';
 import CommandResponseRepository from '../bot/repositories/command-response.repository.js';
 import LurkRespository from '../bot/repositories/lurk.respository.js';
 
@@ -75,6 +76,8 @@ SAContainer.bind<Environment>(InjectionTypes.Environment).toConstantValue(enviro
 
 SAContainer.bind<Broadcaster>(Broadcaster).toSelf().inSingletonScope();
 SAContainer.bind<StreamStateService>(StreamStateService).toSelf().inSingletonScope();
+
+SAContainer.bind<BanEventRepository>(BanEventRepository).toSelf().inSingletonScope();
 SAContainer.bind<CommandResponseRepository>(CommandResponseRepository).toSelf().inSingletonScope();
 SAContainer.bind<LurkRespository>(LurkRespository).toSelf().inSingletonScope();
 
