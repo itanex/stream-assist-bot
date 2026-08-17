@@ -4,6 +4,11 @@ import { EventSubStreamOfflineEvent, EventSubStreamOnlineEvent } from '@twurple/
 import { mockLogger } from '../../tests/common.mocks.js';
 import StreamEventHandler from './stream-event.handler.js';
 import { LurkingUsers, StreamEventRecord } from '../../database/index.js';
+import LurkRespository from '../repositories/lurk.respository.js';
+
+const mockLurkRepository = <unknown>{
+    setAllUsersToUnlurk: jest.fn<() => Promise<[number, LurkingUsers[]]>>(),
+} as jest.Mocked<LurkRespository>;
 
 describe('Stream Event Handler Tests', () => {
     let subject: StreamEventHandler;
@@ -15,6 +20,7 @@ describe('Stream Event Handler Tests', () => {
         jest.useFakeTimers();
 
         subject = new StreamEventHandler(
+            mockLurkRepository,
             mockLogger,
         );
     });
@@ -37,8 +43,6 @@ describe('Stream Event Handler Tests', () => {
             StreamEventRecord.saveStreamStartEvent = jest.fn<() => Promise<StreamEventRecord>>()
                 .mockResolvedValue(record);
 
-            LurkingUsers.setAllUsersToUnlurk = jest.fn<() => Promise<[number, LurkingUsers[]]>>();
-
             StreamEventHandler.clearTimeoutRef = null;
 
             // Act
@@ -55,9 +59,9 @@ describe('Stream Event Handler Tests', () => {
             expect(StreamEventRecord.saveStreamStartEvent)
                 .toHaveBeenCalledWith(event);
 
-            expect(LurkingUsers.setAllUsersToUnlurk)
+            expect(mockLurkRepository.setAllUsersToUnlurk)
                 .toHaveBeenCalledTimes(1);
-            expect(LurkingUsers.setAllUsersToUnlurk)
+            expect(mockLurkRepository.setAllUsersToUnlurk)
                 .toHaveBeenCalledWith(record.endDate);
 
             expect(mockLogger.info)

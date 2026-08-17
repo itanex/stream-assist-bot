@@ -13,7 +13,7 @@ import {
     clearLurkingUsers,
 } from './lurk.commands.js';
 import { LurkingUsers } from '../../database/index.js';
-import LurkRespository from '../utilities/lurk.respository.js';
+import LurkRespository from '../repositories/lurk.respository.js';
 import { transientKeywords } from '../utilities/default-responses.js';
 
 describe('Lurk Commands Tests', () => {

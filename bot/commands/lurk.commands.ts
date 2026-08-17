@@ -6,7 +6,7 @@ import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import { CommandName, defaultResponses, TransientContext } from '../utilities/default-responses.js';
 import CommandResponseRepository from '../repositories/command-response.repository.js';
 import { templateResolver } from '../utilities/template-resolver.js';
-import LurkRespository from '../utilities/lurk.respository.js';
+import LurkRespository from '../repositories/lurk.respository.js';
 
 @injectable()
 export class LurkCommand implements ICommandHandler {

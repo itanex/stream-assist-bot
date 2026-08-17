@@ -3,6 +3,7 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { LurkingUsers, StreamEventRecord } from '../../database/index.js';
+import LurkRespository from '../repositories/lurk.respository.js';
 
 @injectable()
 export default class StreamEventHandler {
@@ -10,6 +11,7 @@ export default class StreamEventHandler {
     static clearTimeoutRef: NodeJS.Timeout | null = null;
 
     constructor(
+        @inject(LurkRespository) private lurkRepository: LurkRespository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) { }
 
@@ -31,7 +33,7 @@ export default class StreamEventHandler {
             const lastStream = await StreamEventRecord.getLastStream(event.broadcasterId);
 
             if (lastStream) {
-                await LurkingUsers.setAllUsersToUnlurk(lastStream.endDate);
+                await this.lurkRepository.setAllUsersToUnlurk(lastStream.endDate);
             }
         }
 
@@ -78,7 +80,7 @@ export default class StreamEventHandler {
      * @returns The resulting promise
      */
     private async unlurkUsers(endTime: Date) {
-        return LurkingUsers
+        return this.lurkRepository
             .setAllUsersToUnlurk(endTime)
             .then(
                 ([count, _]) => {

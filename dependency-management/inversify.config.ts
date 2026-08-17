@@ -66,7 +66,7 @@ import AuthenticationServer, { IAuthenticationServer } from '../bot/auth/auth.se
 import StreamStateService from '../bot/utilities/stream-state.service.js';
 import JoinGreetingHandler from '../bot/handlers/join-greeting.handler.js';
 import CommandResponseRepository from '../bot/repositories/command-response.repository.js';
-import LurkRespository from '../bot/utilities/lurk.respository.js';
+import LurkRespository from '../bot/repositories/lurk.respository.js';
 
 const SAContainer = new Container();
 
