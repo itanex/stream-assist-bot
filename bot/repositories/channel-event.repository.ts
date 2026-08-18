@@ -3,6 +3,7 @@ import {
     EventSubChannelCheerEvent,
     EventSubChannelFollowEvent,
     EventSubChannelModeratorEvent,
+    EventSubChannelRaidEvent,
     EventSubChannelRedemptionAddEvent,
 } from '@twurple/eventsub-base';
 import winston from 'winston';
@@ -12,6 +13,7 @@ import {
     CheerEvent,
     FollowEvent,
     ModeratorEvent,
+    RaidEvent,
 } from '../../database/index.js';
 
 @injectable()
@@ -128,5 +130,37 @@ export default class ChannelEventRepository {
                     returning: true,
                 },
             );
+    }
+
+    /**
+     * Records the event of the raiding broadcaster and the raided broadcaster
+     * @param event Raid Event
+     * @returns Raid Event Record
+     */
+    async saveRaidEvent(event: EventSubChannelRaidEvent): Promise<RaidEvent> {
+        const record: Partial<RaidEvent> = {
+            raidDate: new Date(),
+            raidingBroadcasterId: event.raidingBroadcasterId,
+            raidingBroadcasterName: event.raidingBroadcasterName,
+            raidingBroadcasterDisplayName: event.raidingBroadcasterDisplayName,
+            raidedBroadcasterId: event.raidedBroadcasterId,
+            raidedBroadcasterName: event.raidedBroadcasterName,
+            raidedBroadcasterDisplayName: event.raidedBroadcasterDisplayName,
+            viewers: event.viewers,
+        };
+
+        return RaidEvent
+            .create(record);
+    }
+
+    /**
+     * Gets the last raid record from the database
+     * @returns the raider record of the last raid
+     */
+    async getLastRaidEvent(): Promise<RaidEvent | null> {
+        return RaidEvent
+            .findOne({
+                order: [['raidDate', 'DESC']],
+            });
     }
 }

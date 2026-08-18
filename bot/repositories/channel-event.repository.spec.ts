@@ -5,6 +5,7 @@ import {
     EventSubChannelCheerEvent,
     EventSubChannelFollowEvent,
     EventSubChannelModeratorEvent,
+    EventSubChannelRaidEvent,
     EventSubChannelRedemptionAddEvent,
 } from '@twurple/eventsub-base';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
@@ -13,6 +14,7 @@ import {
     ChannelPointRedeem,
     CheerEvent,
     FollowEvent,
+    RaidEvent,
 } from '../../database/index.js';
 
 type ChannelEventRepositoryModule = typeof import('./channel-event.repository.js');
@@ -230,6 +232,56 @@ describe('ChannelEvent.Repository (postgres)', () => {
                 expect(result[0].addDate).not.toBe(null);
                 expect(result[0].removeDate).not.toBe(null);
                 expect(result[0]).toEqual(expect.objectContaining(event));
+            });
+        });
+
+        describe('RaidEvent()', () => {
+            it('saved raid event record is persisted in database', async () => {
+                // Arrange
+                const event = {
+                    raidingBroadcasterId: 'test-raiding-broadcaster-id',
+                    raidingBroadcasterName: 'test-raiding-broadcaster-name',
+                    raidingBroadcasterDisplayName: 'testRaidingbroadcaster',
+                    raidedBroadcasterId: 'test-raided-broadcaster-id',
+                    raidedBroadcasterName: 'test-raided-broadcaster-name',
+                    raidedBroadcasterDisplayName: 'testRaidedbroadcaster',
+                    viewers: 25,
+                } as EventSubChannelRaidEvent;
+
+                // Act
+                const result = await subject.saveRaidEvent(event);
+                const row = await RaidEvent
+                    .findOne({
+                        where: {
+                            raidingBroadcasterId: event.raidingBroadcasterId,
+                            raidedBroadcasterId: event.raidedBroadcasterId,
+                        },
+                    });
+
+                // Assert
+                expect(row).not.toBe(undefined);
+                expect(result).toEqual(expect.objectContaining(event));
+            });
+            it('returns the last raid', async () => {
+                // Arrange
+                const event = {
+                    raidingBroadcasterId: 'test-raiding-broadcaster-id',
+                    raidingBroadcasterName: 'test-raiding-broadcaster-name',
+                    raidingBroadcasterDisplayName: 'testRaidingbroadcaster',
+                    raidedBroadcasterId: 'test-raided-broadcaster-id',
+                    raidedBroadcasterName: 'test-raided-broadcaster-name',
+                    raidedBroadcasterDisplayName: 'testRaidedbroadcaster',
+                    viewers: 25,
+                } as EventSubChannelRaidEvent;
+                const record = await subject.saveRaidEvent(event);
+
+                // Act
+                const result = await subject.getLastRaidEvent();
+
+                // Assert
+                expect(record).not.toBe(null);
+                expect(result?.raidDate).not.toBe(null);
+                expect(result).toEqual(expect.objectContaining(event));
             });
         });
     });
