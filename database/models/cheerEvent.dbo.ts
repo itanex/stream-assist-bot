@@ -1,4 +1,3 @@
-import { EventSubChannelCheerEvent } from '@twurple/eventsub-base';
 import { Model, Table, Column, DataType } from 'sequelize-typescript';
 
 @Table({
@@ -72,26 +71,4 @@ export default class CheerEvent extends Model {
         type: DataType.STRING(40),
     })
     userDisplayName!: string;
-
-    /**
-     * Saves the event record into the database as per the mapping results required
-     * @param event The event record to save information from into the database
-     * @returns The stored event record
-     */
-    static async saveCheerEvent(event: EventSubChannelCheerEvent): Promise<CheerEvent> {
-        const record: Partial<CheerEvent> = {
-            bits: event.bits,
-            isAnonymous: event.isAnonymous,
-            message: event.message,
-            broadcasterId: event.broadcasterId,
-            broadcasterName: event.broadcasterName,
-            broadcasterDisplayName: event.broadcasterDisplayName,
-            userId: event.userId!,
-            userName: event.userName!,
-            userDisplayName: event.userDisplayName!,
-        };
-
-        return CheerEvent
-            .create(record);
-    }
 }

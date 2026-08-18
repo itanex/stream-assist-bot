@@ -1,0 +1,99 @@
+import 'reflect-metadata';
+import { jest } from '@jest/globals';
+import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
+import { EventSubChannelCheerEvent } from '@twurple/eventsub-base';
+import Database, { IDatabaseConfiguration } from '../../database/database.js';
+import { mockLogger } from '../../tests/common.mocks.js';
+import { CheerEvent } from '../../database/index.js';
+
+type ChannelEventRepositoryModule = typeof import('./channel-event.repository.js');
+
+describe('ChannelEvent.Repository (postgres)', () => {
+    let container: StartedPostgreSqlContainer;
+    let databaseConfiguration: IDatabaseConfiguration;
+
+    let ChannelEventRepository: ChannelEventRepositoryModule['default'];
+
+    let subject: InstanceType<ChannelEventRepositoryModule['default']>;
+
+    beforeAll(async () => {
+        try {
+            container = await new PostgreSqlContainer('postgres:latest').start();
+        } catch (error: any) {
+            const message = error instanceof Error ? error.message : String(error);
+
+            if (message.includes('401') || message.includes('authentication required')) {
+                throw new Error([
+                    'Docker registry authentication failed while pulling the postgres image.',
+                    'Local Docker Hub credentials are stale: run `docker login`, then rerun.',
+                    `Original error: ${message}`,
+                ].join(' '));
+            }
+
+            throw error;
+        }
+
+        databaseConfiguration = {
+            database: container.getDatabase(),
+            host: container.getHost(),
+            username: container.getUsername(),
+            password: container.getPassword(),
+            port: container.getPort(),
+        };
+
+        ({ default: ChannelEventRepository } = await import('./channel-event.repository.js'));
+    }, 120_000);
+
+    afterAll(async () => {
+        await container.stop();
+    });
+
+    describe('Valid Database Object', () => {
+        let database: Database;
+
+        beforeAll(async () => {
+            database = new Database(databaseConfiguration, mockLogger);
+            await database.initialize();
+            subject = new ChannelEventRepository(mockLogger);
+        });
+
+        afterAll(async () => {
+            await database.disconnect();
+        });
+
+        beforeEach(async () => {
+            jest.resetAllMocks();
+            await CheerEvent.destroy({ where: {}, force: true });
+        });
+
+        describe('saveCheerEvent()', () => {
+            it('saved cheer event record is persisted in database', async () => {
+                // Arrange
+                const event = {
+                    bits: 25,
+                    isAnonymous: false,
+                    message: 'test-cheer-event-message',
+                    broadcasterId: 'test-broadcaster-id',
+                    broadcasterName: 'test-broadcaster-name',
+                    broadcasterDisplayName: 'testbroadcaster',
+                    userId: 'test-cheer-user-id',
+                    userName: 'test-cheer-username',
+                    userDisplayName: 'testCheerUser',
+                } as EventSubChannelCheerEvent;
+
+                // Act
+                const result = await subject.saveCheerEvent(event);
+                const row = await CheerEvent
+                    .findOne({
+                        where: {
+                            broadcasterId: event.broadcasterId,
+                            userId: event.userId,
+                        },
+                    });
+                // Assert
+                expect(row).not.toBe(undefined);
+                expect(result).toEqual(expect.objectContaining(event));
+            });
+        });
+    });
+});

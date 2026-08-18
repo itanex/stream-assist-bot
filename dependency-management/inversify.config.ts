@@ -66,6 +66,7 @@ import AuthenticationServer, { IAuthenticationServer } from '../bot/auth/auth.se
 import StreamStateService from '../bot/utilities/stream-state.service.js';
 import JoinGreetingHandler from '../bot/handlers/join-greeting.handler.js';
 import BanEventRepository from '../bot/repositories/ban-event.repository.js';
+import ChannelEventRepository from '../bot/repositories/channel-event.repository.js';
 import CommandResponseRepository from '../bot/repositories/command-response.repository.js';
 import LurkRespository from '../bot/repositories/lurk.respository.js';
 
@@ -78,6 +79,7 @@ SAContainer.bind<Broadcaster>(Broadcaster).toSelf().inSingletonScope();
 SAContainer.bind<StreamStateService>(StreamStateService).toSelf().inSingletonScope();
 
 SAContainer.bind<BanEventRepository>(BanEventRepository).toSelf().inSingletonScope();
+SAContainer.bind<ChannelEventRepository>(ChannelEventRepository).toSelf().inSingletonScope();
 SAContainer.bind<CommandResponseRepository>(CommandResponseRepository).toSelf().inSingletonScope();
 SAContainer.bind<LurkRespository>(LurkRespository).toSelf().inSingletonScope();
 
