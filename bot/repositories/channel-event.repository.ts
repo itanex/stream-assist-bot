@@ -1,8 +1,18 @@
 import { inject, injectable } from 'inversify';
-import { EventSubChannelCheerEvent, EventSubChannelFollowEvent, EventSubChannelRedemptionAddEvent } from '@twurple/eventsub-base';
+import {
+    EventSubChannelCheerEvent,
+    EventSubChannelFollowEvent,
+    EventSubChannelModeratorEvent,
+    EventSubChannelRedemptionAddEvent,
+} from '@twurple/eventsub-base';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
-import { ChannelPointRedeem, CheerEvent, FollowEvent } from '../../database/index.js';
+import {
+    ChannelPointRedeem,
+    CheerEvent,
+    FollowEvent,
+    ModeratorEvent,
+} from '../../database/index.js';
 
 @injectable()
 export default class ChannelEventRepository {
@@ -77,5 +87,46 @@ export default class ChannelEventRepository {
 
         return FollowEvent
             .create(record);
+    }
+
+    /**
+     * Maps add moderator event to DBO and saves a new event in the database
+     * @param event Moderator Event
+     * @returns Moderator Event Record
+     */
+    async addUserAsMod(event: EventSubChannelModeratorEvent): Promise<ModeratorEvent> {
+        const record: Partial<ModeratorEvent> = {
+            addDate: new Date(),
+            removeDate: null!,
+            broadcasterId: event.broadcasterId,
+            broadcasterName: event.broadcasterName,
+            broadcasterDisplayName: event.broadcasterDisplayName,
+            userId: event.userId,
+            userName: event.userName,
+            userDisplayName: event.userDisplayName,
+        };
+
+        return ModeratorEvent
+            .create(record);
+    }
+
+    /**
+     * Updates moderator event in DB with a remove date
+     * @param event Moderator Event
+     * @returns Moderator Event Record
+     */
+    async removeUserAsMod(event: EventSubChannelModeratorEvent): Promise<[number, ModeratorEvent[]]> {
+        return ModeratorEvent
+            .update(
+                { removeDate: new Date() },
+                {
+                    where: {
+                        removeDate: null,
+                        broadcasterId: event.broadcasterId,
+                        userId: event.userId,
+                    },
+                    returning: true,
+                },
+            );
     }
 }

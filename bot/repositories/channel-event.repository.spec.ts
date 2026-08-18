@@ -4,6 +4,7 @@ import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers
 import {
     EventSubChannelCheerEvent,
     EventSubChannelFollowEvent,
+    EventSubChannelModeratorEvent,
     EventSubChannelRedemptionAddEvent,
 } from '@twurple/eventsub-base';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
@@ -75,7 +76,7 @@ describe('ChannelEvent.Repository (postgres)', () => {
             await ChannelPointRedeem.destroy({ where: {}, force: true });
         });
 
-        describe('saveCheerEvent()', () => {
+        describe('CheerEvent()', () => {
             it('saved cheer event record is persisted in database', async () => {
                 // Arrange
                 const event = {
@@ -105,7 +106,7 @@ describe('ChannelEvent.Repository (postgres)', () => {
             });
         });
 
-        describe('saveChannelPointRedeemEvent()', () => {
+        describe('ChannelPointRedeemEvent()', () => {
             it('saved channel point event record is persisted in database', async () => {
                 // Arrange
                 const eventId = {
@@ -145,7 +146,7 @@ describe('ChannelEvent.Repository (postgres)', () => {
             });
         });
 
-        describe('saveFollowEvent()', () => {
+        describe('FollowEvent', () => {
             it('saved follow event record is persisted in database', async () => {
                 // Arrange
                 const event = {
@@ -171,6 +172,64 @@ describe('ChannelEvent.Repository (postgres)', () => {
                 // Assert
                 expect(row).not.toBe(undefined);
                 expect(result).toEqual(expect.objectContaining(event));
+            });
+        });
+
+        describe('ModeratorEvent()', () => {
+            it('saved `user as mod` record is persisted in database', async () => {
+                // Arrange
+                const event = {
+                    broadcasterId: 'test-broadcaster-id',
+                    broadcasterName: 'test-broadcaster-name',
+                    broadcasterDisplayName: 'testbroadcaster',
+                    userId: 'test-event-user-id',
+                    userName: 'test-event-username',
+                    userDisplayName: 'testEventUser',
+                } as EventSubChannelModeratorEvent;
+
+                // Act
+                const result = await subject.addUserAsMod(event);
+                const row = await FollowEvent
+                    .findOne({
+                        where: {
+                            broadcasterId: event.broadcasterId,
+                            userId: event.userId,
+                        },
+                    });
+
+                // Assert
+                expect(row).not.toBe(null);
+                expect(result.addDate).not.toBe(null);
+                expect(result.removeDate).toBe(null);
+                expect(result).toEqual(expect.objectContaining(event));
+            });
+            it('saved `user removed as mod` record is persisted in database', async () => {
+                // Arrange
+                const event = {
+                    broadcasterId: 'test-broadcaster-id',
+                    broadcasterName: 'test-broadcaster-name',
+                    broadcasterDisplayName: 'testbroadcaster',
+                    userId: 'test-event-user-id',
+                    userName: 'test-event-username',
+                    userDisplayName: 'testEventUser',
+                } as EventSubChannelModeratorEvent;
+
+                // Act
+                const [count, result] = await subject.removeUserAsMod(event);
+                const row = await FollowEvent
+                    .findOne({
+                        where: {
+                            broadcasterId: event.broadcasterId,
+                            userId: event.userId,
+                        },
+                    });
+
+                // Assert
+                expect(count).toBe(1);
+                expect(row).not.toBe(null);
+                expect(result[0].addDate).not.toBe(null);
+                expect(result[0].removeDate).not.toBe(null);
+                expect(result[0]).toEqual(expect.objectContaining(event));
             });
         });
     });
