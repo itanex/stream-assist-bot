@@ -1,4 +1,3 @@
-import { EventSubChannelFollowEvent } from '@twurple/eventsub-base';
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
 
 @Table({
@@ -64,24 +63,4 @@ export default class FollowEvent extends Model {
         type: DataType.STRING(40),
     })
     userDisplayName!: string;
-
-    /**
-     * Records the event of a user following the specific channel (broadcaster)
-     * @param event Follow Event
-     * @returns Follow Event Record
-     */
-    static async follow(event: EventSubChannelFollowEvent): Promise<FollowEvent> {
-        const record: Partial<FollowEvent> = {
-            followDate: event.followDate,
-            broadcasterId: event.broadcasterId,
-            broadcasterName: event.broadcasterName,
-            broadcasterDisplayName: event.broadcasterDisplayName,
-            userId: event.userId,
-            userName: event.userName,
-            userDisplayName: event.userDisplayName,
-        };
-
-        return this
-            .create(record);
-    }
 }

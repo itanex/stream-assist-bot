@@ -1,10 +1,18 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import { EventSubChannelCheerEvent, EventSubChannelRedemptionAddEvent } from '@twurple/eventsub-base';
+import {
+    EventSubChannelCheerEvent,
+    EventSubChannelFollowEvent,
+    EventSubChannelRedemptionAddEvent,
+} from '@twurple/eventsub-base';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
 import { mockLogger } from '../../tests/common.mocks.js';
-import { ChannelPointRedeem, CheerEvent } from '../../database/index.js';
+import {
+    ChannelPointRedeem,
+    CheerEvent,
+    FollowEvent,
+} from '../../database/index.js';
 
 type ChannelEventRepositoryModule = typeof import('./channel-event.repository.js');
 
@@ -133,6 +141,35 @@ describe('ChannelEvent.Repository (postgres)', () => {
                 // Assert
                 expect(row).not.toBe(undefined);
                 expect(result.eventId).toEqual(eventId.id);
+                expect(result).toEqual(expect.objectContaining(event));
+            });
+        });
+
+        describe('saveFollowEvent()', () => {
+            it('saved follow event record is persisted in database', async () => {
+                // Arrange
+                const event = {
+                    followDate: new Date(),
+                    broadcasterId: 'test-broadcaster-id',
+                    broadcasterName: 'test-broadcaster-name',
+                    broadcasterDisplayName: 'testbroadcaster',
+                    userId: 'test-event-user-id',
+                    userName: 'test-event-username',
+                    userDisplayName: 'testEventUser',
+                } as EventSubChannelFollowEvent;
+
+                // Act
+                const result = await subject.saveFollowEvent(event);
+                const row = await FollowEvent
+                    .findOne({
+                        where: {
+                            broadcasterId: event.broadcasterId,
+                            userId: event.userId,
+                        },
+                    });
+
+                // Assert
+                expect(row).not.toBe(undefined);
                 expect(result).toEqual(expect.objectContaining(event));
             });
         });

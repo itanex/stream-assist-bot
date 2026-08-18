@@ -1,8 +1,8 @@
 import { inject, injectable } from 'inversify';
-import { EventSubChannelCheerEvent, EventSubChannelRedemptionAddEvent } from '@twurple/eventsub-base';
+import { EventSubChannelCheerEvent, EventSubChannelFollowEvent, EventSubChannelRedemptionAddEvent } from '@twurple/eventsub-base';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
-import { ChannelPointRedeem, CheerEvent } from '../../database/index.js';
+import { ChannelPointRedeem, CheerEvent, FollowEvent } from '../../database/index.js';
 
 @injectable()
 export default class ChannelEventRepository {
@@ -56,6 +56,26 @@ export default class ChannelEventRepository {
         };
 
         return ChannelPointRedeem
+            .create(record);
+    }
+
+    /**
+     * Records the event of a user following the specific channel (broadcaster)
+     * @param event Follow Event
+     * @returns Follow Event Record
+     */
+    async saveFollowEvent(event: EventSubChannelFollowEvent): Promise<FollowEvent> {
+        const record: Partial<FollowEvent> = {
+            followDate: event.followDate,
+            broadcasterId: event.broadcasterId,
+            broadcasterName: event.broadcasterName,
+            broadcasterDisplayName: event.broadcasterDisplayName,
+            userId: event.userId,
+            userName: event.userName,
+            userDisplayName: event.userDisplayName,
+        };
+
+        return FollowEvent
             .create(record);
     }
 }
