@@ -1,10 +1,10 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import { EventSubChannelCheerEvent } from '@twurple/eventsub-base';
+import { EventSubChannelCheerEvent, EventSubChannelRedemptionAddEvent } from '@twurple/eventsub-base';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
 import { mockLogger } from '../../tests/common.mocks.js';
-import { CheerEvent } from '../../database/index.js';
+import { ChannelPointRedeem, CheerEvent } from '../../database/index.js';
 
 type ChannelEventRepositoryModule = typeof import('./channel-event.repository.js');
 
@@ -64,6 +64,7 @@ describe('ChannelEvent.Repository (postgres)', () => {
         beforeEach(async () => {
             jest.resetAllMocks();
             await CheerEvent.destroy({ where: {}, force: true });
+            await ChannelPointRedeem.destroy({ where: {}, force: true });
         });
 
         describe('saveCheerEvent()', () => {
@@ -92,6 +93,46 @@ describe('ChannelEvent.Repository (postgres)', () => {
                     });
                 // Assert
                 expect(row).not.toBe(undefined);
+                expect(result).toEqual(expect.objectContaining(event));
+            });
+        });
+
+        describe('saveChannelPointRedeemEvent()', () => {
+            it('saved channel point event record is persisted in database', async () => {
+                // Arrange
+                const eventId = {
+                    id: '40e7847b-a685-49a7-9a69-a599c6893e7f',
+                };
+                const event = {
+                    broadcasterId: 'test-broadcaster-id',
+                    broadcasterName: 'test-broadcaster-name',
+                    broadcasterDisplayName: 'testbroadcaster',
+                    userId: 'test-event-user-id',
+                    userName: 'test-event-username',
+                    userDisplayName: 'testEventUser',
+                    input: 'test-event-input-string',
+                    status: 'test-event-status',
+                    rewardId: '10dcc9a1-c021-458d-9d2e-d10174d1fc3c',
+                    rewardTitle: 'test-event-reward-title',
+                    rewardCost: 25,
+                    rewardPrompt: 'test-event-reward-prompt',
+                    redemptionDate: new Date(),
+                } as EventSubChannelRedemptionAddEvent;
+
+                // Act
+                const result = await subject.saveChannelPointRedeemEvent({ ...event, ...eventId } as EventSubChannelRedemptionAddEvent);
+                const row = await ChannelPointRedeem
+                    .findOne({
+                        where: {
+                            broadcasterId: event.broadcasterId,
+                            userId: event.userId,
+                            rewardId: event.rewardId,
+                        },
+                    });
+
+                // Assert
+                expect(row).not.toBe(undefined);
+                expect(result.eventId).toEqual(eventId.id);
                 expect(result).toEqual(expect.objectContaining(event));
             });
         });

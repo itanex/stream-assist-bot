@@ -2,21 +2,19 @@ import { EventSubChannelRedemptionAddEvent } from '@twurple/eventsub-base';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
-import { ChannelPointRedeem } from '../../database/index.js';
+import ChannelEventRepository from '../repositories/channel-event.repository.js';
 
 @injectable()
 export default class ChannelPointEventHandler {
-    /**
-     *
-     */
     constructor(
+        @inject(ChannelEventRepository) private channelEventRepository: ChannelEventRepository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
     async onChannelPointRedeem(event: EventSubChannelRedemptionAddEvent): Promise<void> {
-        return ChannelPointRedeem
-            .saveRedeemEvent(event)
+        return this.channelEventRepository
+            .saveChannelPointRedeemEvent(event)
             .catch((reason: any) => {
                 this.logger.error(`Unable to store Channel Point Redeem in DB >> ${reason}`);
             })

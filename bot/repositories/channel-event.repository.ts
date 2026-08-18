@@ -1,8 +1,8 @@
 import { inject, injectable } from 'inversify';
-import { EventSubChannelCheerEvent } from '@twurple/eventsub-base';
+import { EventSubChannelCheerEvent, EventSubChannelRedemptionAddEvent } from '@twurple/eventsub-base';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
-import { CheerEvent } from '../../database/index.js';
+import { ChannelPointRedeem, CheerEvent } from '../../database/index.js';
 
 @injectable()
 export default class ChannelEventRepository {
@@ -29,6 +29,33 @@ export default class ChannelEventRepository {
         };
 
         return CheerEvent
+            .create(record);
+    }
+
+    /**
+     * Saves the event record into the database as per the mapping results required
+     * @param event The event record to save information from into the database
+     * @returns The stored event record
+     */
+    async saveChannelPointRedeemEvent(event: EventSubChannelRedemptionAddEvent): Promise<ChannelPointRedeem> {
+        const record: Partial<ChannelPointRedeem> = {
+            eventId: event.id,
+            broadcasterId: event.broadcasterId,
+            broadcasterName: event.broadcasterName,
+            broadcasterDisplayName: event.broadcasterDisplayName,
+            userId: event.userId,
+            userName: event.userName,
+            userDisplayName: event.userDisplayName,
+            input: event.input,
+            status: event.status,
+            rewardId: event.rewardId,
+            rewardTitle: event.rewardTitle,
+            rewardCost: event.rewardCost,
+            rewardPrompt: event.rewardPrompt,
+            redemptionDate: event.redemptionDate,
+        };
+
+        return ChannelPointRedeem
             .create(record);
     }
 }

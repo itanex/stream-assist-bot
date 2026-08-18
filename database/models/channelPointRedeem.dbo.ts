@@ -1,4 +1,3 @@
-import { EventSubChannelRedemptionAddEvent } from '@twurple/eventsub-base';
 import { Model, Table, Column, DataType } from 'sequelize-typescript';
 
 @Table({
@@ -123,38 +122,4 @@ export default class ChannelPointRedeem extends Model {
         type: DataType.DATE,
     })
     redemptionDate!: Date;
-
-    /**
-     * Saves the event record into the database as per the mapping results required
-     * @param event The event record to save information from into the database
-     * @returns The stored event record
-     */
-    static async saveRedeemEvent(event: EventSubChannelRedemptionAddEvent): Promise<ChannelPointRedeem> {
-        const record: Partial<ChannelPointRedeem> = {
-            eventId: event.id,
-            broadcasterId: event.broadcasterId,
-            broadcasterName: event.broadcasterName,
-            broadcasterDisplayName: event.broadcasterDisplayName,
-            userId: event.userId,
-            userName: event.userName,
-            userDisplayName: event.userDisplayName,
-            input: event.input,
-            status: event.status,
-            rewardId: event.rewardId,
-            rewardTitle: event.rewardTitle,
-            rewardCost: event.rewardCost,
-            rewardPrompt: event.rewardPrompt,
-            redemptionDate: event.redemptionDate,
-        };
-
-        return ChannelPointRedeem
-            .create(record);
-    }
-}
-
-class ChannelReward {
-    id!: string;
-    title!: string;
-    cost!: number;
-    prompt!: string;
 }
