@@ -65,6 +65,10 @@ describe('Raid Respository (postgres)', () => {
             subject = new RaidRepository(mockLogger);
         });
 
+        afterEach(() => {
+            jest.useRealTimers();
+        });
+
         describe('getLastRaid()', () => {
             it('returns the last raid record in database', async () => {
                 // Arrange

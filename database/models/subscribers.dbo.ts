@@ -1,6 +1,6 @@
 import { Model, Table, Column, DataType, ForeignKey, BelongsTo } from 'sequelize-typescript';
-import SubscriptionGiftUsers from './subscriptionGiftUsers.dbo.js';
-import SubscriptionType from './subscriptionType.js';
+import SubscriptionGiftUsers from './subscription-gift-users.dbo.js';
+import SubscriptionType from './subscription-type.js';
 
 @Table({
     tableName: 'subscribers',
