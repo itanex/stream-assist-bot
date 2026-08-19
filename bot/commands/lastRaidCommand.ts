@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import InjectionTypes from '../../dependency-management/types.js';
-import { Raiders } from '../../database/index.js';
+import RaidRepository from '../repositories/raid.repository.js';
 
 dayjs.extend(isToday);
 dayjs.extend(relativeTime);
@@ -29,12 +29,13 @@ export class LastRaidCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
+        @inject(RaidRepository) private raidRepository: RaidRepository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        await Raiders
+        await this.raidRepository
             .getLastRaid()
             .then(async record => {
                 const lastDate = dayjs(record!.time).fromNow();

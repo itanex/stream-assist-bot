@@ -69,6 +69,7 @@ import BanEventRepository from '../bot/repositories/ban-event.repository.js';
 import ChannelEventRepository from '../bot/repositories/channel-event.repository.js';
 import CommandResponseRepository from '../bot/repositories/command-response.repository.js';
 import LurkRespository from '../bot/repositories/lurk.respository.js';
+import RaidRepository from '../bot/repositories/raid.repository.js';
 
 const SAContainer = new Container();
 
@@ -82,6 +83,7 @@ SAContainer.bind<BanEventRepository>(BanEventRepository).toSelf().inSingletonSco
 SAContainer.bind<ChannelEventRepository>(ChannelEventRepository).toSelf().inSingletonScope();
 SAContainer.bind<CommandResponseRepository>(CommandResponseRepository).toSelf().inSingletonScope();
 SAContainer.bind<LurkRespository>(LurkRespository).toSelf().inSingletonScope();
+SAContainer.bind<RaidRepository>(RaidRepository).toSelf().inSingletonScope();
 
 SAContainer.bind<IChatBot>(ChatBot).toSelf().inSingletonScope();
 
