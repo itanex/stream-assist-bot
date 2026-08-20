@@ -71,6 +71,7 @@ import {
     CommandResponseRepository,
     LurkRespository,
     RaidRepository,
+    StreamEventRepository,
     SubscriberRepository,
 } from '../bot/repositories/index.js';
 
@@ -87,6 +88,7 @@ SAContainer.bind<ChannelEventRepository>(ChannelEventRepository).toSelf().inSing
 SAContainer.bind<CommandResponseRepository>(CommandResponseRepository).toSelf().inSingletonScope();
 SAContainer.bind<LurkRespository>(LurkRespository).toSelf().inSingletonScope();
 SAContainer.bind<RaidRepository>(RaidRepository).toSelf().inSingletonScope();
+SAContainer.bind<StreamEventRepository>(StreamEventRepository).toSelf().inSingletonScope();
 SAContainer.bind<SubscriberRepository>(SubscriberRepository).toSelf().inSingletonScope();
 
 SAContainer.bind<IChatBot>(ChatBot).toSelf().inSingletonScope();

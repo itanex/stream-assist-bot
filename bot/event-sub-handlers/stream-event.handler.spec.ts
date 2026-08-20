@@ -4,11 +4,17 @@ import { EventSubStreamOfflineEvent, EventSubStreamOnlineEvent } from '@twurple/
 import { mockLogger } from '../../tests/common.mocks.js';
 import StreamEventHandler from './stream-event.handler.js';
 import { LurkingUsers, StreamEventRecord } from '../../database/index.js';
-import LurkRespository from '../repositories/lurk.respository.js';
+import { LurkRespository, StreamEventRepository } from '../repositories/index.js';
 
 const mockLurkRepository = <unknown>{
     setAllUsersToUnlurk: jest.fn<() => Promise<[number, LurkingUsers[]]>>(),
 } as jest.Mocked<LurkRespository>;
+
+const mockStreamEventRepository = <unknown>{
+    getLastStream: jest.fn<() => Promise<StreamEventRecord | null>>(),
+    saveStreamStartEvent: jest.fn<() => Promise<StreamEventRecord | null>>(),
+    saveStreamEndEvent: jest.fn<() => Promise<[number, StreamEventRecord[]]>>(),
+} as jest.Mocked<StreamEventRepository>;
 
 describe('Stream Event Handler Tests', () => {
     let subject: StreamEventHandler;
@@ -21,6 +27,7 @@ describe('Stream Event Handler Tests', () => {
 
         subject = new StreamEventHandler(
             mockLurkRepository,
+            mockStreamEventRepository,
             mockLogger,
         );
     });
@@ -38,9 +45,11 @@ describe('Stream Event Handler Tests', () => {
                 id: record.streamId,
             } as EventSubStreamOnlineEvent;
 
-            StreamEventRecord.getLastStream = jest.fn<() => Promise<StreamEventRecord>>()
+            mockStreamEventRepository
+                .getLastStream
                 .mockResolvedValue(record);
-            StreamEventRecord.saveStreamStartEvent = jest.fn<() => Promise<StreamEventRecord>>()
+            mockStreamEventRepository
+                .saveStreamStartEvent
                 .mockResolvedValue(record);
 
             StreamEventHandler.clearTimeoutRef = null;
@@ -49,14 +58,14 @@ describe('Stream Event Handler Tests', () => {
             await subject.streamOnline(event as EventSubStreamOnlineEvent);
 
             // Arrange
-            expect(StreamEventRecord.getLastStream)
+            expect(mockStreamEventRepository.getLastStream)
                 .toHaveBeenCalledTimes(1);
-            expect(StreamEventRecord.getLastStream)
+            expect(mockStreamEventRepository.getLastStream)
                 .toHaveBeenCalledWith(event.broadcasterId);
 
-            expect(StreamEventRecord.saveStreamStartEvent)
+            expect(mockStreamEventRepository.saveStreamStartEvent)
                 .toHaveBeenCalledTimes(1);
-            expect(StreamEventRecord.saveStreamStartEvent)
+            expect(mockStreamEventRepository.saveStreamStartEvent)
                 .toHaveBeenCalledWith(event);
 
             expect(mockLurkRepository.setAllUsersToUnlurk)
@@ -87,7 +96,8 @@ describe('Stream Event Handler Tests', () => {
                 broadcasterId: '1234',
             } as EventSubStreamOfflineEvent;
 
-            StreamEventRecord.saveStreamEndEvent = jest.fn<() => Promise<[number, StreamEventRecord[]]>>()
+            mockStreamEventRepository
+                .saveStreamEndEvent
                 .mockResolvedValue([1, records as StreamEventRecord[]]);
 
             StreamEventHandler.clearTimeoutRef = null;
@@ -96,9 +106,9 @@ describe('Stream Event Handler Tests', () => {
             await subject.streamOffline(event as EventSubStreamOfflineEvent);
 
             // Arrange
-            expect(StreamEventRecord.saveStreamEndEvent)
+            expect(mockStreamEventRepository.saveStreamEndEvent)
                 .toHaveBeenCalledTimes(1);
-            expect(StreamEventRecord.saveStreamEndEvent)
+            expect(mockStreamEventRepository.saveStreamEndEvent)
                 .toHaveBeenCalledWith(expect.any(Date), event);
 
             expect(StreamEventHandler.clearTimeoutRef)
