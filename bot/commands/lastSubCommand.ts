@@ -8,10 +8,9 @@ import winston from 'winston';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import InjectionTypes from '../../dependency-management/types.js';
 import {
-    Subscribers,
-    SubscriptionGiftUsers,
     SubscriptionType,
 } from '../../database/index.js';
+import SubscriberRepository from '../repositories/subscriber.repository.js';
 
 dayjs.extend(isToday);
 dayjs.extend(relativeTime);
@@ -33,12 +32,13 @@ export class LastSubCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
+        @inject(SubscriberRepository) private subscriberRepository: SubscriberRepository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        await Subscribers
+        await this.subscriberRepository
             .getLastSubscriber()
             .then(async record => {
                 const lastDate = dayjs(record!.createdAt).fromNow();
@@ -49,7 +49,7 @@ export class LastSubCommand implements ICommandHandler {
                         await this.chatClient.say(channel, `${record!.subscriber}, subscribed as a new member of the colony ${lastDate}`);
                         break;
                     case SubscriptionType.PrimeSub:
-                        await this.chatClient.say(channel, `${record!.subscriber}, subscibed using their Prime Sub ${lastDate}`);
+                        await this.chatClient.say(channel, `${record!.subscriber}, subscribed using their Prime Sub ${lastDate}`);
                         break;
                     case SubscriptionType.ReSub:
                         await this.chatClient.say(channel, `${record!.subscriber} continued their colony membership ${lastDate}`);

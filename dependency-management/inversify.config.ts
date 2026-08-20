@@ -65,11 +65,14 @@ import OverlayServer, { IOverlayServer } from '../bot/overlay/overlay.server.js'
 import AuthenticationServer, { IAuthenticationServer } from '../bot/auth/auth.server.js';
 import StreamStateService from '../bot/utilities/stream-state.service.js';
 import JoinGreetingHandler from '../bot/handlers/join-greeting.handler.js';
-import BanEventRepository from '../bot/repositories/ban-event.repository.js';
-import ChannelEventRepository from '../bot/repositories/channel-event.repository.js';
-import CommandResponseRepository from '../bot/repositories/command-response.repository.js';
-import LurkRespository from '../bot/repositories/lurk.respository.js';
-import RaidRepository from '../bot/repositories/raid.repository.js';
+import {
+    BanEventRepository,
+    ChannelEventRepository,
+    CommandResponseRepository,
+    LurkRespository,
+    RaidRepository,
+    SubscriberRepository,
+} from '../bot/repositories/index.js';
 
 const SAContainer = new Container();
 
@@ -84,6 +87,7 @@ SAContainer.bind<ChannelEventRepository>(ChannelEventRepository).toSelf().inSing
 SAContainer.bind<CommandResponseRepository>(CommandResponseRepository).toSelf().inSingletonScope();
 SAContainer.bind<LurkRespository>(LurkRespository).toSelf().inSingletonScope();
 SAContainer.bind<RaidRepository>(RaidRepository).toSelf().inSingletonScope();
+SAContainer.bind<SubscriberRepository>(SubscriberRepository).toSelf().inSingletonScope();
 
 SAContainer.bind<IChatBot>(ChatBot).toSelf().inSingletonScope();
 

@@ -64,16 +64,4 @@ export default class Subscribers extends Model {
 
     @BelongsTo(() => SubscriptionGiftUsers)
     gift!: SubscriptionGiftUsers;
-
-    /**
-     * Get the last subscriber in the database
-     * @returns The record of the last Subscriber
-     */
-    static async getLastSubscriber(): Promise<Subscribers | null> {
-        return this
-            .findOne({
-                order: [['createdAt', 'DESC']],
-                include: [SubscriptionGiftUsers],
-            });
-    }
 }
