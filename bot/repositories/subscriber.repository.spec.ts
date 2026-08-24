@@ -9,12 +9,8 @@ import {
 } from '@twurple/chat';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
 import SubscriberRepository from './subscriber.repository.js';
-import { mockLogger } from '../../tests/common.mocks.js';
+import { mockLogger, mockError } from '../../tests/common.mocks.js';
 import { Subscribers, SubscriptionType } from '../../database/index.js';
-
-const mockError = new Error('[Test Error Message]: Mock', {
-    cause: 'Database Save Failed',
-});
 
 describe('Subscription Repository (postgres)', () => {
     let container: StartedPostgreSqlContainer;

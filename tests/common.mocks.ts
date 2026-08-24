@@ -5,20 +5,20 @@ import winston from 'winston';
 import CommandResponseRepository from '../bot/repositories/command-response.repository.js';
 
 export const mockChatClient = <unknown>{
-    say: jest.fn(),
+    say: jest.fn<ChatClient['say']>(),
 } as jest.Mocked<ChatClient>;
 
 export const mockApiClient = <unknown>{
     users: {
-        getUserByName: jest.fn(),
-        getUserById: jest.fn(),
-        getAuthenticatedUser: jest.fn(),
+        getUserByName: jest.fn<HelixUserApi['getUserByName']>(),
+        getUserById: jest.fn<HelixUserApi['getUserById']>(),
+        getAuthenticatedUser: jest.fn<HelixUserApi['getAuthenticatedUser']>(),
     },
     streams: {
-        getStreamByUserName: jest.fn(),
+        getStreamByUserName: jest.fn<HelixStreamApi['getStreamByUserName']>(),
     },
     channels: {
-        getChannelFollowers: jest.fn(),
+        getChannelFollowers: jest.fn<HelixChannelApi['getChannelFollowers']>(),
     },
 } as jest.Mocked<ApiClient> & {
     users: jest.Mocked<Pick<HelixUserApi, 'getUserByName' | 'getUserById' | 'getAuthenticatedUser'>>;
@@ -27,16 +27,21 @@ export const mockApiClient = <unknown>{
 };
 
 export const mockLogger = <unknown>{
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+    info: jest.fn<winston.Logger['info']>(),
+    warn: jest.fn<winston.Logger['warn']>(),
+    error: jest.fn<winston.Logger['error']>(),
 } as jest.Mocked<winston.Logger>;
 
 export const mockCommandResponseRepository = <unknown>{
-    initialize: jest.fn(),
-    addCommandText: jest.fn(),
-    getCommandText: jest.fn(),
-    setCommandText: jest.fn(),
-    removeCommandText: jest.fn(),
-    restoreCommandText: jest.fn(),
+    initialize: jest.fn<CommandResponseRepository['initialize']>(),
+    addCommandText: jest.fn<CommandResponseRepository['addCommandText']>(),
+    getCommandText: jest.fn<CommandResponseRepository['getCommandText']>(),
+    setCommandText: jest.fn<CommandResponseRepository['setCommandText']>(),
+    removeCommandText: jest.fn<CommandResponseRepository['removeCommandText']>(),
+    restoreCommandText: jest.fn<CommandResponseRepository['restoreCommandText']>(),
 } as jest.Mocked<CommandResponseRepository>;
+
+/** Error mock for database error testing */
+export const mockError = new Error('[Test Error Message]: Mock', {
+    cause: 'Database Save Failed',
+});

@@ -4,12 +4,8 @@ import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers
 import { EventSubStreamOnlineEvent } from '@twurple/eventsub-base';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
 import StreamEventRepository from './stream-event.repository.js';
-import { mockLogger } from '../../tests/common.mocks.js';
+import { mockLogger, mockError } from '../../tests/common.mocks.js';
 import { StreamEventRecord } from '../../database/index.js';
-
-const mockError = new Error('[Test Error Message]: Mock', {
-    cause: 'Database Save Failed',
-});
 
 describe('Stream Event Repository (postgres)', () => {
     let container: StartedPostgreSqlContainer;
