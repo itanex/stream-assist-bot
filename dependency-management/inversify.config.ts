@@ -69,6 +69,7 @@ import {
     BanEventRepository,
     ChannelEventRepository,
     CommandResponseRepository,
+    DeathCountRepository,
     LurkRespository,
     RaidRepository,
     StreamEventRepository,
@@ -86,6 +87,7 @@ SAContainer.bind<StreamStateService>(StreamStateService).toSelf().inSingletonSco
 SAContainer.bind<BanEventRepository>(BanEventRepository).toSelf().inSingletonScope();
 SAContainer.bind<ChannelEventRepository>(ChannelEventRepository).toSelf().inSingletonScope();
 SAContainer.bind<CommandResponseRepository>(CommandResponseRepository).toSelf().inSingletonScope();
+SAContainer.bind<DeathCountRepository>(DeathCountRepository).toSelf().inSingletonScope();
 SAContainer.bind<LurkRespository>(LurkRespository).toSelf().inSingletonScope();
 SAContainer.bind<RaidRepository>(RaidRepository).toSelf().inSingletonScope();
 SAContainer.bind<StreamEventRepository>(StreamEventRepository).toSelf().inSingletonScope();
