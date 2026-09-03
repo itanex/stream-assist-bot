@@ -1,7 +1,11 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { ChatUser } from '@twurple/chat';
-import { mockChatClient, mockLogger, mockCommandResponseRepository } from '../../tests/common.mocks.js';
+import {
+    mockChatClient,
+    mockLogger,
+    mockCommandResponseService,
+} from '../../tests/common.mocks.js';
 import { DivideByZeroCommand } from './DivideByZeroCommand.js';
 import { defaultResponses } from '../utilities/default-responses.js';
 
@@ -19,14 +23,14 @@ describe(' Divide By Zero Command Tests', () => {
         jest.resetAllMocks();
         subject = new DivideByZeroCommand(
             mockChatClient,
-            mockCommandResponseRepository,
+            mockCommandResponseService,
             mockLogger,
         );
     });
 
     it('says the configured text in chat', async () => {
         // Arrange
-        mockCommandResponseRepository
+        mockCommandResponseService
             .getCommandText
             .mockReturnValue(configuredText);
 
@@ -40,7 +44,7 @@ describe(' Divide By Zero Command Tests', () => {
 
     it('says the default text and logs a warning when no text is configured', async () => {
         // Arrange
-        mockCommandResponseRepository
+        mockCommandResponseService
             .getCommandText
             .mockReturnValue(undefined);
 
@@ -48,7 +52,7 @@ describe(' Divide By Zero Command Tests', () => {
         await subject.handle(channel, command, user, message);
 
         // Assert
-        expect(mockChatClient.say).toHaveBeenNthCalledWith(1, channel, defaultResponses.dividebyzero);
+        expect(mockChatClient.say).toHaveBeenNthCalledWith(1, channel, defaultResponses.dividebyzero['']);
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.anything());
         expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
     });

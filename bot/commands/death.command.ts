@@ -9,8 +9,8 @@ import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import InjectionTypes from '../../dependency-management/types.js';
 import { CommandTimeout } from '../types/CommandTimeout.js';
 import { CommandName, TransientContext } from '../utilities/default-responses.js';
-import CommandResponseRepository from '../repositories/command-response.repository.js';
 import { templateResolver } from '../utilities/template-resolver.js';
+import { CommandResponseService } from '../services/index.js';
 import DeathCountRepository from '../repositories/death-count.repository.js';
 
 dayjs.extend(localizedFormat);
@@ -139,7 +139,7 @@ export class LastDeathCountCommmand implements ICommandHandler {
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(ApiClient) private apiClient: ApiClient,
-        @inject(CommandResponseRepository) private commandResponseRepository: CommandResponseRepository,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(DeathCountRepository) private deathCountRepository: DeathCountRepository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
@@ -152,7 +152,7 @@ export class LastDeathCountCommmand implements ICommandHandler {
             const records = await this.deathCountRepository
                 .getLastStreamDeathCount(stream.id);
 
-            const result = this.commandResponseRepository.getCommandText(this.commandName);
+            const result = this.commandResponseService.getCommandText(this.commandName);
 
             if (result) {
                 const games = records

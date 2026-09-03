@@ -5,8 +5,8 @@ import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import { CommandName, TransientContext } from '../utilities/default-responses.js';
-import CommandResponseRepository from '../repositories/command-response.repository.js';
 import { templateResolver } from '../utilities/template-resolver.js';
+import { CommandResponseService } from '../services/index.js';
 
 @injectable()
 export class CuddleCommand implements ICommandHandler {
@@ -26,7 +26,7 @@ export class CuddleCommand implements ICommandHandler {
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(ApiClient) private apiClient: ApiClient,
-        @inject(CommandResponseRepository) private commandResponseRepository: CommandResponseRepository,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
@@ -38,7 +38,7 @@ export class CuddleCommand implements ICommandHandler {
             const targetUser = await this.apiClient.users.getUserByName(targetUsername);
 
             if (targetUser && userstate.displayName !== targetUser.displayName) {
-                const result = this.commandResponseRepository.getCommandText(this.commandName);
+                const result = this.commandResponseService.getCommandText(this.commandName);
 
                 if (result) {
                     const context: TransientContext = {

@@ -3,7 +3,7 @@ import { jest } from '@jest/globals';
 import { ChatUser } from '@twurple/chat';
 import {
     mockChatClient,
-    mockCommandResponseRepository,
+    mockCommandResponseService,
     mockLogger,
 } from '../../tests/common.mocks.js';
 import {
@@ -12,7 +12,7 @@ import {
     WhoIsLurkingCommand,
     clearLurkingUsers,
 } from './lurk.commands.js';
-import { LurkingUsers } from '../../database/index.js';
+import { CommandResponse, LurkingUsers } from '../../database/index.js';
 import LurkRespository from '../repositories/lurk.respository.js';
 import { transientKeywords } from '../utilities/default-responses.js';
 
@@ -37,7 +37,7 @@ describe('Lurk Commands Tests', () => {
 
             subject = new LurkCommand(
                 mockChatClient,
-                mockCommandResponseRepository,
+                mockCommandResponseService,
                 mockLurkRepository,
                 mockLogger,
             );
@@ -57,7 +57,7 @@ describe('Lurk Commands Tests', () => {
                     true,
                 ]);
 
-            mockCommandResponseRepository
+            mockCommandResponseService
                 .getCommandText
                 .mockReturnValue(responseText);
 
@@ -70,7 +70,7 @@ describe('Lurk Commands Tests', () => {
             expect(mockLurkRepository.setUserToLurk)
                 .toHaveBeenCalledWith(user);
 
-            expect(mockCommandResponseRepository.getCommandText)
+            expect(mockCommandResponseService.getCommandText)
                 .toHaveBeenNthCalledWith(1, subject.commandName);
 
             expect(mockChatClient.say)
@@ -114,7 +114,7 @@ describe('Lurk Commands Tests', () => {
 
             subject = new UnLurkCommand(
                 mockChatClient,
-                mockCommandResponseRepository,
+                mockCommandResponseService,
                 mockLurkRepository,
                 mockLogger,
             );
@@ -137,7 +137,7 @@ describe('Lurk Commands Tests', () => {
                 .setUserToUnlurk
                 .mockResolvedValue(calledUser);
 
-            mockCommandResponseRepository
+            mockCommandResponseService
                 .getCommandText
                 .mockReturnValue(responseText);
 
@@ -151,7 +151,7 @@ describe('Lurk Commands Tests', () => {
             expect(calledUser.duration).toHaveBeenCalledTimes(1);
             expect(calledUser.duration().humanize).toHaveBeenCalledTimes(1);
 
-            expect(mockCommandResponseRepository.getCommandText)
+            expect(mockCommandResponseService.getCommandText)
                 .toHaveBeenNthCalledWith(1, subject.commandName);
             expect(mockChatClient.say)
                 .toHaveBeenNthCalledWith(1, channel, expect.stringContaining(calledUser.displayName));

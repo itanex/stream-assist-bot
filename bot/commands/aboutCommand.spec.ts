@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { ChatUser } from '@twurple/chat';
-import { mockChatClient, mockLogger, mockCommandResponseRepository } from '../../tests/common.mocks.js';
+import { mockChatClient, mockLogger, mockCommandResponseService } from '../../tests/common.mocks.js';
 import { AboutCommand } from './aboutCommand.js';
 import { defaultResponses } from '../utilities/default-responses.js';
 
@@ -20,14 +20,14 @@ describe('About Command Tests', () => {
 
         subject = new AboutCommand(
             mockChatClient,
-            mockCommandResponseRepository,
+            mockCommandResponseService,
             mockLogger,
         );
     });
 
     it('says the configured text in chat', async () => {
         // Arrange
-        mockCommandResponseRepository
+        mockCommandResponseService
             .getCommandText
             .mockReturnValue(configuredText);
 
@@ -41,7 +41,7 @@ describe('About Command Tests', () => {
 
     it('says the default text and logs a warning when no text is configured', async () => {
         // Arrange
-        mockCommandResponseRepository
+        mockCommandResponseService
             .getCommandText
             .mockReturnValue(undefined);
 
@@ -49,7 +49,7 @@ describe('About Command Tests', () => {
         await subject.handle(channel, command, user, message);
 
         // Assert
-        expect(mockChatClient.say).toHaveBeenNthCalledWith(1, channel, defaultResponses.about);
+        expect(mockChatClient.say).toHaveBeenNthCalledWith(1, channel, defaultResponses.about['']);
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.anything());
         expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
     });

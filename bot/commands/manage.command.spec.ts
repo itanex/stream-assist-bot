@@ -8,13 +8,17 @@ import ManageCommand, {
     UnsupportedMessage,
     UpdateReplies,
 } from './manage.command.js';
-import { mockChatClient, mockCommandResponseRepository, mockLogger } from '../../tests/common.mocks.js';
+import {
+    mockChatClient,
+    mockCommandResponseService,
+    mockLogger,
+} from '../../tests/common.mocks.js';
 import {
     CommandTextInsertResult,
     CommandTextRemoveResult,
     CommandTextUpdateResult,
     CommandTextRestoreResult,
-} from '../repositories/command-response.repository.js';
+} from '../services/index.js';
 
 /** Utility method for constructing command message inline with ManageCommand */
 const messageFn = (subcommand: string, compoundName: string, text: string = '') => `!command ${subcommand} ${compoundName} ${text}`.trim();
@@ -44,7 +48,7 @@ describe('ManageCommand', () => {
 
         subject = new ManageCommand(
             mockChatClient,
-            mockCommandResponseRepository,
+            mockCommandResponseService,
             mockLogger,
         );
     });
@@ -76,7 +80,7 @@ describe('ManageCommand', () => {
                 const message = messageFn(subCommand, compoundName, text);
                 const args = parseComand(message, subject.exp);
 
-                mockCommandResponseRepository
+                mockCommandResponseService
                     .addCommandText
                     .mockResolvedValue(result);
 
@@ -84,7 +88,7 @@ describe('ManageCommand', () => {
                 await subject.handle(channel, command, user, message, args);
 
                 // Assert
-                expect(mockCommandResponseRepository.addCommandText)
+                expect(mockCommandResponseService.addCommandText)
                     .toHaveBeenCalledWith(name, text, variant);
                 expect(mockChatClient.say).toHaveBeenCalledWith(channel, InsertReplies[result](compoundName));
             },
@@ -95,7 +99,7 @@ describe('ManageCommand', () => {
             const message = messageFn(subCommand, command, text);
             const args = [subCommand, command, text];
 
-            mockCommandResponseRepository
+            mockCommandResponseService
                 .addCommandText
                 .mockRejectedValue(new Error('connection lost'));
 
@@ -118,15 +122,15 @@ describe('ManageCommand', () => {
                 const message = messageFn(subCommand, compoundName, text);
                 const args = parseComand(message, subject.exp);
 
-                mockCommandResponseRepository
-                    .setCommandText
+                mockCommandResponseService
+                    .updateCommandText
                     .mockResolvedValue(result);
 
                 // Act
                 await subject.handle(channel, command, user, message, args);
 
                 // Assert
-                expect(mockCommandResponseRepository.setCommandText)
+                expect(mockCommandResponseService.updateCommandText)
                     .toHaveBeenCalledWith(name, text, variant);
                 expect(mockChatClient.say).toHaveBeenCalledWith(channel, UpdateReplies[result](compoundName));
             },
@@ -137,8 +141,8 @@ describe('ManageCommand', () => {
             const message = messageFn(subCommand, command, text);
             const args = [subCommand, command, text];
 
-            mockCommandResponseRepository
-                .setCommandText
+            mockCommandResponseService
+                .updateCommandText
                 .mockRejectedValue(new Error('connection lost'));
 
             // Act & Assert
@@ -160,7 +164,7 @@ describe('ManageCommand', () => {
                 const message = messageFn(subCommand, compoundName);
                 const args = parseComand(message, subject.exp);
 
-                mockCommandResponseRepository
+                mockCommandResponseService
                     .removeCommandText
                     .mockResolvedValue(result);
 
@@ -168,7 +172,7 @@ describe('ManageCommand', () => {
                 await subject.handle(channel, command, user, message, args);
 
                 // Assert
-                expect(mockCommandResponseRepository.removeCommandText)
+                expect(mockCommandResponseService.removeCommandText)
                     .toHaveBeenCalledWith(name, variant);
                 expect(mockChatClient.say).toHaveBeenCalledWith(channel, RemoveReplies[result](compoundName));
             },
@@ -179,7 +183,7 @@ describe('ManageCommand', () => {
             const message = messageFn(subCommand, command, text);
             const args = [subCommand, command, text];
 
-            mockCommandResponseRepository
+            mockCommandResponseService
                 .removeCommandText
                 .mockRejectedValue(new Error('connection lost'));
 
@@ -202,7 +206,7 @@ describe('ManageCommand', () => {
                 const message = messageFn(subCommand, compoundName);
                 const args = parseComand(message, subject.exp);
 
-                mockCommandResponseRepository
+                mockCommandResponseService
                     .restoreCommandText
                     .mockResolvedValue(result);
 
@@ -210,7 +214,7 @@ describe('ManageCommand', () => {
                 await subject.handle(channel, command, user, message, args);
 
                 // Assert
-                expect(mockCommandResponseRepository.restoreCommandText)
+                expect(mockCommandResponseService.restoreCommandText)
                     .toHaveBeenCalledWith(name, variant);
                 expect(mockChatClient.say).toHaveBeenCalledWith(channel, RestoreReplies[result](compoundName));
             },
@@ -221,7 +225,7 @@ describe('ManageCommand', () => {
             const message = messageFn(subCommand, command, text);
             const args = [subCommand, command, text];
 
-            mockCommandResponseRepository
+            mockCommandResponseService
                 .restoreCommandText
                 .mockRejectedValue(new Error('connection lost'));
 

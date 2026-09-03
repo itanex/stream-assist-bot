@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 import { ApiClient, HelixChannelApi, HelixStreamApi, HelixUserApi } from '@twurple/api';
 import { ChatClient } from '@twurple/chat';
 import winston from 'winston';
-import CommandResponseRepository from '../bot/repositories/command-response.repository.js';
+import { CommandResponseService } from '../bot/services/index.js';
 
 export const mockChatClient = <unknown>{
     say: jest.fn<ChatClient['say']>(),
@@ -32,14 +32,14 @@ export const mockLogger = <unknown>{
     error: jest.fn<winston.Logger['error']>(),
 } as jest.Mocked<winston.Logger>;
 
-export const mockCommandResponseRepository = <unknown>{
-    initialize: jest.fn<CommandResponseRepository['initialize']>(),
-    addCommandText: jest.fn<CommandResponseRepository['addCommandText']>(),
-    getCommandText: jest.fn<CommandResponseRepository['getCommandText']>(),
-    setCommandText: jest.fn<CommandResponseRepository['setCommandText']>(),
-    removeCommandText: jest.fn<CommandResponseRepository['removeCommandText']>(),
-    restoreCommandText: jest.fn<CommandResponseRepository['restoreCommandText']>(),
-} as jest.Mocked<CommandResponseRepository>;
+export const mockCommandResponseService = <unknown>{
+    initialize: jest.fn<CommandResponseService['initialize']>(),
+    addCommandText: jest.fn<CommandResponseService['addCommandText']>(),
+    getCommandText: jest.fn<CommandResponseService['getCommandText']>(),
+    updateCommandText: jest.fn<CommandResponseService['updateCommandText']>(),
+    removeCommandText: jest.fn<CommandResponseService['removeCommandText']>(),
+    restoreCommandText: jest.fn<CommandResponseService['restoreCommandText']>(),
+} as jest.Mocked<CommandResponseService>;
 
 /** Error mock for database error testing */
 export const mockError = new Error('[Test Error Message]: Mock', {

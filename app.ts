@@ -9,8 +9,8 @@ import { SocketServer, type ISocketServer } from './bot/overlay/socket.server.js
 import OverlayServer, { IOverlayServer } from './bot/overlay/overlay.server.js';
 import AuthenticationServer, { IAuthenticationServer } from './bot/auth/auth.server.js';
 import { isUserAuthenticated } from './bot/auth/authProvider.js';
+import { CommandResponseService } from './bot/services/index.js';
 import environment from './configurations/environment.js';
-import CommandResponseRepository from './bot/repositories/command-response.repository.js';
 import pkg from './package.json' with { type: 'json' };
 
 const { name, version } = pkg;
@@ -24,7 +24,7 @@ class App {
         @inject(SocketServer) private socketServer: ISocketServer,
         @inject(OverlayServer) private overlayServer: IOverlayServer,
         @inject(AuthenticationServer) private authServer: IAuthenticationServer,
-        @inject(CommandResponseRepository) private commandResponseRepository: CommandResponseRepository,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(InjectionTypes.Logger) public logger: winston.Logger,
     ) {
         this.logger.info(`** Application initialized **`);
@@ -43,7 +43,7 @@ class App {
             this.scheduler.scheduleChatEvents(),
         ]);
 
-        await this.commandResponseRepository.initialize();
+        await this.commandResponseService.initialize();
 
         this.authServer.listen();
         this.overlayServer.listen();

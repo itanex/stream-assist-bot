@@ -75,6 +75,7 @@ import {
     StreamEventRepository,
     SubscriberRepository,
 } from '../bot/repositories/index.js';
+import { CommandResponseService } from '../bot/services/index.js';
 
 const SAContainer = new Container();
 
@@ -92,6 +93,8 @@ SAContainer.bind<LurkRespository>(LurkRespository).toSelf().inSingletonScope();
 SAContainer.bind<RaidRepository>(RaidRepository).toSelf().inSingletonScope();
 SAContainer.bind<StreamEventRepository>(StreamEventRepository).toSelf().inSingletonScope();
 SAContainer.bind<SubscriberRepository>(SubscriberRepository).toSelf().inSingletonScope();
+
+SAContainer.bind<CommandResponseService>(CommandResponseService).toSelf().inSingletonScope();
 
 SAContainer.bind<IChatBot>(ChatBot).toSelf().inSingletonScope();
 

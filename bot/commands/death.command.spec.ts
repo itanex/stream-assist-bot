@@ -6,7 +6,7 @@ import {
     mockChatClient,
     mockApiClient,
     mockLogger,
-    mockCommandResponseRepository,
+    mockCommandResponseService,
 } from '../../tests/common.mocks.js';
 import {
     DeathCommand,
@@ -229,7 +229,7 @@ describe('Death Commands Tests', () => {
             subject = new LastDeathCountCommmand(
                 mockChatClient,
                 mockApiClient,
-                mockCommandResponseRepository,
+                mockCommandResponseService,
                 mockDeathCountRepository,
                 mockLogger,
             );
@@ -254,7 +254,7 @@ describe('Death Commands Tests', () => {
                 .getLastStreamDeathCount
                 .mockResolvedValue(records);
 
-            mockCommandResponseRepository
+            mockCommandResponseService
                 .getCommandText
                 .mockReturnValue(`%${transientKeywords.streamdate}%, %${transientKeywords.deathtotal}%, %${transientKeywords.streamcategory}%`);
 
@@ -269,7 +269,7 @@ describe('Death Commands Tests', () => {
             expect(mockDeathCountRepository.getLastStreamDeathCount)
                 .toHaveBeenCalledWith(streamData.id);
 
-            expect(mockCommandResponseRepository.getCommandText)
+            expect(mockCommandResponseService.getCommandText)
                 .toHaveBeenCalledWith(subject.commandName);
             expect(mockChatClient.say)
                 .toHaveBeenCalledTimes(1);
@@ -283,7 +283,7 @@ describe('Death Commands Tests', () => {
 
         it('logs a warning when no death count record is found', async () => {
             // Arrange
-            mockCommandResponseRepository
+            mockCommandResponseService
                 .getCommandText
                 .mockReturnValue(undefined);
 

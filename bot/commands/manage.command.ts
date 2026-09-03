@@ -3,13 +3,14 @@ import { ChatClient, ChatUser } from '@twurple/chat';
 import winston from 'winston';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import InjectionTypes from '../../dependency-management/types.js';
-import CommandResponseRepository, {
+import {
+    CommandResponseService,
     CommandTextValidationResult,
     CommandTextInsertResult,
     CommandTextUpdateResult,
     CommandTextRemoveResult,
     CommandTextRestoreResult,
-} from '../repositories/command-response.repository.js';
+} from '../services/index.js';
 
 export const GenericReplies: Record<CommandTextValidationResult, (name: string) => string> = {
     invalidInput: () => 'Invalid input: both [name] and [text] are required',
@@ -65,7 +66,7 @@ export default class ManageCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(CommandResponseRepository) private commandResponseRepository: CommandResponseRepository,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) { }
 
@@ -80,22 +81,22 @@ export default class ManageCommand implements ICommandHandler {
             // eslint-disable-next-line default-case
             switch (subCommand.toLowerCase()) {
                 case 'add': {
-                    const result = await this.commandResponseRepository.addCommandText(name, text, variant);
+                    const result = await this.commandResponseService.addCommandText(name, text, variant);
                     await this.chatClient.say(channel, InsertReplies[result](compoundName));
                     break;
                 }
                 case 'edit': {
-                    const result = await this.commandResponseRepository.setCommandText(name, text, variant);
+                    const result = await this.commandResponseService.updateCommandText(name, text, variant);
                     await this.chatClient.say(channel, UpdateReplies[result](compoundName));
                     break;
                 }
                 case 'remove': {
-                    const result = await this.commandResponseRepository.removeCommandText(name, variant);
+                    const result = await this.commandResponseService.removeCommandText(name, variant);
                     await this.chatClient.say(channel, RemoveReplies[result](compoundName));
                     break;
                 }
                 case 'restore': {
-                    const result = await this.commandResponseRepository.restoreCommandText(name, variant);
+                    const result = await this.commandResponseService.restoreCommandText(name, variant);
                     await this.chatClient.say(channel, RestoreReplies[result](compoundName));
                     break;
                 }
