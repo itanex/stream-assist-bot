@@ -1,4 +1,3 @@
-import { EventSubChannelRaidEvent } from '@twurple/eventsub-base';
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
 
 @Table({
@@ -29,7 +28,7 @@ export default class RaidEvent extends Model {
      * The ID of the broadcaster.
      */
     @Column({
-        type: DataType.STRING(20),
+        type: DataType.STRING(40),
     })
     raidingBroadcasterId!: string;
 
@@ -53,7 +52,7 @@ export default class RaidEvent extends Model {
      * The ID of the raiding user.
      */
     @Column({
-        type: DataType.STRING(20),
+        type: DataType.STRING(40),
     })
     raidedBroadcasterId!: string;
 
@@ -72,24 +71,4 @@ export default class RaidEvent extends Model {
         type: DataType.STRING(40),
     })
     raidedBroadcasterDisplayName!: string;
-
-    /**
-     * Records the event of the raiding broadcaster and the raided broadcaster
-     * @param event Raid Event
-     * @returns Raid Event Record
-     */
-    static async raid(event: EventSubChannelRaidEvent): Promise<RaidEvent> {
-        const record: Partial<RaidEvent> = {
-            raidDate: new Date(),
-            raidingBroadcasterId: event.raidingBroadcasterId,
-            raidingBroadcasterName: event.raidingBroadcasterName,
-            raidingBroadcasterDisplayName: event.raidingBroadcasterDisplayName,
-            raidedBroadcasterId: event.raidedBroadcasterId,
-            raidedBroadcasterName: event.raidedBroadcasterName,
-            raidedBroadcasterDisplayName: event.raidedBroadcasterDisplayName,
-        };
-
-        return this
-            .create(record);
-    }
 }

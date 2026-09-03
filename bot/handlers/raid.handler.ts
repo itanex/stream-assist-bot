@@ -1,13 +1,11 @@
 import { ApiClient } from '@twurple/api';
 import { ChatRaidInfo, ChatUser, UserNotice } from '@twurple/chat';
-import dayjs from 'dayjs';
-import { inject, injectable, multiInject, named } from 'inversify';
+import { inject, injectable, multiInject } from 'inversify';
 import winston from 'winston';
 import environment from '../../configurations/environment.js';
 import { ICommandHandler, ShoutOutCommand } from '../commands/index.js';
 import InjectionTypes from '../../dependency-management/types.js';
-import Database from '../../database/database.js';
-import { Raiders } from '../../database/index.js';
+import RaidRepository from '../repositories/raid.repository.js';
 
 export interface IRaidStreamEvent {
     onRaid(channel: string, user: string, raidInfo: ChatRaidInfo, message: UserNotice): Promise<void>;
@@ -24,7 +22,7 @@ export class RaidHandler implements IRaidStreamEvent {
     constructor(
         @inject(ApiClient) private apiClient: ApiClient,
         @multiInject(InjectionTypes.CommandHandlers) commandHandlers: ICommandHandler[],
-        @inject(Database) private database: Database,
+        @inject(RaidRepository) private raidRepository: RaidRepository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
         // clear
@@ -46,15 +44,7 @@ export class RaidHandler implements IRaidStreamEvent {
             await this.shoutOutCommand.handle(channel, this.command, chatUser, this.command, [raidInfo.displayName], undefined, true);
         }, 3000);
 
-        const raider = Raiders.build({
-            raider: raidInfo.displayName,
-            time: dayjs().toISOString(),
-            viewerCount: raidInfo.viewerCount,
-        }, {
-            isNewRecord: true,
-        });
-
-        await raider.save();
+        await this.raidRepository.saveRaid(raidInfo);
 
         this.logger.info(`* Executed Raid Handler :: ${user}|${raidInfo.displayName} > Viewers: ${raidInfo.viewerCount}`);
     }

@@ -1,7 +1,11 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { ChatUser } from '@twurple/chat';
-import { mockChatClient, mockLogger, mockCommandResponseService } from '../../tests/common.mocks.js';
+import {
+    mockChatClient,
+    mockLogger,
+    mockCommandResponseService,
+} from '../../tests/common.mocks.js';
 import { DrinkCommand } from './drinkCommand.js';
 import { defaultResponses } from '../utilities/default-responses.js';
 
@@ -49,7 +53,7 @@ describe('Drink Command Tests', () => {
         await subject.handle(channel, command, user, message);
 
         // Assert
-        expect(mockChatClient.say).toHaveBeenNthCalledWith(1, channel, defaultResponses.drink);
+        expect(mockChatClient.say).toHaveBeenNthCalledWith(1, channel, defaultResponses.drink['']);
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.anything());
         expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
     });

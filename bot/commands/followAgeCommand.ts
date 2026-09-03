@@ -7,9 +7,9 @@ import InjectionTypes from '../../dependency-management/types.js';
 import { type Environment } from '../../configurations/environment.js';
 import Timespan, { getAgeReport } from '../utilities/timeSpan.js';
 import { CommandName, TransientContext } from '../utilities/default-responses.js';
-import CommandResponseService from '../utilities/command-response.service.js';
 import { templateResolver } from '../utilities/template-resolver.js';
 import Broadcaster from '../utilities/broadcaster.js';
+import { CommandResponseService } from '../services/index.js';
 
 @injectable()
 export class FollowAgeCommand implements ICommandHandler {

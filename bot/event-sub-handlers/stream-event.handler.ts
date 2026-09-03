@@ -1,8 +1,10 @@
-import { EventSubStreamOfflineEvent, EventSubStreamOnlineEvent } from '@twurple/eventsub-base';
 import { inject, injectable } from 'inversify';
+import { EventSubStreamOfflineEvent, EventSubStreamOnlineEvent } from '@twurple/eventsub-base';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
-import { LurkingUsers, StreamEventRecord } from '../../database/index.js';
+import LurkRespository from '../repositories/lurk.respository.js';
+import StreamEventRepository from '../repositories/stream-event.repository.js';
+import { StreamEventRecord } from '../../database/index.js';
 
 @injectable()
 export default class StreamEventHandler {
@@ -10,6 +12,8 @@ export default class StreamEventHandler {
     static clearTimeoutRef: NodeJS.Timeout | null = null;
 
     constructor(
+        @inject(LurkRespository) private lurkRepository: LurkRespository,
+        @inject(StreamEventRepository) private streamEventRespository: StreamEventRepository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) { }
 
@@ -28,18 +32,20 @@ export default class StreamEventHandler {
             StreamEventHandler.clearTimeoutRef = null;
         } else {
             // Clean up lurking users on fresh stream...
-            const lastStream = await StreamEventRecord.getLastStream(event.broadcasterId);
+            const lastStream = await this.streamEventRespository
+                .getLastStream(event.broadcasterId);
 
             if (lastStream) {
-                await LurkingUsers.setAllUsersToUnlurk(lastStream.endDate);
+                await this.lurkRepository
+                    .setAllUsersToUnlurk(lastStream.endDate);
             }
         }
 
-        return StreamEventRecord
+        return this.streamEventRespository
             .saveStreamStartEvent(event)
             .then(
-                (record: StreamEventRecord) => {
-                    this.logger.info(`Start of stream (E-${event.id}::R-${record.streamId})`);
+                (record: StreamEventRecord | null) => {
+                    this.logger.info(`Start of stream (E-${event.id}::R-${record?.streamId})`);
                 },
                 (reason: any) => {
                     this.logger.error('Error trying to record end of stream in DB', reason);
@@ -61,7 +67,7 @@ export default class StreamEventHandler {
 
         StreamEventHandler.clearTimeoutRef = setTimeout(() => this.unlurkUsers(endTime), delay);
 
-        return StreamEventRecord
+        return this.streamEventRespository
             .saveStreamEndEvent(endTime, event)
             .then(
                 ([count, _]: [number, StreamEventRecord[]]) => {
@@ -78,7 +84,7 @@ export default class StreamEventHandler {
      * @returns The resulting promise
      */
     private async unlurkUsers(endTime: Date) {
-        return LurkingUsers
+        return this.lurkRepository
             .setAllUsersToUnlurk(endTime)
             .then(
                 ([count, _]) => {

@@ -8,13 +8,17 @@ import ManageCommand, {
     UnsupportedMessage,
     UpdateReplies,
 } from './manage.command.js';
-import { mockChatClient, mockCommandResponseService, mockLogger } from '../../tests/common.mocks.js';
+import {
+    mockChatClient,
+    mockCommandResponseService,
+    mockLogger,
+} from '../../tests/common.mocks.js';
 import {
     CommandTextInsertResult,
     CommandTextRemoveResult,
     CommandTextUpdateResult,
     CommandTextRestoreResult,
-} from '../utilities/command-response.service.js';
+} from '../services/index.js';
 
 /** Utility method for constructing command message inline with ManageCommand */
 const messageFn = (subcommand: string, compoundName: string, text: string = '') => `!command ${subcommand} ${compoundName} ${text}`.trim();
@@ -119,14 +123,14 @@ describe('ManageCommand', () => {
                 const args = parseComand(message, subject.exp);
 
                 mockCommandResponseService
-                    .setCommandText
+                    .updateCommandText
                     .mockResolvedValue(result);
 
                 // Act
                 await subject.handle(channel, command, user, message, args);
 
                 // Assert
-                expect(mockCommandResponseService.setCommandText)
+                expect(mockCommandResponseService.updateCommandText)
                     .toHaveBeenCalledWith(name, text, variant);
                 expect(mockChatClient.say).toHaveBeenCalledWith(channel, UpdateReplies[result](compoundName));
             },
@@ -138,7 +142,7 @@ describe('ManageCommand', () => {
             const args = [subCommand, command, text];
 
             mockCommandResponseService
-                .setCommandText
+                .updateCommandText
                 .mockRejectedValue(new Error('connection lost'));
 
             // Act & Assert

@@ -4,6 +4,11 @@ import { ChatUser } from '@twurple/chat';
 import { mockChatClient, mockLogger } from '../../tests/common.mocks.js';
 import { LastRaidCommand } from './lastRaidCommand.js';
 import { Raiders } from '../../database/index.js';
+import RaidRepository from '../repositories/raid.repository.js';
+
+const mockRaidRepository = <unknown>{
+    getLastRaid: jest.fn<() => Promise<Raiders>>(),
+} as jest.Mocked<RaidRepository>;
 
 describe('Last Raid Command Tests', () => {
     const channel = 'TestChannel';
@@ -18,6 +23,7 @@ describe('Last Raid Command Tests', () => {
 
         subject = new LastRaidCommand(
             mockChatClient,
+            mockRaidRepository,
             mockLogger,
         );
     });
@@ -35,14 +41,15 @@ describe('Last Raid Command Tests', () => {
                 raider: 'TestRaidUser',
             } as Raiders;
 
-            Raiders.getLastRaid = jest.fn<() => Promise<Raiders>>()
+            mockRaidRepository
+                .getLastRaid
                 .mockResolvedValue(mockRaider);
 
             // Act
             await subject.handle(channel, command, user, message, []);
 
             // Assert
-            expect(Raiders.getLastRaid)
+            expect(mockRaidRepository.getLastRaid)
                 .toHaveBeenCalledTimes(1);
 
             expect(mockChatClient.say)

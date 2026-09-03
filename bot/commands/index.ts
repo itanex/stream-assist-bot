@@ -3,7 +3,7 @@ import { AccountAgeCommand } from './accountAgeCommand.js';
 import BrainCommand from './brain.command.js';
 import { CountExhaustCommand } from './countExhaustCommand.js';
 import { CuddleCommand } from './cuddle.command.js';
-import { DeathCommand, DeathCountCommand, LastDeathCountCommmand } from './deathCommands.js';
+import { DeathCommand, DeathCountCommand, LastDeathCountCommmand } from './death.command.js';
 import { DiceCommand } from './diceCommand.js';
 import { DivideByZeroCommand } from './DivideByZeroCommand.js';
 import { DrinkCommand } from './drinkCommand.js';

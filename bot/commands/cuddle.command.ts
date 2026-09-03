@@ -5,8 +5,8 @@ import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import { CommandName, TransientContext } from '../utilities/default-responses.js';
-import CommandResponseService from '../utilities/command-response.service.js';
 import { templateResolver } from '../utilities/template-resolver.js';
+import { CommandResponseService } from '../services/index.js';
 
 @injectable()
 export class CuddleCommand implements ICommandHandler {

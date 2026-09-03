@@ -68,6 +68,7 @@ describe('Account Age Command Tests', () => {
                 .toHaveBeenCalledWith(channel, expect.stringContaining(age));
             expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
         });
+
         it('should display age of targeted account', async () => {
             // Arrange
             const targetUser = <HelixUser>{
@@ -103,6 +104,7 @@ describe('Account Age Command Tests', () => {
                 .toHaveBeenCalledWith(channel, expect.stringContaining(age));
             expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
         });
+
         it('should say nothing (no user found)', async () => {
             // Arrange
             mockApiClient
@@ -117,6 +119,7 @@ describe('Account Age Command Tests', () => {
             expect(mockApiClient.users.getUserByName).toHaveBeenCalled();
             expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
         });
+
         it('should say nothing and log warning', async () => {
             // Arrange
             const targetUser = <HelixUser>{

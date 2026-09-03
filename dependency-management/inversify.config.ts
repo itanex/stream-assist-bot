@@ -65,8 +65,17 @@ import OverlayServer, { IOverlayServer } from '../bot/overlay/overlay.server.js'
 import AuthenticationServer, { IAuthenticationServer } from '../bot/auth/auth.server.js';
 import StreamStateService from '../bot/utilities/stream-state.service.js';
 import JoinGreetingHandler from '../bot/handlers/join-greeting.handler.js';
-import CommandResponseService from '../bot/utilities/command-response.service.js';
-import LurkRespository from '../bot/utilities/lurk.respository.js';
+import {
+    BanEventRepository,
+    ChannelEventRepository,
+    CommandResponseRepository,
+    DeathCountRepository,
+    LurkRespository,
+    RaidRepository,
+    StreamEventRepository,
+    SubscriberRepository,
+} from '../bot/repositories/index.js';
+import { CommandResponseService } from '../bot/services/index.js';
 
 const SAContainer = new Container();
 
@@ -75,8 +84,17 @@ SAContainer.bind<Environment>(InjectionTypes.Environment).toConstantValue(enviro
 
 SAContainer.bind<Broadcaster>(Broadcaster).toSelf().inSingletonScope();
 SAContainer.bind<StreamStateService>(StreamStateService).toSelf().inSingletonScope();
-SAContainer.bind<CommandResponseService>(CommandResponseService).toSelf().inSingletonScope();
+
+SAContainer.bind<BanEventRepository>(BanEventRepository).toSelf().inSingletonScope();
+SAContainer.bind<ChannelEventRepository>(ChannelEventRepository).toSelf().inSingletonScope();
+SAContainer.bind<CommandResponseRepository>(CommandResponseRepository).toSelf().inSingletonScope();
+SAContainer.bind<DeathCountRepository>(DeathCountRepository).toSelf().inSingletonScope();
 SAContainer.bind<LurkRespository>(LurkRespository).toSelf().inSingletonScope();
+SAContainer.bind<RaidRepository>(RaidRepository).toSelf().inSingletonScope();
+SAContainer.bind<StreamEventRepository>(StreamEventRepository).toSelf().inSingletonScope();
+SAContainer.bind<SubscriberRepository>(SubscriberRepository).toSelf().inSingletonScope();
+
+SAContainer.bind<CommandResponseService>(CommandResponseService).toSelf().inSingletonScope();
 
 SAContainer.bind<IChatBot>(ChatBot).toSelf().inSingletonScope();
 

@@ -87,7 +87,7 @@ describe('Lurk Repository (postgres)', () => {
                     displayName: 'TestUser',
                     userId: 'TestUserId',
                 } as ChatUser;
-                await LurkingUsers.setUserToLurk(lurkingUser);
+                await subject.setUserToLurk(lurkingUser);
 
                 // Act
                 const records = await subject.getAllLurkingUsers();
@@ -126,7 +126,7 @@ describe('Lurk Repository (postgres)', () => {
                 } as ChatUser;
 
                 // Act
-                const unlurkedUser = await LurkingUsers.setUserToLurk(lurkingUser)
+                const unlurkedUser = await subject.setUserToLurk(lurkingUser)
                     .then(() => subject.setUserToUnlurk(lurkingUser));
 
                 // Assert
@@ -158,7 +158,7 @@ describe('Lurk Repository (postgres)', () => {
                 } as ChatUser;
 
                 // Act
-                const [count, users] = await LurkingUsers.setUserToLurk(lurkingUser)
+                const [count, users] = await subject.setUserToLurk(lurkingUser)
                     .then(() => subject.setAllUsersToUnlurk());
 
                 const unlurkedUser = users[0] ?? null;

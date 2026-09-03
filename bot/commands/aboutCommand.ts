@@ -3,8 +3,8 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
-import CommandResponseService from '../utilities/command-response.service.js';
 import { CommandName, defaultResponses } from '../utilities/default-responses.js';
+import { CommandResponseService } from '../services/index.js';
 
 @injectable()
 export class AboutCommand implements ICommandHandler {
@@ -35,7 +35,7 @@ export class AboutCommand implements ICommandHandler {
             this.logger.warn(`* Command Text not found for ${command} in ${channel} || ${userstate.displayName} > ${message}`);
         }
 
-        await this.chatClient.say(channel, commandText ?? defaultResponses.about);
+        await this.chatClient.say(channel, commandText ?? defaultResponses.about['']);
         this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }

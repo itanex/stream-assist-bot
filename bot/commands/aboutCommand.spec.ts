@@ -49,7 +49,7 @@ describe('About Command Tests', () => {
         await subject.handle(channel, command, user, message);
 
         // Assert
-        expect(mockChatClient.say).toHaveBeenNthCalledWith(1, channel, defaultResponses.about);
+        expect(mockChatClient.say).toHaveBeenNthCalledWith(1, channel, defaultResponses.about['']);
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.anything());
         expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
     });

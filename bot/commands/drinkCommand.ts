@@ -4,7 +4,7 @@ import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import { CommandName, defaultResponses } from '../utilities/default-responses.js';
-import CommandResponseService from '../utilities/command-response.service.js';
+import { CommandResponseService } from '../services/index.js';
 
 @injectable()
 export class DrinkCommand implements ICommandHandler {
@@ -35,7 +35,7 @@ export class DrinkCommand implements ICommandHandler {
             this.logger.warn(`* Command Text not found for ${command} in ${channel} || ${userstate.displayName} > ${message}`);
         }
 
-        await this.chatClient.say(channel, commandText ?? defaultResponses.drink);
+        await this.chatClient.say(channel, commandText ?? defaultResponses.drink['']);
         this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }

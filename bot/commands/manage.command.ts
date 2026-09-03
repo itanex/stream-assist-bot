@@ -3,13 +3,14 @@ import { ChatClient, ChatUser } from '@twurple/chat';
 import winston from 'winston';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import InjectionTypes from '../../dependency-management/types.js';
-import CommandResponseService, {
+import {
+    CommandResponseService,
     CommandTextValidationResult,
     CommandTextInsertResult,
     CommandTextUpdateResult,
     CommandTextRemoveResult,
     CommandTextRestoreResult,
-} from '../utilities/command-response.service.js';
+} from '../services/index.js';
 
 export const GenericReplies: Record<CommandTextValidationResult, (name: string) => string> = {
     invalidInput: () => 'Invalid input: both [name] and [text] are required',
@@ -85,7 +86,7 @@ export default class ManageCommand implements ICommandHandler {
                     break;
                 }
                 case 'edit': {
-                    const result = await this.commandResponseService.setCommandText(name, text, variant);
+                    const result = await this.commandResponseService.updateCommandText(name, text, variant);
                     await this.chatClient.say(channel, UpdateReplies[result](compoundName));
                     break;
                 }

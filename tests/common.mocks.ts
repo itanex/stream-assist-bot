@@ -2,23 +2,23 @@ import { jest } from '@jest/globals';
 import { ApiClient, HelixChannelApi, HelixStreamApi, HelixUserApi } from '@twurple/api';
 import { ChatClient } from '@twurple/chat';
 import winston from 'winston';
-import CommandResponseService from '../bot/utilities/command-response.service.js';
+import { CommandResponseService } from '../bot/services/index.js';
 
 export const mockChatClient = <unknown>{
-    say: jest.fn(),
+    say: jest.fn<ChatClient['say']>(),
 } as jest.Mocked<ChatClient>;
 
 export const mockApiClient = <unknown>{
     users: {
-        getUserByName: jest.fn(),
-        getUserById: jest.fn(),
-        getAuthenticatedUser: jest.fn(),
+        getUserByName: jest.fn<HelixUserApi['getUserByName']>(),
+        getUserById: jest.fn<HelixUserApi['getUserById']>(),
+        getAuthenticatedUser: jest.fn<HelixUserApi['getAuthenticatedUser']>(),
     },
     streams: {
-        getStreamByUserName: jest.fn(),
+        getStreamByUserName: jest.fn<HelixStreamApi['getStreamByUserName']>(),
     },
     channels: {
-        getChannelFollowers: jest.fn(),
+        getChannelFollowers: jest.fn<HelixChannelApi['getChannelFollowers']>(),
     },
 } as jest.Mocked<ApiClient> & {
     users: jest.Mocked<Pick<HelixUserApi, 'getUserByName' | 'getUserById' | 'getAuthenticatedUser'>>;
@@ -27,16 +27,21 @@ export const mockApiClient = <unknown>{
 };
 
 export const mockLogger = <unknown>{
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+    info: jest.fn<winston.Logger['info']>(),
+    warn: jest.fn<winston.Logger['warn']>(),
+    error: jest.fn<winston.Logger['error']>(),
 } as jest.Mocked<winston.Logger>;
 
 export const mockCommandResponseService = <unknown>{
-    initialize: jest.fn(),
-    addCommandText: jest.fn(),
-    getCommandText: jest.fn(),
-    setCommandText: jest.fn(),
-    removeCommandText: jest.fn(),
-    restoreCommandText: jest.fn(),
+    initialize: jest.fn<CommandResponseService['initialize']>(),
+    addCommandText: jest.fn<CommandResponseService['addCommandText']>(),
+    getCommandText: jest.fn<CommandResponseService['getCommandText']>(),
+    updateCommandText: jest.fn<CommandResponseService['updateCommandText']>(),
+    removeCommandText: jest.fn<CommandResponseService['removeCommandText']>(),
+    restoreCommandText: jest.fn<CommandResponseService['restoreCommandText']>(),
 } as jest.Mocked<CommandResponseService>;
+
+/** Error mock for database error testing */
+export const mockError = new Error('[Test Error Message]: Mock', {
+    cause: 'Database Save Failed',
+});

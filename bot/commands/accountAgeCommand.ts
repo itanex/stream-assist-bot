@@ -6,8 +6,8 @@ import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import InjectionTypes from '../../dependency-management/types.js';
 import Timespan, { getAgeReport } from '../utilities/timeSpan.js';
 import { CommandName, TransientContext } from '../utilities/default-responses.js';
-import CommandResponseService from '../utilities/command-response.service.js';
 import { templateResolver } from '../utilities/template-resolver.js';
+import { CommandResponseService } from '../services/index.js';
 
 @injectable()
 export class AccountAgeCommand implements ICommandHandler {

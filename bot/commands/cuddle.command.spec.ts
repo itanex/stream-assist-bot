@@ -2,7 +2,12 @@ import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { HelixUser } from '@twurple/api';
 import { ChatUser } from '@twurple/chat';
-import { mockApiClient, mockChatClient, mockCommandResponseService, mockLogger } from '../../tests/common.mocks.js';
+import {
+    mockApiClient,
+    mockChatClient,
+    mockCommandResponseService,
+    mockLogger,
+} from '../../tests/common.mocks.js';
 import { CuddleCommand } from './cuddle.command.js';
 import { transientKeywords } from '../utilities/default-responses.js';
 

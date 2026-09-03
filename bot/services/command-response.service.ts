@@ -1,9 +1,9 @@
 import { inject, injectable } from 'inversify';
 import { UniqueConstraintError, ValidationError } from 'sequelize';
 import winston from 'winston';
-import { CommandResponse } from '../../database/index.js';
-import { defaultResponses, CommandFamilies } from './default-responses.js';
+import { defaultResponses, CommandFamilies } from '../utilities/default-responses.js';
 import InjectionTypes from '../../dependency-management/types.js';
+import { CommandResponseRepository } from '../repositories/index.js';
 
 export type CommandTextValidationResult =
     'invalidInput' |
@@ -31,20 +31,22 @@ export type CommandTextRestoreResult = CommandTextValidationResult |
 
 type ResponseEntry = { variant: string; text: string };
 
-const cacheKey = (name: string, variant: string = ''): string => (variant ? `${name}.${variant}` : name);
+export const cacheKey = (name: string, variant: string = ''): string => (variant ? `${name}.${variant}` : name);
 
 @injectable()
 export default class CommandResponseService {
     private responseCache = new Map<string, ResponseEntry>();
 
     constructor(
+        @inject(CommandResponseRepository) private commandResponseRepository: CommandResponseRepository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) { }
 
     async initialize(): Promise<void> {
-        await CommandResponse.seed(defaultResponses);
+        await this.commandResponseRepository
+            .seed(defaultResponses);
 
-        const rows = await CommandResponse.findAll();
+        const rows = await this.commandResponseRepository.findAll();
         this.responseCache = new Map(rows
             .map((row): [string, ResponseEntry] => [
                 cacheKey(row.commandName, row.variant),
@@ -82,7 +84,7 @@ export default class CommandResponseService {
      * @returns boolean flag denoting if the provided command/variant was created
      */
     async addCommandText(commandName: string, text: string, variant: string = ''): Promise<CommandTextInsertResult> {
-        if (!commandName || !text || !variant) {
+        if (!commandName || !text) {
             return 'invalidInput';
         }
 
@@ -95,12 +97,15 @@ export default class CommandResponseService {
         }
 
         try {
-            const [restored] = await CommandResponse.restoreCommandText(commandName, variant);
+            const [restored] = await this.commandResponseRepository
+                .restoreCommandText(commandName, variant);
 
             if (restored) {
-                await CommandResponse.updateCommandText(commandName, text, variant);
+                await this.commandResponseRepository
+                    .updateCommandText(commandName, text, variant);
             } else {
-                await CommandResponse.addCommandText(commandName, text, variant);
+                await this.commandResponseRepository
+                    .addCommandText(commandName, text, variant);
             }
 
             this.responseCache.set(cacheKey(commandName, variant), { variant, text });
@@ -124,7 +129,7 @@ export default class CommandResponseService {
      * @param variant The command name variant to update
      * @returns boolean flag denoting if the provided command was updated
      */
-    async setCommandText(commandName: string, text: string, variant: string = ''): Promise<CommandTextUpdateResult> {
+    async updateCommandText(commandName: string, text: string, variant: string = ''): Promise<CommandTextUpdateResult> {
         if (!commandName || !text) {
             return 'invalidInput';
         }
@@ -134,7 +139,8 @@ export default class CommandResponseService {
         }
 
         try {
-            const command = await CommandResponse.updateCommandText(commandName, text, variant);
+            const command = await this.commandResponseRepository
+                .updateCommandText(commandName, text, variant);
 
             if (command) {
                 this.responseCache.set(cacheKey(commandName, variant), { variant, text });
@@ -159,8 +165,8 @@ export default class CommandResponseService {
      * @param variant The command variant to remove
      * @returns boolean flag denoting if the provided command/variant was removed
      */
-    async removeCommandText(commandName: string, variant: string = ''): Promise<CommandTextRemoveResult> {
-        if (!commandName || !variant) {
+    async removeCommandText(commandName: string, variant: string): Promise<CommandTextRemoveResult> {
+        if (!commandName) {
             return 'invalidInput';
         }
 
@@ -168,7 +174,8 @@ export default class CommandResponseService {
             return 'notFound';
         }
 
-        const result = await CommandResponse.removeCommandText(commandName, variant);
+        const result = await this.commandResponseRepository
+            .removeCommandText(commandName, variant);
 
         if (result) {
             this.responseCache.delete(cacheKey(commandName, variant));
@@ -185,24 +192,25 @@ export default class CommandResponseService {
      * @param variant The command variant to restore
      * @returns boolean flag denoting if the provided command/variant was restored
      */
-    async restoreCommandText(commandName: string, variant: string = ''): Promise<CommandTextRestoreResult> {
-        if (!commandName || !variant) {
+    async restoreCommandText(commandName: string, variant: string): Promise<CommandTextRestoreResult> {
+        if (!commandName) {
             return 'invalidInput';
         }
 
-        if (!this.responseCache.has(cacheKey(commandName, variant))) {
-            const [restored, command] = await CommandResponse.restoreCommandText(commandName, variant);
+        const cached = this.responseCache.has(cacheKey(commandName, variant));
 
-            if (restored && command) {
-                this.responseCache.set(cacheKey(command.commandName, command.variant), { variant: command.variant, text: command.text });
-                return 'restored';
-            }
-
-            if (!command) {
-                return 'notFound';
-            }
+        if (cached) {
+            return 'alreadyActive';
         }
 
-        return 'alreadyActive';
+        const [restored, command] = await this.commandResponseRepository
+            .restoreCommandText(commandName, variant);
+
+        if (restored && command) {
+            this.responseCache.set(cacheKey(command.commandName, command.variant), { variant: command.variant, text: command.text });
+            return 'restored';
+        }
+
+        return 'notFound';
     }
 }

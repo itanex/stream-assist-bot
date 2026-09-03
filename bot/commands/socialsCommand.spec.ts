@@ -1,7 +1,11 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { ChatUser } from '@twurple/chat';
-import { mockChatClient, mockLogger, mockCommandResponseService } from '../../tests/common.mocks.js';
+import {
+    mockChatClient,
+    mockLogger,
+    mockCommandResponseService,
+} from '../../tests/common.mocks.js';
 import { SocialsCommand } from './socialsCommand.js';
 
 const messageFn = (

@@ -2,11 +2,12 @@ import { EventSubChannelFollowEvent } from '@twurple/eventsub-base';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
-import { FollowEvent } from '../../database/index.js';
+import ChannelEventRepository from '../repositories/channel-event.repository.js';
 
 @injectable()
 export default class FollowerEventHandler {
     constructor(
+        @inject(ChannelEventRepository) private channelEventRepository: ChannelEventRepository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
@@ -16,8 +17,8 @@ export default class FollowerEventHandler {
      * @param event Moderator Event
      */
     async follow(event: EventSubChannelFollowEvent): Promise<void> {
-        return FollowEvent
-            .follow(event)
+        return this.channelEventRepository
+            .saveFollowEvent(event)
             .catch((reason: any) => {
                 this.logger.error(`Unable to store Follow event in DB >> ${reason}`);
             })

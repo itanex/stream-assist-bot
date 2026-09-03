@@ -4,9 +4,9 @@ import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import { CommandName, defaultResponses, TransientContext } from '../utilities/default-responses.js';
-import CommandResponseService from '../utilities/command-response.service.js';
 import { templateResolver } from '../utilities/template-resolver.js';
-import LurkRespository from '../utilities/lurk.respository.js';
+import { CommandResponseService } from '../services/index.js';
+import LurkRespository from '../repositories/lurk.respository.js';
 
 @injectable()
 export class LurkCommand implements ICommandHandler {
@@ -35,13 +35,14 @@ export class LurkCommand implements ICommandHandler {
         const [user, created] = await this.lurkRespository.setUserToLurk(userstate);
 
         if (created) {
-            const result = this.commandResponseService.getCommandText(this.commandName);
+            const result = this.commandResponseService.getCommandText(this.commandName)
+                ?? defaultResponses.lurk[''];
 
             const context: TransientContext = {
                 speakinguser: user.displayName,
             };
 
-            await this.chatClient.say(channel, templateResolver(result ?? defaultResponses.lurk, context, this.logger));
+            await this.chatClient.say(channel, templateResolver(result, context, this.logger));
         }
 
         // Don't say anything if the user is already lurking
@@ -76,14 +77,16 @@ export class UnLurkCommand implements ICommandHandler {
         const unlurkedUser = await this.lurkRespository.setUserToUnlurk(userstate);
 
         if (unlurkedUser) {
-            const result = this.commandResponseService.getCommandText(this.commandName);
+            const result = this.commandResponseService.getCommandText(this.commandName)
+                ?? defaultResponses.unlurk[''];
+
             const context: TransientContext = {
                 speakinguser: unlurkedUser.displayName,
                 lurkduration: unlurkedUser.duration().humanize(),
             };
 
             // Report the command result
-            await this.chatClient.say(channel, templateResolver(result ?? defaultResponses.unlurk, context, this.logger));
+            await this.chatClient.say(channel, templateResolver(result, context, this.logger));
         }
 
         this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);

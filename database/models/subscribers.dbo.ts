@@ -1,6 +1,6 @@
 import { Model, Table, Column, DataType, ForeignKey, BelongsTo } from 'sequelize-typescript';
-import SubscriptionGiftUsers from './subscriptionGiftUsers.dbo.js';
-import SubscriptionType from './subscriptionType.js';
+import SubscriptionGiftUsers from './subscription-gift-users.dbo.js';
+import SubscriptionType from './subscription-type.js';
 
 @Table({
     tableName: 'subscribers',
@@ -64,16 +64,4 @@ export default class Subscribers extends Model {
 
     @BelongsTo(() => SubscriptionGiftUsers)
     gift!: SubscriptionGiftUsers;
-
-    /**
-     * Get the last subscriber in the database
-     * @returns The record of the last Subscriber
-     */
-    static async getLastSubscriber(): Promise<Subscribers | null> {
-        return this
-            .findOne({
-                order: [['createdAt', 'DESC']],
-                include: [SubscriptionGiftUsers],
-            });
-    }
 }

@@ -1,13 +1,14 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
-import { ChatClient, ChatUser } from '@twurple/chat';
-import { Container } from 'inversify';
-import winston from 'winston';
+import { ChatUser } from '@twurple/chat';
 import { mockChatClient, mockLogger } from '../../tests/common.mocks.js';
-import InjectionTypes from '../../dependency-management/types.js';
-import { ICommandHandler } from './iCommandHandler.js';
 import { LastSubCommand } from './lastSubCommand.js';
 import { Subscribers, SubscriptionType } from '../../database/index.js';
+import SubscriberRepository from '../repositories/subscriber.repository.js';
+
+const mockSubscriberRepository = <unknown>{
+    getLastSubscriber: jest.fn<() => Promise<Subscribers | null>>(),
+} as jest.Mocked<SubscriberRepository>;
 
 describe('Last Sub Command Tests', () => {
     const channel = 'TestChannel';
@@ -32,6 +33,7 @@ describe('Last Sub Command Tests', () => {
 
         subject = new LastSubCommand(
             mockChatClient,
+            mockSubscriberRepository,
             mockLogger,
         );
     });
@@ -59,7 +61,8 @@ describe('Last Sub Command Tests', () => {
             // Arrange
             mockSubscriber.type = type;
 
-            Subscribers.getLastSubscriber = jest.fn<() => Promise<Subscribers>>()
+            mockSubscriberRepository
+                .getLastSubscriber
                 .mockResolvedValue(mockSubscriber);
 
             // Act
