@@ -5,6 +5,7 @@ import CommandResponseService, {
     CommandTextUpdateResult,
     CommandTextValidationResult,
 } from './command-response.service.js';
+import GreetUserService from './greet-user.service.js';
 import StreamStateService from './stream-state.service.js';
 
 /** exported types */
@@ -19,5 +20,6 @@ export {
 /** exported services */
 export {
     CommandResponseService,
+    GreetUserService,
     StreamStateService,
 };

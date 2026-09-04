@@ -74,7 +74,11 @@ import {
     StreamEventRepository,
     SubscriberRepository,
 } from '../bot/repositories/index.js';
-import { CommandResponseService, StreamStateService } from '../bot/services/index.js';
+import {
+    CommandResponseService,
+    GreetUserService,
+    StreamStateService,
+} from '../bot/services/index.js';
 
 const SAContainer = new Container();
 
@@ -82,7 +86,6 @@ SAContainer.bind<Database>(Database).toSelf().inSingletonScope();
 SAContainer.bind<Environment>(InjectionTypes.Environment).toConstantValue(environment);
 
 SAContainer.bind<Broadcaster>(Broadcaster).toSelf().inSingletonScope();
-SAContainer.bind<StreamStateService>(StreamStateService).toSelf().inSingletonScope();
 
 SAContainer.bind<BanEventRepository>(BanEventRepository).toSelf().inSingletonScope();
 SAContainer.bind<ChannelEventRepository>(ChannelEventRepository).toSelf().inSingletonScope();
@@ -94,6 +97,8 @@ SAContainer.bind<StreamEventRepository>(StreamEventRepository).toSelf().inSingle
 SAContainer.bind<SubscriberRepository>(SubscriberRepository).toSelf().inSingletonScope();
 
 SAContainer.bind<CommandResponseService>(CommandResponseService).toSelf().inSingletonScope();
+SAContainer.bind<GreetUserService>(GreetUserService).toSelf().inSingletonScope();
+SAContainer.bind<StreamStateService>(StreamStateService).toSelf().inSingletonScope();
 
 SAContainer.bind<IChatBot>(ChatBot).toSelf().inSingletonScope();
 

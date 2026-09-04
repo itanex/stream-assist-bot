@@ -3,18 +3,22 @@ import { jest } from '@jest/globals';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import winston from 'winston';
 import JoinGreetingHandler, { MOD_GREETING, VIP_GREETING } from './join-greeting.handler.js';
-import { StreamStateService } from '../services/index.js';
+import { GreetUserService, StreamStateService } from '../services/index.js';
 
-const mockSay = jest.fn();
-const mockChatClient = {
-    say: mockSay,
-} as unknown as ChatClient;
+const mockChatClient = <unknown>{
+    say: jest.fn<ChatClient['say']>(),
+} as jest.Mocked<ChatClient>;
 
-const mockOnOffline = jest.fn<(fn: () => void) => void>();
-const mockStreamingStateService: StreamStateService = {
+const mockStreamingStateService = <unknown>{
     isOnline: false,
-    onOffline: mockOnOffline,
-} as unknown as StreamStateService;
+    onOffline: jest.fn<StreamStateService['onOffline']>(),
+} as jest.Mocked<StreamStateService>;
+
+const mockGreetUserService = <unknown>{
+    clear: jest.fn<GreetUserService['clear']>(),
+    hasUser: jest.fn<GreetUserService['hasUser']>(),
+    saveUser: jest.fn<GreetUserService['saveUser']>(),
+} as jest.Mocked<GreetUserService>;
 
 const mockLogger = {
     info: jest.fn(),
@@ -52,6 +56,7 @@ describe('JoinGreetingHandler', () => {
         joinGreetingHandler = new JoinGreetingHandler(
             mockChatClient,
             mockStreamingStateService,
+            mockGreetUserService,
             mockLogger,
         );
     });
@@ -65,7 +70,7 @@ describe('JoinGreetingHandler', () => {
             await joinGreetingHandler.greetIfEligible('#channel', basicUser);
 
             // Assert
-            expect(mockSay).not.toHaveBeenCalled();
+            expect(mockChatClient.say).not.toHaveBeenCalled();
             expect(mockLogger.info).not.toHaveBeenCalled();
         });
         it('Skips greeting for a viewer (not mod, not vip)`', async () => {
@@ -76,7 +81,7 @@ describe('JoinGreetingHandler', () => {
             await joinGreetingHandler.greetIfEligible('#channel', basicUser);
 
             // Assert
-            expect(mockSay).not.toHaveBeenCalled();
+            expect(mockChatClient.say).not.toHaveBeenCalled();
             expect(mockLogger.info).not.toHaveBeenCalled();
         });
         it.each`
@@ -92,35 +97,41 @@ describe('JoinGreetingHandler', () => {
             await joinGreetingHandler.greetIfEligible('#channel', user);
 
             // Assert
-            expect(mockSay).toHaveBeenCalledWith('#channel', greeting(user.displayName));
+            expect(mockChatClient.say).toHaveBeenCalledWith('#channel', greeting(user.displayName));
             expect(mockLogger.info).toHaveBeenCalled();
         });
         it('Does not greet the same user twice in a session`', async () => {
             // Arrange
             (mockStreamingStateService as any).isOnline = true;
 
+            mockGreetUserService
+                .hasUser
+                .mockReturnValueOnce(false)
+                .mockReturnValue(true);
+
             // Act
             await joinGreetingHandler.greetIfEligible('#channel', modUser);
             await joinGreetingHandler.greetIfEligible('#channel', modUser);
 
             // Assert
-            expect(mockSay).toHaveBeenCalledTimes(1);
+            expect(mockChatClient.say).toHaveBeenCalledTimes(1);
             expect(mockLogger.info).toHaveBeenCalled();
         });
         it('Clears the greeted set when StreamStateService fires the offline callback`', async () => {
-            // Arrange - greet the user to populate the set
-            (mockStreamingStateService as any).isOnline = true;
-            await joinGreetingHandler.greetIfEligible('#channel', modUser);
-            expect(mockSay).toHaveBeenCalledTimes(1); // confirm they were greeted
+            // Arrange
+            const offlineCallback = mockStreamingStateService
+                .onOffline
+                .mock
+                .calls[0][0];
 
-            // Act - fire the offline callback that the constructor registered
-            const offlineCallback = mockOnOffline.mock.calls[0][0];
+            // Act
             offlineCallback();
 
-            // Assert - same user is greeted again (set was cleared)
-            jest.resetAllMocks(); // reset say count
-            await joinGreetingHandler.greetIfEligible('#channel', modUser);
-            expect(mockSay).toHaveBeenCalledTimes(1);
+            // Assert
+            expect(mockStreamingStateService.onOffline)
+                .toHaveBeenCalled();
+            expect(mockGreetUserService.clear)
+                .toHaveBeenCalled();
         });
     });
 });
