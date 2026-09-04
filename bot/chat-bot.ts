@@ -42,7 +42,7 @@ import {
 import InjectionTypes from '../dependency-management/types.js';
 import { type Environment } from '../configurations/environment.js';
 import { isUserAuthenticated } from './auth/authProvider.js';
-import StreamStateService from './utilities/stream-state.service.js';
+import { StreamStateService } from './services/index.js';
 import JoinGreetingHandler from './handlers/join-greeting.handler.js';
 
 export interface IChatBot {

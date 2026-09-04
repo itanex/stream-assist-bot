@@ -2,7 +2,7 @@ import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
-import StreamStateService from '../utilities/stream-state.service.js';
+import { StreamStateService } from '../services/index.js';
 
 const MOD_GREETING = (name: string) => `Uh oh, the mods are here! Welcome @${name}, keeping us all in line as always.`;
 const VIP_GREETING = (name: string) => `Hey @${name}, welcome in! Always great to see you here.`;

@@ -6,7 +6,7 @@ import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler } from '../commands/index.js';
 import { CommandTimeout } from '../types/CommandTimeout.js';
 import Broadcaster from '../utilities/broadcaster.js';
-import StreamStateService from '../utilities/stream-state.service.js';
+import { StreamStateService } from '../services/index.js';
 
 type ParsedCommand = {
     commandHandler: ICommandHandler | undefined,

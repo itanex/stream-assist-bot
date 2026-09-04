@@ -3,7 +3,7 @@ import { jest } from '@jest/globals';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import winston from 'winston';
 import JoinGreetingHandler, { MOD_GREETING, VIP_GREETING } from './join-greeting.handler.js';
-import StreamStateService from '../utilities/stream-state.service.js';
+import { StreamStateService } from '../services/index.js';
 
 const mockSay = jest.fn();
 const mockChatClient = {

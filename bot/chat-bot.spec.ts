@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { ChatClient } from '@twurple/chat';
 import { EventSubWsListener } from '@twurple/eventsub-ws';
-import StreamStateService from './utilities/stream-state.service.js';
+import { StreamStateService } from './services/index.js';
 import { mockLogger } from '../tests/common.mocks.js';
 import { type Environment } from '../configurations/environment.js';
 

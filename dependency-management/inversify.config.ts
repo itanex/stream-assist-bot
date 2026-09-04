@@ -63,7 +63,6 @@ import Scheduler from '../bot/scheduler.js';
 import { SocketServer, ISocketServer } from '../bot/overlay/socket.server.js';
 import OverlayServer, { IOverlayServer } from '../bot/overlay/overlay.server.js';
 import AuthenticationServer, { IAuthenticationServer } from '../bot/auth/auth.server.js';
-import StreamStateService from '../bot/utilities/stream-state.service.js';
 import JoinGreetingHandler from '../bot/handlers/join-greeting.handler.js';
 import {
     BanEventRepository,
@@ -75,7 +74,7 @@ import {
     StreamEventRepository,
     SubscriberRepository,
 } from '../bot/repositories/index.js';
-import { CommandResponseService } from '../bot/services/index.js';
+import { CommandResponseService, StreamStateService } from '../bot/services/index.js';
 
 const SAContainer = new Container();
 
