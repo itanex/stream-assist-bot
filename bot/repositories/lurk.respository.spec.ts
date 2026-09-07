@@ -44,10 +44,6 @@ describe('Lurk Repository (postgres)', () => {
         await container.stop();
     });
 
-    beforeEach(() => {
-        jest.resetAllMocks();
-    });
-
     describe('Valid Database object', () => {
         let database: Database;
 

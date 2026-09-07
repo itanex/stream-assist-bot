@@ -106,8 +106,8 @@ describe('JoinGreetingHandler', () => {
 
             mockGreetUserService
                 .hasUser
-                .mockReturnValueOnce(false)
-                .mockReturnValue(true);
+                .mockResolvedValueOnce(false)
+                .mockResolvedValue(true);
 
             // Act
             await joinGreetingHandler.greetIfEligible('#channel', modUser);

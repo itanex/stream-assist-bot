@@ -21,14 +21,14 @@ export default class JoinGreetingHandler {
     async greetIfEligible(channel: string, user: ChatUser): Promise<void> {
         if (!this.streamStateService.isOnline) return;
         if (!user.isMod && !user.isVip) return;
-        if (this.greetUserService.hasUser(user)) return;
+        if (await this.greetUserService.hasUser(user)) return;
 
         const message = user.isMod
             ? MOD_GREETING(user.displayName)
             : VIP_GREETING(user.displayName);
 
         await this.chatClient.say(channel, message);
-        this.greetUserService.saveUser(user);
+        await this.greetUserService.saveUser(user);
 
         this.logger.info(`* Greeted ${user.isMod ? 'mod' : 'vip'} ${user.displayName} in ${channel}`);
     }
