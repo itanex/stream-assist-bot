@@ -63,7 +63,6 @@ import Scheduler from '../bot/scheduler.js';
 import { SocketServer, ISocketServer } from '../bot/overlay/socket.server.js';
 import OverlayServer, { IOverlayServer } from '../bot/overlay/overlay.server.js';
 import AuthenticationServer, { IAuthenticationServer } from '../bot/auth/auth.server.js';
-import StreamStateService from '../bot/utilities/stream-state.service.js';
 import JoinGreetingHandler from '../bot/handlers/join-greeting.handler.js';
 import {
     BanEventRepository,
@@ -75,7 +74,11 @@ import {
     StreamEventRepository,
     SubscriberRepository,
 } from '../bot/repositories/index.js';
-import { CommandResponseService } from '../bot/services/index.js';
+import {
+    CommandResponseService,
+    GreetUserService,
+    StreamStateService,
+} from '../bot/services/index.js';
 
 const SAContainer = new Container();
 
@@ -83,7 +86,6 @@ SAContainer.bind<Database>(Database).toSelf().inSingletonScope();
 SAContainer.bind<Environment>(InjectionTypes.Environment).toConstantValue(environment);
 
 SAContainer.bind<Broadcaster>(Broadcaster).toSelf().inSingletonScope();
-SAContainer.bind<StreamStateService>(StreamStateService).toSelf().inSingletonScope();
 
 SAContainer.bind<BanEventRepository>(BanEventRepository).toSelf().inSingletonScope();
 SAContainer.bind<ChannelEventRepository>(ChannelEventRepository).toSelf().inSingletonScope();
@@ -95,6 +97,8 @@ SAContainer.bind<StreamEventRepository>(StreamEventRepository).toSelf().inSingle
 SAContainer.bind<SubscriberRepository>(SubscriberRepository).toSelf().inSingletonScope();
 
 SAContainer.bind<CommandResponseService>(CommandResponseService).toSelf().inSingletonScope();
+SAContainer.bind<GreetUserService>(GreetUserService).toSelf().inSingletonScope();
+SAContainer.bind<StreamStateService>(StreamStateService).toSelf().inSingletonScope();
 
 SAContainer.bind<IChatBot>(ChatBot).toSelf().inSingletonScope();
 

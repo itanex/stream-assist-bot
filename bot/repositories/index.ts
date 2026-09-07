@@ -2,6 +2,7 @@ import BanEventRepository from './ban-event.repository.js';
 import ChannelEventRepository from './channel-event.repository.js';
 import CommandResponseRepository from './command-response.repository.js';
 import DeathCountRepository from './death-count.repository.js';
+import GreetedUserRepository from './greeted-user.repository.js';
 import LurkRespository from './lurk.respository.js';
 import RaidRepository from './raid.repository.js';
 import StreamEventRepository from './stream-event.repository.js';
@@ -12,6 +13,7 @@ export {
     ChannelEventRepository,
     CommandResponseRepository,
     DeathCountRepository,
+    GreetedUserRepository,
     LurkRespository,
     RaidRepository,
     StreamEventRepository,
