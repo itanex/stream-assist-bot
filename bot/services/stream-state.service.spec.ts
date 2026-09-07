@@ -3,11 +3,10 @@ import { jest } from '@jest/globals';
 import StreamStateService from './stream-state.service.js';
 import Broadcaster from '../utilities/broadcaster.js';
 
-const mockIsOnline = jest.fn<() => Promise<boolean>>();
-const mockBroadcaster = {
-    getBroadcaster: jest.fn(),
-    isOnline: mockIsOnline,
-} as unknown as Broadcaster;
+const mockBroadcaster = <unknown>{
+    getBroadcaster: jest.fn<Broadcaster['getBroadcaster']>(),
+    isOnline: jest.fn<Broadcaster['isOnline']>(),
+} as jest.Mocked<Broadcaster>;
 
 describe('StreamStateService', () => {
     let streamStateService: StreamStateService;
@@ -43,7 +42,9 @@ describe('StreamStateService', () => {
         });
         it('`isOnline` is `true` after `initialize()` when broadcaster is online', async () => {
             // Arrange
-            mockIsOnline.mockResolvedValue(true);
+            mockBroadcaster
+                .isOnline
+                .mockResolvedValue(true);
 
             // Act
             await streamStateService.initialize();
@@ -53,7 +54,9 @@ describe('StreamStateService', () => {
         });
         it('`isOnline` is `false` after `initialize()` when broadcaster is offline', async () => {
             // Arrange
-            mockIsOnline.mockResolvedValue(false);
+            mockBroadcaster
+                .isOnline
+                .mockResolvedValue(false);
 
             // Act
             await streamStateService.initialize();
