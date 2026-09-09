@@ -1,4 +1,5 @@
-import { Column, DataType, Table, Model } from 'sequelize-typescript';
+import { Column, DataType, Table, Model, HasMany } from 'sequelize-typescript';
+import CommandResponseText from './command-response-text.dbo.js';
 
 const COMMAND_VARIANT_UNIQUE_INDEX = 'commandName-variant';
 
@@ -18,23 +19,10 @@ export default class CommandResponse extends Model {
         allowNull: false,
         defaultValue: '',
         type: DataType.STRING(32),
-        unique: 'commandName-variant',
+        unique: COMMAND_VARIANT_UNIQUE_INDEX,
     })
     variant!: string;
 
-    @Column({
-        allowNull: false,
-        type: DataType.TEXT,
-        validate: {
-            notEmpty: true,
-            len: {
-                args: [10, 400],
-                msg: 'command text must be 10-400 characters',
-            },
-        },
-        set(value: string) {
-            this.setDataValue('text', value?.trim());
-        },
-    })
-    text!: string;
+    @HasMany(() => CommandResponseText)
+    texts!: CommandResponseText[];
 }

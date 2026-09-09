@@ -13,12 +13,14 @@ import StreamEventRecord from './models/stream-event-record.dbo.js';
 import Subscribers from './models/subscribers.dbo.js';
 import SubscriptionType from './models/subscription-type.js';
 import SubscriptionGiftUsers from './models/subscription-gift-users.dbo.js';
+import CommandResponseText from './models/command-response-text.dbo.js';
 
 export {
     BanEvent,
     ChannelPointRedeem,
     CheerEvent,
     CommandResponse,
+    CommandResponseText,
     DeathCounts,
     GreetUser,
     FollowEvent,
