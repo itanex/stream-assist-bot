@@ -369,25 +369,23 @@ describe('CommandResponse.Repository (postgres)', () => {
             });
         });
 
-        describe('removeCommandText()', () => {
+        describe('removeCommand()', () => {
             beforeEach(async () => {
                 await subject.seed(seedEntries);
-            });
-
-            afterEach(async () => {
-                await CommandResponse.destroy({ where: {}, force: true });
             });
 
             it.each`
                 input    | commandName                  | isRemoved
                 ${''}    | ${testCommandDefaultVariant} | ${true}
                 ${'not'} | ${'unknownCommand'}          | ${false}
-            `('should $input remove the command record (no-variant)', async ({ input, commandName, isRemoved }: { input: string, commandName: string, isRemoved: boolean }) => {
+            `('should $input remove the command (no-variant)', async ({ input, commandName, isRemoved }: { input: string, commandName: string, isRemoved: boolean }) => {
                 // Arrange - beforeEach()
                 // Act
-                const result = await subject.removeCommandText(commandName);
+                const result = await subject.removeCommand(commandName);
 
                 // Assert
+                expect(mockLogger.error).not.toHaveBeenCalled();
+
                 expect(result).toBe(isRemoved);
             });
 
@@ -395,13 +393,32 @@ describe('CommandResponse.Repository (postgres)', () => {
                 input    | commandName               | variant             | isRemoved
                 ${''}    | ${testCommandOnlyVariant} | ${testVariants[0]}  | ${true}
                 ${'not'} | ${testCommandOnlyVariant} | ${'unknownVariant'} | ${false}
-            `('should $input remove the command record (variant)', async ({ input, commandName, variant, isRemoved }: { input: string, commandName: string, variant: string, isRemoved: boolean }) => {
+            `('should $input remove the command (variant)', async ({ input, commandName, variant, isRemoved }: { input: string, commandName: string, variant: string, isRemoved: boolean }) => {
                 // Arrange - beforeEach()
                 // Act
-                const result = await subject.removeCommandText(commandName, variant);
+                const result = await subject.removeCommand(commandName, variant);
 
                 // Assert
+                expect(mockLogger.error).not.toHaveBeenCalled();
+
                 expect(result).toBe(isRemoved);
+            });
+
+            it('should log error when failing database', async () => {
+                // Arrange
+                const spy = jest.spyOn(CommandResponseDbo, 'destroy')
+                    .mockImplementation(() => { throw mockError; });
+
+                // Act
+                const result = await subject.removeCommand(testCommandDefaultVariant, defaultVariant);
+
+                // Assert
+                expect(mockLogger.error)
+                    .toHaveBeenCalledWith(expect.any(String), expect.any(Error));
+
+                expect(result).toBe(false);
+
+                spy.mockRestore();
             });
         });
 

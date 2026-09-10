@@ -32,7 +32,6 @@ export default class CommandResponseRepository {
                 .map(([variant, text]) => ({
                     commandName,
                     variant,
-                    text,
                     texts: text.map(x => ({ text: x })),
                 })));
 
@@ -178,8 +177,9 @@ export default class CommandResponseRepository {
      * @param variant The command name variant to remove
      * @returns boolean flag denoting if the provided command was removed
      */
-    async removeCommandText(commandName: string, variant: string = ''): Promise<boolean> {
-        const count = await CommandResponse
+    async removeCommand(commandName: string, variant: string = ''): Promise<boolean> {
+        try {
+            const count = await CommandResponseDbo
             .destroy({
                 where: {
                     commandName,
@@ -188,6 +188,11 @@ export default class CommandResponseRepository {
             });
 
         return count === 1;
+        } catch (error) {
+            this.logger.error(`Error removing the command from database`, error);
+        }
+
+        return false;
     }
 
     /**
