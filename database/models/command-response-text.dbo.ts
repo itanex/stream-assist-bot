@@ -28,4 +28,16 @@ export default class CommandResponseTextDbo extends Model {
         },
     })
     text!: string;
+
+    @Column({
+        allowNull: false,
+        type: DataType.DECIMAL,
+        defaultValue: 1,
+        validate: {
+            isDecimal: true,
+            min: 0,
+            max: 99,
+        },
+    })
+    weight!: number;
 }
