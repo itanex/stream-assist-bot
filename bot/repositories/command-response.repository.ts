@@ -3,6 +3,13 @@ import winston from 'winston';
 import { CommandResponseDbo, CommandResponseTextDbo } from '../../database/index.js';
 import InjectionTypes from '../../dependency-management/types.js';
 
+export class CommandResponseText {
+    constructor(
+        public text: string = '',
+        public weight: number = 1,
+    ) { }
+}
+
 @injectable()
 export default class CommandResponseRepository {
     constructor(
@@ -45,19 +52,27 @@ export default class CommandResponseRepository {
     }
 
     /**
-     * Get the command text based on the provided commandName
+     * Get the command text based on the provided commandName and variant
      * @param commandName The command name to fetch
      * @param variant The command name variant to fetch
      * @returns The Command based on the provided commandName or null
      */
-    async getCommandText(commandName: string, variant: string = ''): Promise<CommandResponse | null> {
-        return CommandResponse
+    async getCommandText(commandName: string, variant: string = ''): Promise<CommandResponseText[]> {
+        const records = await CommandResponseDbo
             .findOne({
                 where: {
                     commandName,
                     variant,
                 },
+                include: CommandResponseTextDbo,
             });
+
+        const textResponses = records?.texts.map(x => ({
+            text: x.text,
+            weight: x.weight,
+        } as CommandResponseText));
+
+        return textResponses ?? [];
     }
 
     /**
