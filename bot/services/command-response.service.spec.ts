@@ -9,7 +9,7 @@ import {
     type CommandTextRestoreResult,
 } from './command-response.service.js';
 import { mockLogger } from '../../tests/common.mocks.js';
-import { CommandResponse } from '../../database/index.js';
+import { CommandResponseDbo } from '../../database/index.js';
 import { CommandResponseRepository } from '../repositories/index.js';
 
 type CommandResponseServiceModule = typeof import('./command-response.service.js');
@@ -45,12 +45,12 @@ describe('CommandResponse.Service (postgres)', () => {
         commandName: testCommandName,
         variant: '',
         text: testCommandText,
-    } as CommandResponse;
+    } as CommandResponseDbo;
     const testCommandResponseVariant = <unknown>{
         commandName: testCommandName,
         variant: testVariant,
         text: testCommandVariantText,
-    } as CommandResponse;
+    } as CommandResponseDbo;
 
     let CommandResponseService: CommandResponseServiceModule['default'];
     let cacheKey: CommandResponseServiceModule['cacheKey'];

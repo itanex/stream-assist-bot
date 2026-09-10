@@ -1,7 +1,7 @@
 import BanEvent from './models/ban-event.dbo.js';
 import ChannelPointRedeem from './models/channel-point-redeem.dbo.js';
 import CheerEvent from './models/cheer-event.dbo.js';
-import CommandResponse from './models/command-response.dbo.js';
+import CommandResponseDbo from './models/command-response.dbo.js';
 import DeathCounts from './models/death-count-record.dbo.js';
 import FollowEvent from './models/follow-event.dbo.js';
 import GreetUser from './models/greet-user.dbo.js';
@@ -13,14 +13,14 @@ import StreamEventRecord from './models/stream-event-record.dbo.js';
 import Subscribers from './models/subscribers.dbo.js';
 import SubscriptionType from './models/subscription-type.js';
 import SubscriptionGiftUsers from './models/subscription-gift-users.dbo.js';
-import CommandResponseText from './models/command-response-text.dbo.js';
+import CommandResponseTextDbo from './models/command-response-text.dbo.js';
 
 export {
     BanEvent,
     ChannelPointRedeem,
     CheerEvent,
-    CommandResponse,
-    CommandResponseText,
+    CommandResponseDbo,
+    CommandResponseTextDbo,
     DeathCounts,
     GreetUser,
     FollowEvent,

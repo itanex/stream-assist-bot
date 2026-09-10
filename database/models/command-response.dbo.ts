@@ -1,5 +1,5 @@
 import { Column, DataType, Table, Model, HasMany } from 'sequelize-typescript';
-import CommandResponseText from './command-response-text.dbo.js';
+import CommandResponseTextDbo from './command-response-text.dbo.js';
 
 const COMMAND_VARIANT_UNIQUE_INDEX = 'commandName-variant';
 
@@ -7,7 +7,7 @@ const COMMAND_VARIANT_UNIQUE_INDEX = 'commandName-variant';
     tableName: 'CommandResponse',
     paranoid: true,
 })
-export default class CommandResponse extends Model {
+export default class CommandResponseDbo extends Model {
     @Column({
         allowNull: false,
         type: DataType.STRING(32),
@@ -23,6 +23,9 @@ export default class CommandResponse extends Model {
     })
     variant!: string;
 
-    @HasMany(() => CommandResponseText)
-    texts!: CommandResponseText[];
+    @HasMany(() => CommandResponseTextDbo, {
+        foreignKey: 'commandResponseId',
+        as: 'texts',
+    })
+    texts!: CommandResponseTextDbo[];
 }

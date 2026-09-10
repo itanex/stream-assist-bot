@@ -1,20 +1,17 @@
 import { Table, Model, ForeignKey, Column, DataType, BelongsTo } from 'sequelize-typescript';
-import CommandResponse from './command-response.dbo.js';
+import CommandResponseDbo from './command-response.dbo.js';
 
 @Table({
     tableName: 'CommandResponseText',
     paranoid: true,
 })
-export default class CommandResponseText extends Model {
-    @ForeignKey(() => CommandResponse)
+export default class CommandResponseTextDbo extends Model {
+    @ForeignKey(() => CommandResponseDbo)
     @Column({
         allowNull: false,
         type: DataType.INTEGER,
     })
     commandResponseId!: number;
-
-    @BelongsTo(() => CommandResponse)
-    commandResponse!: CommandResponse;
 
     @Column({
         allowNull: false,

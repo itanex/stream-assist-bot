@@ -12,7 +12,7 @@ import {
     WhoIsLurkingCommand,
     clearLurkingUsers,
 } from './lurk.commands.js';
-import { CommandResponse, LurkingUsers } from '../../database/index.js';
+import { CommandResponseDbo, LurkingUsers } from '../../database/index.js';
 import LurkRespository from '../repositories/lurk.respository.js';
 import { transientKeywords } from '../utilities/default-responses.js';
 
