@@ -81,13 +81,17 @@ export default class CommandResponseRepository {
      * @param variant The command name variant to fetch
      * @returns The Command based on the provided commandName or null
      */
-    async getCommandVariants(commandName: string): Promise<CommandResponse[]> {
-        return CommandResponse
+    async getCommandVariants(commandName: string): Promise<string[]> {
+        const records = await CommandResponseDbo
             .findAll({
                 where: {
                     commandName,
                 },
             });
+
+        const variants = records.map(x => x.variant);
+
+        return variants;
     }
 
     /**

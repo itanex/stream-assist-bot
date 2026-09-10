@@ -223,52 +223,37 @@ describe('CommandResponse.Repository (postgres)', () => {
                 await subject.seed(seedEntries);
             });
 
-            afterEach(async () => {
-                await CommandResponse.destroy({ where: {}, force: true });
-            });
-
             it('should return only the command default variant (command, no variant) ', async () => {
                 // Arrange - beforeEach()
                 // Act
                 const result = await subject.getCommandVariants(testCommandDefaultVariant);
 
                 // Assert
-                expect(result).toContainEqual(expect.objectContaining({
-                    commandName: testCommandDefaultVariant,
-                    variant: defaultVariant,
-                }));
+                expect(result).toEqual([defaultVariant]);
             });
 
             it('should return the command variants (command, expected variant)', async () => {
                 // Arrange - beforeAll()
+                const expectedVariants = Object.keys(seedEntries[testCommandAllVariants])
+                    .map(x => x);
+
                 // Act
                 const result = await subject.getCommandVariants(testCommandAllVariants);
 
                 // Assert
-                expect(result).toContainEqual(expect.objectContaining({
-                    commandName: testCommandAllVariants,
-                    variant: defaultVariant,
-                }));
-                expect(result).toContainEqual(expect.objectContaining({
-                    commandName: testCommandAllVariants,
-                    variant: testVariants[0],
-                }));
-                expect(result).toContainEqual(expect.objectContaining({
-                    commandName: testCommandAllVariants,
-                    variant: testVariants[1],
-                }));
+                expect(result).toEqual(expectedVariants);
             });
 
-            it('should return null for no default variant name (command)', async () => {
+            it('should return empty set for no default variant name (command)', async () => {
                 // Arrange - beforeAll()
                 // Act
                 const result = await subject.getCommandText(testCommandOnlyVariant);
 
                 // Assert
-                expect(result).toBe(null);
+                expect(result).toEqual([]);
             });
 
-            it('should return null for unknown variant (variant)', async () => {
+            it('should return empty set for unknown variant (variant)', async () => {
                 // Arrange
                 const unknownVariant = 'unknown';
 
@@ -276,10 +261,10 @@ describe('CommandResponse.Repository (postgres)', () => {
                 const result = await subject.getCommandText(testCommandDefaultVariant, unknownVariant);
 
                 // Assert
-                expect(result).toBe(null);
+                expect(result).toEqual([]);
             });
 
-            it('should return null for invalid commandName (unknown command)', async () => {
+            it('should return empty set for invalid commandName (unknown command)', async () => {
                 // Arrange - beforeEach()
                 const unknownCommand = 'unknownCommand';
 
@@ -287,7 +272,7 @@ describe('CommandResponse.Repository (postgres)', () => {
                 const result = await subject.getCommandText(unknownCommand);
 
                 // Assert
-                expect(result).toBe(null);
+                expect(result).toEqual([]);
             });
         });
 
