@@ -4,24 +4,24 @@ import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
 import CommandResponseRepository from './command-response.repository.js';
 import { mockLogger } from '../../tests/common.mocks.js';
-import { CommandResponse } from '../../database/index.js';
+import { CommandResponseDbo, CommandResponseTextDbo } from '../../database/index.js';
 
 describe('CommandResponse.Repository (postgres)', () => {
     let container: StartedPostgreSqlContainer;
     let databaseConfiguration: IDatabaseConfiguration;
 
     /** Command Response seed records */
-    const seedEntries: Record<string, Record<string, string>> = {
+    const seedEntries: Record<string, Record<string, string[]>> = {
         'test-key-1': {
-            '': 'test-value-1',
+            '': ['test-value-1'],
         },
         'test-key-2': {
-            'variant-1': 'test-variant-value-1',
+            'variant-1': ['test-variant-value-1'],
         },
         'test-key-3': {
-            '': 'test-value-3',
-            'variant-1': 'test-variant-value-1',
-            'variant-2': 'test-variant-value-2',
+            '': ['test-value-3'],
+            'variant-1': ['test-variant-value-1'],
+            'variant-2': ['test-variant-value-2'],
         },
     };
 
@@ -85,11 +85,14 @@ describe('CommandResponse.Repository (postgres)', () => {
             await database.disconnect();
         });
 
-        beforeEach(async () => {
+        beforeEach(() => {
             jest.resetAllMocks();
 
-            await CommandResponse.destroy({ where: {}, force: true });
             subject = new CommandResponseRepository(mockLogger);
+        });
+
+        afterEach(async () => {
+            await CommandResponseDbo.destroy({ where: {}, force: true });
         });
 
         describe('seed()', () => {
@@ -98,33 +101,35 @@ describe('CommandResponse.Repository (postgres)', () => {
                 // Act
                 await subject.seed(seedEntries);
 
-                const actualByCommand = (await subject.findAll()).reduce<Record<string, Record<string, string>>>((acc, row) => {
+                const actualByCommand = (await subject.findAll()).reduce<Record<string, Record<string, string[]>>>((acc, row) => {
                     acc[row.commandName] ??= {};
-                    acc[row.commandName][row.variant] = row.text;
+                    acc[row.commandName][row.variant] = row.texts.map(x => x.text);
                     return acc;
                 }, {});
 
                 // Assert
+                expect(mockLogger.error).not.toHaveBeenCalled();
                 expect(actualByCommand).toMatchObject(seedEntries);
             });
 
             it('should not seed twice, overriding existing keys', async () => {
                 // Arrange - beforeEach()
-                const newEntries: Record<string, Record<string, string>> = {
-                    'test-key-1': { '': 'test-value-4' },
+                const newEntries: Record<string, Record<string, string[]>> = {
+                    'test-key-1': { '': ['test-value-4'] },
                 };
 
                 // Act
                 await subject.seed(seedEntries);
                 await subject.seed(newEntries);
 
-                const actualByCommand = (await subject.findAll()).reduce<Record<string, Record<string, string>>>((acc, row) => {
+                const actualByCommand = (await subject.findAll()).reduce<Record<string, Record<string, string[]>>>((acc, row) => {
                     acc[row.commandName] ??= {};
-                    acc[row.commandName][row.variant] = row.text;
+                    acc[row.commandName][row.variant] = row.texts.map(x => x.text);
                     return acc;
                 }, {});
 
                 // Assert
+                expect(mockLogger.error).not.toHaveBeenCalled();
                 expect(actualByCommand).toMatchObject(seedEntries);
             });
 
@@ -135,13 +140,14 @@ describe('CommandResponse.Repository (postgres)', () => {
                 await subject.updateCommandText('test-key-1', validText);
                 await subject.seed(seedEntries);
 
-                const actualByCommand = (await subject.findAll()).reduce<Record<string, Record<string, string>>>((acc, row) => {
+                const actualByCommand = (await subject.findAll()).reduce<Record<string, Record<string, string[]>>>((acc, row) => {
                     acc[row.commandName] ??= {};
-                    acc[row.commandName][row.variant] = row.text;
+                    acc[row.commandName][row.variant] = row.texts.map(x => x.text);
                     return acc;
                 }, {});
 
                 // Assert
+                expect(mockLogger.error).toHaveBeenCalledWith(expect.any(String));
                 expect(actualByCommand).toEqual(expect.objectContaining({
                     ...seedEntries,
                     'test-key-1': { '': validText },

@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import { CommandResponse } from '../../database/index.js';
+import { CommandResponseDbo, CommandResponseTextDbo } from '../../database/index.js';
 import InjectionTypes from '../../dependency-management/types.js';
 
 @injectable()
@@ -9,7 +9,7 @@ export default class CommandResponseRepository {
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) { }
 
-    async seed(entries: Record<string, Record<string, string>>): Promise<void> {
+    async seed(entries: Record<string, Record<string, string[]>>): Promise<void> {
         const records = Object
             .entries(entries)
             .flatMap(([commandName, variants]) => Object
@@ -18,16 +18,25 @@ export default class CommandResponseRepository {
                     commandName,
                     variant,
                     text,
+                    texts: text.map(x => ({ text: x })),
                 })));
 
-        await CommandResponse
+        try {
+            await CommandResponseDbo
             .bulkCreate(
                 records,
                 {
                     ignoreDuplicates: true,
+                        include: {
+                            model: CommandResponseTextDbo,
+                            as: 'texts',
+                        },
                     validate: true,
                 },
             );
+        } catch (error) {
+            this.logger.error(`Failed to Seed Data for CommandResponse/Text`, error);
+        }
     }
 
     async findAll(): Promise<CommandResponse[]> {
