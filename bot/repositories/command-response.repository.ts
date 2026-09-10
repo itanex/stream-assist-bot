@@ -10,6 +10,14 @@ export class CommandResponseText {
     ) { }
 }
 
+export class CommandResponse {
+    constructor(
+        public commandName: string = '',
+        public variant: string = '',
+        public texts: CommandResponseText[] = [],
+    ) { }
+}
+
 @injectable()
 export default class CommandResponseRepository {
     constructor(
@@ -101,16 +109,45 @@ export default class CommandResponseRepository {
      * @param variant The command name variant to fetch
      * @returns The created command if successful, rejected error otherwise
      */
-    async addCommandText(commandName: string, text: string, variant: string = ''): Promise<CommandResponse> {
-        return CommandResponse
-            .create({
+    async addCommandText(commandName: string, text: string, variant: string = ''): Promise<CommandResponse | null> {
+        try {
+            const [parentRecord] = await CommandResponseDbo
+                .findOrCreate({
+                    where: {
+                        commandName,
+                        variant,
+                    },
+                    defaults: {
                 commandName,
                 variant,
-                text,
-            }, {
+                    },
                 isNewRecord: true,
                 validate: true,
             });
+
+            const record = await CommandResponseTextDbo
+                .create({
+                    commandResponseId: parentRecord.id,
+                    text,
+                });
+
+            if (record) {
+                return {
+                    commandName: parentRecord.commandName,
+                    variant: parentRecord.variant,
+                    texts: [{
+                        text: record.text,
+                        weight: Number(record.weight),
+                    } as CommandResponseText],
+                } as CommandResponse;
+            }
+
+            this.logger.warn(`Failed to create CommandResponseText`);
+        } catch (error) {
+            this.logger.error(`Error creating command records in the database`, error);
+        }
+
+        return null;
     }
 
     /**

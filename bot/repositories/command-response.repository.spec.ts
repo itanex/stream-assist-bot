@@ -3,7 +3,7 @@ import { jest } from '@jest/globals';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
 import CommandResponseRepository from './command-response.repository.js';
-import { mockLogger } from '../../tests/common.mocks.js';
+import { mockError, mockLogger } from '../../tests/common.mocks.js';
 import { CommandResponseDbo, CommandResponseTextDbo } from '../../database/index.js';
 
 describe('CommandResponse.Repository (postgres)', () => {
@@ -281,12 +281,8 @@ describe('CommandResponse.Repository (postgres)', () => {
                 await subject.seed(seedEntries);
             });
 
-            afterEach(async () => {
-                await CommandResponse.destroy({ where: {}, force: true });
-            });
-
             it('should insert and return the new record', async () => {
-                // Arrange - beforeEach()
+                // Arrange
                 const commandName = 'test-command-name';
                 const variant = 'test-variant';
                 const text = 'test-command-text';
@@ -295,15 +291,18 @@ describe('CommandResponse.Repository (postgres)', () => {
                 const result = await subject.addCommandText(commandName, text, variant);
 
                 // Assert
-                expect(result).toEqual(expect.objectContaining({
+                expect(result).toStrictEqual({
                     commandName,
                     variant,
+                    texts: [{
                     text,
-                }));
+                        weight: 1,
+                    }],
+                });
             });
 
             it('should insert and return the new record (default variant)', async () => {
-                // Arrange - beforeEach()
+                // Arrange
                 const commandName = 'test-command-name';
                 const text = 'test-command-text';
 
@@ -311,11 +310,62 @@ describe('CommandResponse.Repository (postgres)', () => {
                 const result = await subject.addCommandText(commandName, text);
 
                 // Assert
-                expect(result).toEqual(expect.objectContaining({
+                expect(result).toStrictEqual({
                     commandName,
                     variant: '',
+                    texts: [{
                     text,
-                }));
+                        weight: 1,
+                    }],
+                });
+            });
+
+            it('should return null when parentCommand fails', async () => {
+                // Arrange
+                const spy = jest.spyOn(CommandResponseDbo, 'findOrCreate')
+                    .mockImplementation(() => { throw mockError; });
+
+                // Act
+                const result = await subject.addCommandText(testCommandDefaultVariant, validText, defaultVariant);
+
+                // Assert
+                expect(mockLogger.error)
+                    .toHaveBeenCalledWith(expect.any(String), expect.any(Error));
+                expect(result).toEqual(null);
+
+                spy.mockRestore();
+            });
+
+            it('should return null when text record fails to be created', async () => {
+                // Arrange
+                const spy = jest.spyOn(CommandResponseTextDbo, 'create')
+                    .mockImplementation(() => undefined);
+
+                // Act
+                const result = await subject.addCommandText(testCommandDefaultVariant, validText, defaultVariant);
+
+                // Assert
+                expect(mockLogger.warn)
+                    .toHaveBeenCalledWith(expect.any(String));
+                expect(result).toEqual(null);
+
+                spy.mockRestore();
+            });
+
+            it('should return null when text record fails', async () => {
+                // Arrange
+                const spy = jest.spyOn(CommandResponseTextDbo, 'create')
+                    .mockImplementation(() => { throw mockError; });
+
+                // Act
+                const result = await subject.addCommandText(testCommandDefaultVariant, validText, defaultVariant);
+
+                // Assert
+                expect(mockLogger.error)
+                    .toHaveBeenCalledWith(expect.any(String), expect.any(Error));
+                expect(result).toEqual(null);
+
+                spy.mockRestore();
             });
         });
 
