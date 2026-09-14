@@ -5,7 +5,6 @@
   "main": "app.ts",
   "type": "module",
   "dependencies": {
-    "@sequelize/core": "7.0.0-alpha.48",
     "@twurple/api": "8.1.4",
     "@twurple/auth": "8.1.4",
     "@twurple/chat": "8.1.4",
