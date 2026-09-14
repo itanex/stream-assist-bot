@@ -383,6 +383,41 @@ describe('CommandResponse.Repository (postgres)', () => {
             });
         });
 
+        describe('updateCommand', () => {
+            beforeEach(async () => {
+                await subject.seed(seedEntries);
+            });
+
+            it('should update the command name of the record', async () => {
+                // Arrange
+                // Act
+                const result = await subject.updateCommand(testCommandDefaultVariant, newCommandName);
+
+                // Assert
+                expect(result).toEqual(expect.arrayContaining([{
+                    commandName: newCommandName,
+                    variant: defaultVariant,
+                    originalName: testCommandDefaultVariant,
+                }]));
+            });
+
+            it('should return null when text record fails', async () => {
+                // Arrange
+                const spy = jest.spyOn(CommandResponseDbo, 'update')
+                    .mockImplementation(() => { throw mockError; });
+
+                // Act
+                const result = await subject.updateCommand(testCommandDefaultVariant, newCommandName);
+
+                // Assert
+                expect(mockLogger.error)
+                    .toHaveBeenCalledWith(expect.any(String), expect.any(Error));
+                expect(result).toEqual([]);
+
+                spy.mockRestore();
+            });
+        });
+
         describe('removeCommand()', () => {
             beforeEach(async () => {
                 await subject.seed(seedEntries);

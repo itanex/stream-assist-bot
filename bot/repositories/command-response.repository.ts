@@ -129,6 +129,36 @@ export default class CommandResponseRepository {
     }
 
     /**
+     * Update the command record with a new commandName
+     * @param commandName the command to change
+     * @param newCommandName the new name for the command
+     * @returns updated command record with original name
+     */
+    async updateCommand(commandName: string, newCommandName: string): Promise<CommandResponseUpdate[]> {
+        try {
+            const [count, records] = await CommandResponseDbo
+                .update({
+                    commandName: newCommandName,
+                }, {
+                    where: {
+                        commandName,
+                    },
+                    returning: true,
+                });
+
+            return records.map(x => (<unknown>{
+                commandName: x.commandName,
+                variant: x.variant,
+                originalName: commandName,
+            } as CommandResponseUpdate));
+        } catch (error) {
+            this.logger.error(`Failed to update CommandResponse in database`, error);
+        }
+
+        return [];
+    }
+
+    /**
      * Inserts the provided command with variant and text
      * @param commandName The command name to fetch
      * @param text new text value for the Command
