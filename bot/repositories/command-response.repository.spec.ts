@@ -423,34 +423,28 @@ describe('CommandResponse.Repository (postgres)', () => {
                 await subject.seed(seedEntries);
             });
 
-            it.each`
-                input    | commandName                  | isRemoved
-                ${''}    | ${testCommandDefaultVariant} | ${true}
-                ${'not'} | ${'unknownCommand'}          | ${false}
-            `('should $input remove the command (no-variant)', async ({ input, commandName, isRemoved }: { input: string, commandName: string, isRemoved: boolean }) => {
+            it('should remove the known command record', async () => {
                 // Arrange - beforeEach()
                 // Act
-                const result = await subject.removeCommand(commandName);
+                const result = await subject.removeCommand(testCommandDefaultVariant);
 
                 // Assert
-                expect(mockLogger.error).not.toHaveBeenCalled();
-
-                expect(result).toBe(isRemoved);
+                expect(mockLogger.error)
+                    .not.toHaveBeenCalled();
+                expect(result).toBe(true);
             });
 
-            it.each`
-                input    | commandName               | variant             | isRemoved
-                ${''}    | ${testCommandOnlyVariant} | ${testVariants[0]}  | ${true}
-                ${'not'} | ${testCommandOnlyVariant} | ${'unknownVariant'} | ${false}
-            `('should $input remove the command (variant)', async ({ input, commandName, variant, isRemoved }: { input: string, commandName: string, variant: string, isRemoved: boolean }) => {
+            it('should NOT remove the unknown command record', async () => {
                 // Arrange - beforeEach()
+                const unknownCommand = 'unknown-command-name';
+
                 // Act
-                const result = await subject.removeCommand(commandName, variant);
+                const result = await subject.removeCommand(unknownCommand);
 
                 // Assert
-                expect(mockLogger.error).not.toHaveBeenCalled();
-
-                expect(result).toBe(isRemoved);
+                expect(mockLogger.error)
+                    .not.toHaveBeenCalled();
+                expect(result).toBe(false);
             });
 
             it('should log error when failing database', async () => {
@@ -459,7 +453,7 @@ describe('CommandResponse.Repository (postgres)', () => {
                     .mockImplementation(() => { throw mockError; });
 
                 // Act
-                const result = await subject.removeCommand(testCommandDefaultVariant, defaultVariant);
+                const result = await subject.removeCommand(testCommandDefaultVariant);
 
                 // Assert
                 expect(mockLogger.error)

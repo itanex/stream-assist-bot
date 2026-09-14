@@ -229,6 +229,29 @@ export default class CommandResponseRepository {
     }
 
     /**
+     * Soft-Delete specified command including all variants, if present
+     * @param commandName The command name to remove
+     * @param variant The command name variant to remove
+     * @returns boolean flag denoting if the provided command was removed
+     */
+    async removeCommand(commandName: string): Promise<boolean> {
+        try {
+            const count = await CommandResponseDbo
+                .destroy({
+                    where: {
+                        commandName,
+                    },
+                });
+
+            return count > 0;
+        } catch (error) {
+            this.logger.error(`Error removing the command from database`, error);
+        }
+
+        return false;
+    }
+
+    /**
      * Soft-Delete specified command, if present
      * @param commandName The command name to remove
      * @param variant The command name variant to remove
