@@ -102,6 +102,33 @@ export default class CommandResponseRepository {
     }
 
     /**
+     * Create a new command record with the default variant and no text responses
+     * @param commandName to be created
+     * @returns database command record
+     */
+    async addCommand(commandName: string): Promise<CommandResponse | null> {
+        try {
+            const record = await CommandResponseDbo
+                .create({
+                    commandName,
+                }, {
+                    isNewRecord: true,
+                    validate: true,
+                });
+
+            return {
+                commandName: record.commandName,
+                variant: record.variant,
+                texts: [],
+            } as CommandResponse;
+        } catch (error) {
+            this.logger.error(`Failed to create CommandResponse in database`, error);
+        }
+
+        return null;
+    }
+
+    /**
      * Inserts the provided command with variant and text
      * @param commandName The command name to fetch
      * @param text new text value for the Command

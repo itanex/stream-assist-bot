@@ -218,30 +218,44 @@ describe('CommandResponse.Repository (postgres)', () => {
             });
         });
 
-        describe('getCommandVariants()', () => {
+        describe('addCommand()', () => {
             beforeEach(async () => {
                 await subject.seed(seedEntries);
             });
 
-            it('should return only the command default variant (command, no variant) ', async () => {
-                // Arrange - beforeEach()
+            it('should insert and return the new record', async () => {
+                // Arrange
                 // Act
-                const result = await subject.getCommandVariants(testCommandDefaultVariant);
+                const result = await subject.addCommand(newCommandName);
 
                 // Assert
-                expect(result).toEqual([defaultVariant]);
+                expect(result).toEqual(expect.objectContaining({
+                    commandName: newCommandName,
+                    variant: defaultVariant,
+                    texts: [],
+                }));
             });
 
-            it('should return the command variants (command, expected variant)', async () => {
-                // Arrange - beforeAll()
-                const expectedVariants = Object.keys(seedEntries[testCommandAllVariants])
-                    .map(x => x);
+            it('should return null when text record fails', async () => {
+                // Arrange
+                const spy = jest.spyOn(CommandResponseDbo, 'create')
+                    .mockImplementation(() => { throw mockError; });
 
                 // Act
-                const result = await subject.getCommandVariants(testCommandAllVariants);
+                const result = await subject.addCommand(testCommandDefaultVariant);
 
                 // Assert
-                expect(result).toEqual(expectedVariants);
+                expect(mockLogger.error)
+                    .toHaveBeenCalledWith(expect.any(String), expect.any(Error));
+                expect(result).toEqual(null);
+
+                spy.mockRestore();
+            });
+        });
+
+        describe('addCommandVariant()', () => {
+            beforeEach(async () => {
+                await subject.seed(seedEntries);
             });
 
             it('should return empty set for no default variant name (command)', async () => {
