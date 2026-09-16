@@ -288,12 +288,12 @@ export default class CommandResponseRepository {
     }
 
     /**
-     * Soft-Delete specified command, if present
+     * Soft-Delete specified command variant, if present
      * @param commandName The command name to remove
      * @param variant The command name variant to remove
      * @returns boolean flag denoting if the provided command was removed
      */
-    async removeCommand(commandName: string, variant: string = ''): Promise<boolean> {
+    async removeCommandVariant(commandName: string, variant: string): Promise<boolean> {
         try {
             const count = await CommandResponseDbo
             .destroy({
@@ -305,6 +305,7 @@ export default class CommandResponseRepository {
 
         return count === 1;
         } catch (error) {
+            this.logger.error(`Error removing the command variant from database`, error);
             this.logger.error(`Error removing the command from database`, error);
         }
 

@@ -505,6 +505,53 @@ describe('CommandResponse.Repository (postgres)', () => {
             });
         });
 
+        describe('removeCommandVariant()', () => {
+            beforeEach(async () => {
+                await subject.seed(seedEntries);
+            });
+
+            it('should remove the known command variant record', async () => {
+                // Arrange - beforeEach()
+                // Act
+                const result = await subject.removeCommandVariant(testCommandDefaultVariant, defaultVariant);
+
+                // Assert
+                expect(mockLogger.error)
+                    .not.toHaveBeenCalled();
+                expect(result).toBe(true);
+            });
+
+            it('should NOT remove the unknown command variant record', async () => {
+                // Arrange - beforeEach()
+                const unknownVariant = 'unknown-variant-name';
+
+                // Act
+                const result = await subject.removeCommandVariant(testCommandDefaultVariant, unknownVariant);
+
+                // Assert
+                expect(mockLogger.error)
+                    .not.toHaveBeenCalled();
+                expect(result).toBe(false);
+            });
+
+            it('should log error when failing database', async () => {
+                // Arrange
+                const spy = jest.spyOn(CommandResponseDbo, 'destroy')
+                    .mockImplementation(() => { throw mockError; });
+
+                // Act
+                const result = await subject.removeCommandVariant(testCommandDefaultVariant, defaultVariant);
+
+                // Assert
+                expect(mockLogger.error)
+                    .toHaveBeenCalledWith(expect.any(String), expect.any(Error));
+
+                expect(result).toBe(false);
+
+                spy.mockRestore();
+            });
+        });
+
         describe('restoreCommandText()', () => {
             beforeEach(async () => {
                 await subject.seed(seedEntries);
