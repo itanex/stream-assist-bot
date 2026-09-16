@@ -552,6 +552,49 @@ describe('CommandResponse.Repository (postgres)', () => {
             });
         });
 
+        describe('restoreCommand()', () => {
+            beforeEach(async () => {
+                await subject.seed(seedEntries);
+            });
+
+            it('should restore command with variants and text responses', async () => {
+                // Arrange
+                const expected = Object.entries(seedEntries[testCommandAllVariants])
+                    .map(([variant, texts]) => ({
+                        commandName: testCommandAllVariants,
+                        variant,
+                        texts: expect.arrayContaining(
+                            texts.map(text => expect.objectContaining({ text })),
+                        ),
+                    } as CommandResponse));
+                const removed = await subject.removeCommand(testCommandAllVariants);
+
+                // Act
+                const result = await subject.restoreCommand(testCommandAllVariants);
+
+                // Assert
+                expect(removed).toBe(true);
+                expect(result).toStrictEqual(expected);
+            });
+
+            it('should log error when failing database', async () => {
+                // Arrange
+                const spy = jest.spyOn(CommandResponseDbo, 'restore')
+                    .mockImplementation(() => { throw mockError; });
+
+                // Act
+                const result = await subject.restoreCommand(testCommandAllVariants);
+
+                // Assert
+                expect(mockLogger.error)
+                    .toHaveBeenCalledWith(expect.any(String), expect.any(Error));
+
+                expect(result).toEqual([]);
+
+                spy.mockRestore();
+            });
+        });
+
         describe('restoreCommandText()', () => {
             beforeEach(async () => {
                 await subject.seed(seedEntries);

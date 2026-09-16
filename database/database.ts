@@ -82,6 +82,10 @@ export default class Database {
         return this.sequelize;
     }
 
+    get transaction() {
+        return this.sequelize.transaction.bind(this.sequelize);
+    }
+
     constructor(
         @inject(InjectionTypes.DatabaseConfiguration) private dbconfig: IDatabaseConfiguration,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,

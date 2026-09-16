@@ -313,6 +313,63 @@ export default class CommandResponseRepository {
     }
 
     /**
+     * Restores the specific command provided
+     * @param commandName The command to restore
+     * @returns all restored records with text
+     */
+    async restoreCommand(commandName: string): Promise<CommandResponse[]> {
+        try {
+            const records = await this.database.transaction(async transaction => {
+                await CommandResponseDbo
+                    .restore({
+                        where: {
+                            commandName,
+                        },
+                        transaction,
+                    });
+
+                const parents = await CommandResponseDbo
+                    .findAll({
+                        where: {
+                            commandName,
+                        },
+                        transaction,
+                    });
+
+                const textRecords = await CommandResponseTextDbo
+                    .restore({
+                        where: {
+                            commandResponseId: parents.map(x => x.id),
+                        },
+                        transaction,
+                    });
+
+                return CommandResponseDbo
+                    .findAll({
+                        where: {
+                            commandName,
+                        },
+                        include: [CommandResponseTextDbo],
+                        transaction,
+                    });
+            });
+
+            return records.map(x => (<unknown>{
+                commandName: x.commandName,
+                variant: x.variant,
+                texts: x.texts.map(y => ({
+                    text: y.text,
+                    weight: y.weight,
+                }) as CommandResponseText),
+            } as CommandResponse));
+        } catch (error) {
+            this.logger.error(`There was an error restoring the CommandResponse for the command`, error);
+        }
+
+        return [];
+    }
+
+    /**
      * Restore specified command, if present
      * @param commandName The command name to restore
      * @param variant The command name variant to restore
