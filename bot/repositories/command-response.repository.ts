@@ -2,25 +2,29 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import { CommandResponseDbo, CommandResponseTextDbo } from '../../database/index.js';
 import InjectionTypes from '../../dependency-management/types.js';
+import Database from '../../database/database.js';
 
-export class CommandResponseText {
-    constructor(
-        public text: string = '',
-        public weight: number = 1,
-    ) { }
-}
+export type CommandResponseText = {
+    text: string,
+    weight: number,
+};
 
-export class CommandResponse {
-    constructor(
-        public commandName: string = '',
-        public variant: string = '',
-        public texts: CommandResponseText[] = [],
-    ) { }
-}
+export type CommandResponse = {
+    commandName: string,
+    variant: string,
+    texts: CommandResponseText[],
+};
+
+export type CommandResponseUpdate = CommandResponse & {
+    originalName?: string,
+    originalVariant?: string,
+    originalText?: string,
+};
 
 @injectable()
 export default class CommandResponseRepository {
     constructor(
+        @inject(Database) private database: Database,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) { }
 
@@ -152,10 +156,42 @@ export default class CommandResponseRepository {
                 originalName: commandName,
             } as CommandResponseUpdate));
         } catch (error) {
-            this.logger.error(`Failed to update CommandResponse in database`, error);
+            this.logger.error(`Failed to update CommandResponse CommandName in database`, error);
         }
 
         return [];
+    }
+
+    /**
+     * Update the command variant record with a new variant name
+     * @param commandName the command which is connected with the variant
+     * @param variant the variant to change
+     * @param newVariant the new name for the command
+     * @returns updated command record with original name
+     */
+    async updateCommandVariant(commandName: string, variant: string, newVariant: string): Promise<CommandResponseUpdate | null> {
+        try {
+            const [count, records] = await CommandResponseDbo
+                .update({
+                    variant: newVariant,
+                }, {
+                    where: {
+                        commandName,
+                        variant,
+                    },
+                    returning: true,
+                });
+
+            return records.map(x => ({
+                commandName: x.commandName,
+                variant: x.variant,
+                originalVariant: variant,
+            } as CommandResponseUpdate))[0];
+        } catch (error) {
+            this.logger.error(`Failed to update CommandResponse Variant in database`, error);
+        }
+
+        return null;
     }
 
     /**

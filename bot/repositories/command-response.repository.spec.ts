@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
-import CommandResponseRepository from './command-response.repository.js';
+import CommandResponseRepository, { CommandResponse, CommandResponseUpdate } from './command-response.repository.js';
 import { mockError, mockLogger } from '../../tests/common.mocks.js';
 import { CommandResponseDbo, CommandResponseTextDbo } from '../../database/index.js';
 
@@ -36,6 +36,8 @@ describe('CommandResponse.Repository (postgres)', () => {
 
     const defaultVariant = '';
     const validText = 'Edited Text';
+    const newCommandName = 'new-command-name';
+    const newVariantName = 'new-variant-name';
 
     let subject: CommandResponseRepository;
 
@@ -88,7 +90,10 @@ describe('CommandResponse.Repository (postgres)', () => {
         beforeEach(() => {
             jest.resetAllMocks();
 
-            subject = new CommandResponseRepository(mockLogger);
+            subject = new CommandResponseRepository(
+                database,
+                mockLogger,
+            );
         });
 
         afterEach(async () => {
@@ -401,7 +406,7 @@ describe('CommandResponse.Repository (postgres)', () => {
                 }]));
             });
 
-            it('should return null when text record fails', async () => {
+            it('should return null when command record fails', async () => {
                 // Arrange
                 const spy = jest.spyOn(CommandResponseDbo, 'update')
                     .mockImplementation(() => { throw mockError; });
@@ -413,6 +418,41 @@ describe('CommandResponse.Repository (postgres)', () => {
                 expect(mockLogger.error)
                     .toHaveBeenCalledWith(expect.any(String), expect.any(Error));
                 expect(result).toEqual([]);
+
+                spy.mockRestore();
+            });
+        });
+
+        describe('updateCommandVariant', () => {
+            beforeEach(async () => {
+                await subject.seed(seedEntries);
+            });
+
+            it('should update the command variant name of the record', async () => {
+                // Arrange
+                // Act
+                const result = await subject.updateCommandVariant(testCommandOnlyVariant, testVariants[0], newVariantName);
+
+                // Assert
+                expect(result).toStrictEqual(expect.objectContaining({
+                    commandName: testCommandOnlyVariant,
+                    variant: newVariantName,
+                    originalVariant: testVariants[0],
+                }));
+            });
+
+            it('should return null when command record fails', async () => {
+                // Arrange
+                const spy = jest.spyOn(CommandResponseDbo, 'update')
+                    .mockImplementation(() => { throw mockError; });
+
+                // Act
+                const result = await subject.updateCommandVariant(testCommandDefaultVariant, testVariants[0], newCommandName);
+
+                // Assert
+                expect(mockLogger.error)
+                    .toHaveBeenCalledWith(expect.any(String), expect.any(Error));
+                expect(result).toEqual(null);
 
                 spy.mockRestore();
             });
