@@ -112,13 +112,23 @@ export default class CommandResponseRepository {
      */
     async addCommand(commandName: string): Promise<CommandResponse | null> {
         try {
-            const record = await CommandResponseDbo
-                .create({
+            const [record] = await CommandResponseDbo
+                .findOrCreate({
+                    where: {
+                        commandName,
+                        variant: '',
+                    },
+                    defaults: {
                     commandName,
-                }, {
+                    },
+                    paranoid: false,
                     isNewRecord: true,
                     validate: true,
                 });
+
+            if (record.isSoftDeleted()) {
+                await record.restore();
+            }
 
             return {
                 commandName: record.commandName,
@@ -140,7 +150,7 @@ export default class CommandResponseRepository {
      */
     async updateCommand(commandName: string, newCommandName: string): Promise<CommandResponseUpdate[]> {
         try {
-            const [count, records] = await CommandResponseDbo
+            const [, records] = await CommandResponseDbo
                 .update({
                     commandName: newCommandName,
                 }, {
@@ -171,7 +181,7 @@ export default class CommandResponseRepository {
      */
     async updateCommandVariant(commandName: string, variant: string, newVariant: string): Promise<CommandResponseUpdate | null> {
         try {
-            const [count, records] = await CommandResponseDbo
+            const [, records] = await CommandResponseDbo
                 .update({
                     variant: newVariant,
                 }, {
@@ -194,6 +204,39 @@ export default class CommandResponseRepository {
         return null;
     }
 
+    async addCommandVariant(commandName: string, variant: string): Promise<CommandResponse | null> {
+        try {
+            const [record] = await CommandResponseDbo
+                .findOrCreate({
+                    where: {
+                        commandName,
+                        variant,
+                    },
+                    defaults: {
+                        commandName,
+                        variant,
+                    },
+                    paranoid: false,
+                    isNewRecord: true,
+                    validate: true,
+                });
+
+            if (record.isSoftDeleted()) {
+                await record.restore();
+            }
+
+            return {
+                commandName: record.commandName,
+                variant: record.variant,
+                texts: [],
+            } as CommandResponse;
+        } catch (error) {
+            this.logger.error(`Failed to create CommandResponse in database`, error);
+        }
+
+        return null;
+    }
+
     /**
      * Inserts the provided command with variant and text
      * @param commandName The command name to fetch
@@ -203,6 +246,7 @@ export default class CommandResponseRepository {
      */
     async addCommandText(commandName: string, text: string, variant: string = ''): Promise<CommandResponse | null> {
         try {
+            return await this.database.transaction(async transaction => {
             const [parentRecord] = await CommandResponseDbo
                 .findOrCreate({
                     where: {
@@ -213,14 +257,24 @@ export default class CommandResponseRepository {
                 commandName,
                 variant,
                     },
+                        paranoid: false,
                 isNewRecord: true,
                 validate: true,
+                        transaction,
             });
+
+                if (parentRecord.isSoftDeleted()) {
+                    await parentRecord.restore({
+                        transaction,
+                    });
+                }
 
             const record = await CommandResponseTextDbo
                 .create({
                     commandResponseId: parentRecord.id,
                     text,
+                    }, {
+                        transaction,
                 });
 
             if (record) {
@@ -235,6 +289,8 @@ export default class CommandResponseRepository {
             }
 
             this.logger.warn(`Failed to create CommandResponseText`);
+                return null;
+            });
         } catch (error) {
             this.logger.error(`Error creating command records in the database`, error);
         }
@@ -250,9 +306,9 @@ export default class CommandResponseRepository {
      * @returns boolean flag denoting if the provided command was updated
      */
     async updateCommandText(commandName: string, text: string, variant: string = ''): Promise<boolean> {
-        const [count] = await CommandResponse
+        const [count] = await CommandResponseDbo
             .update(
-                { text },
+                { texts: [text] },
                 {
                     where: {
                         commandName,
@@ -272,14 +328,37 @@ export default class CommandResponseRepository {
      */
     async removeCommand(commandName: string): Promise<boolean> {
         try {
+            return await this.database.transaction(async transaction => {
+                const commands = await CommandResponseDbo
+                    .findAll({
+                        where: {
+                            commandName,
+                        },
+                        transaction,
+                    });
+
+                if (commands.length === 0) {
+                    return false;
+                }
+
+                await CommandResponseTextDbo
+                    .destroy({
+                        where: {
+                            commandResponseId: commands.map(x => x.id),
+                        },
+                        transaction,
+                    });
+
             const count = await CommandResponseDbo
                 .destroy({
                     where: {
                         commandName,
                     },
+                        transaction,
                 });
 
             return count > 0;
+            });
         } catch (error) {
             this.logger.error(`Error removing the command from database`, error);
         }
@@ -295,18 +374,41 @@ export default class CommandResponseRepository {
      */
     async removeCommandVariant(commandName: string, variant: string): Promise<boolean> {
         try {
+            return await this.database.transaction(async transaction => {
+                const commands = await CommandResponseDbo
+                    .findAll({
+                        where: {
+                            commandName,
+                            variant,
+                        },
+                        transaction,
+                    });
+
+                if (commands.length === 0) {
+                    return false;
+                }
+
+                await CommandResponseTextDbo
+                    .destroy({
+                        where: {
+                            commandResponseId: commands.map(x => x.id),
+                        },
+                        transaction,
+                    });
+
             const count = await CommandResponseDbo
             .destroy({
                 where: {
                     commandName,
                     variant,
                 },
+                        transaction,
             });
 
         return count === 1;
+            });
         } catch (error) {
             this.logger.error(`Error removing the command variant from database`, error);
-            this.logger.error(`Error removing the command from database`, error);
         }
 
         return false;
