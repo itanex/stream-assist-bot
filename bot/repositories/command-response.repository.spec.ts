@@ -184,6 +184,44 @@ describe('CommandResponse.Repository (postgres)', () => {
             });
         });
 
+        describe('getCommandVariants()', () => {
+            beforeEach(async () => {
+                await subject.seed(seedEntries);
+            });
+
+            it('should return only the command default variant (command, no variant) ', async () => {
+                // Arrange - beforeEach()
+                // Act
+                const result = await subject.getCommandVariants(testCommandDefaultVariant);
+
+                // Assert
+                expect(result).toEqual([defaultVariant]);
+            });
+
+            it('should return the command variants (command, expected variant)', async () => {
+                // Arrange - beforeAll()
+                const expectedVariants = Object.keys(seedEntries[testCommandAllVariants]);
+
+                // Act
+                const result = await subject.getCommandVariants(testCommandAllVariants);
+
+                // Assert
+                expect(result).toHaveLength(expectedVariants.length);
+                expect(result).toEqual(expect.arrayContaining(expectedVariants));
+            });
+
+            it('should return empty set for invalid commandName (unknown command)', async () => {
+                // Arrange - beforeEach()
+                const unknownCommand = 'unknownCommand';
+
+                // Act
+                const result = await subject.getCommandVariants(unknownCommand);
+
+                // Assert
+                expect(result).toEqual([]);
+            });
+        });
+
         describe('getCommandText()', () => {
             beforeEach(async () => {
                 await subject.seed(seedEntries);
