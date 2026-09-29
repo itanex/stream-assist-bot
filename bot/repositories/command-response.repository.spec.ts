@@ -241,9 +241,25 @@ describe('CommandResponse.Repository (postgres)', () => {
                 }));
             });
 
+            it('should restore previously deleted command', async () => {
+                // Arrange
+                const removed = await subject.removeCommand(testCommandDefaultVariant);
+
+                // Act
+                const result = await subject.addCommand(testCommandDefaultVariant);
+
+                // Assert
+                expect(removed).toBe(true);
+                expect(result).toEqual(expect.objectContaining({
+                    commandName: testCommandDefaultVariant,
+                    variant: defaultVariant,
+                    texts: [],
+                }));
+            });
+
             it('should return null when text record fails', async () => {
                 // Arrange
-                const spy = jest.spyOn(CommandResponseDbo, 'create')
+                const spy = jest.spyOn(CommandResponseDbo, 'findOrCreate')
                     .mockImplementation(() => { throw mockError; });
 
                 // Act
@@ -263,35 +279,49 @@ describe('CommandResponse.Repository (postgres)', () => {
                 await subject.seed(seedEntries);
             });
 
-            it('should return empty set for no default variant name (command)', async () => {
-                // Arrange - beforeAll()
-                // Act
-                const result = await subject.getCommandText(testCommandOnlyVariant);
-
-                // Assert
-                expect(result).toEqual([]);
-            });
-
-            it('should return empty set for unknown variant (variant)', async () => {
-                // Arrange
-                const unknownVariant = 'unknown';
-
-                // Act
-                const result = await subject.getCommandText(testCommandDefaultVariant, unknownVariant);
-
-                // Assert
-                expect(result).toEqual([]);
-            });
-
-            it('should return empty set for invalid commandName (unknown command)', async () => {
+            it('should insert and return the new record', async () => {
                 // Arrange - beforeEach()
-                const unknownCommand = 'unknownCommand';
-
                 // Act
-                const result = await subject.getCommandText(unknownCommand);
+                const result = await subject.addCommandVariant(newCommandName, defaultVariant);
 
                 // Assert
-                expect(result).toEqual([]);
+                expect(result).toEqual(expect.objectContaining({
+                    commandName: newCommandName,
+                    variant: defaultVariant,
+                    texts: [],
+                }));
+            });
+
+            it('should restore previously deleted command variant', async () => {
+                // Arrange
+                const removed = await subject.removeCommandVariant(testCommandAllVariants, testVariants[0]);
+
+                // Act
+                const result = await subject.addCommandVariant(testCommandAllVariants, testVariants[0]);
+
+                // Assert
+                expect(removed).toBe(true);
+                expect(result).toEqual(expect.objectContaining({
+                    commandName: testCommandAllVariants,
+                    variant: testVariants[0],
+                    texts: [],
+                }));
+            });
+
+            it('should return null when text record fails', async () => {
+                // Arrange
+                const spy = jest.spyOn(CommandResponseDbo, 'findOrCreate')
+                    .mockImplementation(() => { throw mockError; });
+
+                // Act
+                const result = await subject.addCommandVariant(newCommandName, defaultVariant);
+
+                // Assert
+                expect(mockLogger.error)
+                    .toHaveBeenCalledWith(expect.any(String), expect.any(Error));
+                expect(result).toEqual(null);
+
+                spy.mockRestore();
             });
         });
 
@@ -465,13 +495,28 @@ describe('CommandResponse.Repository (postgres)', () => {
 
             it('should remove the known command record', async () => {
                 // Arrange - beforeEach()
+                const commands = await CommandResponseDbo.findAll({
+                    where: {
+                        commandName: testCommandDefaultVariant,
+                    },
+                });
+
                 // Act
                 const result = await subject.removeCommand(testCommandDefaultVariant);
+                const texts = await CommandResponseTextDbo.findAll({
+                    where: {
+                        commandResponseId: commands.map(x => x.id),
+                    },
+                    paranoid: false,
+                });
 
                 // Assert
                 expect(mockLogger.error)
                     .not.toHaveBeenCalled();
                 expect(result).toBe(true);
+                // Validate child record deletes
+                expect(texts.length).toBe(1);
+                expect(texts.every(x => x.deletedAt !== null)).toBe(true);
             });
 
             it('should NOT remove the unknown command record', async () => {
@@ -487,19 +532,36 @@ describe('CommandResponse.Repository (postgres)', () => {
                 expect(result).toBe(false);
             });
 
-            it('should log error when failing database', async () => {
+            it('should log error when failing database (with rollback)', async () => {
                 // Arrange
                 const spy = jest.spyOn(CommandResponseDbo, 'destroy')
                     .mockImplementation(() => { throw mockError; });
 
                 // Act
                 const result = await subject.removeCommand(testCommandDefaultVariant);
+                const commands = await CommandResponseDbo.findAll({
+                    where: {
+                        commandName: testCommandDefaultVariant,
+                    },
+                    paranoid: false,
+                });
+                const texts = await CommandResponseTextDbo.findAll({
+                    where: {
+                        commandResponseId: commands.map(x => x.id),
+                    },
+                    paranoid: false,
+                });
 
                 // Assert
                 expect(mockLogger.error)
                     .toHaveBeenCalledWith(expect.any(String), expect.any(Error));
 
                 expect(result).toBe(false);
+                // Validate Rollback effect
+                expect(commands.length).toBe(1);
+                expect(commands.every(x => x.deletedAt === null)).toBe(true);
+                expect(texts.length).toBe(1);
+                expect(texts.every(x => x.deletedAt === null)).toBe(true);
 
                 spy.mockRestore();
             });
@@ -512,13 +574,29 @@ describe('CommandResponse.Repository (postgres)', () => {
 
             it('should remove the known command variant record', async () => {
                 // Arrange - beforeEach()
+                const commands = await CommandResponseDbo.findAll({
+                    where: {
+                        commandName: testCommandAllVariants,
+                        variant: testVariants[0],
+                    },
+                });
+
                 // Act
-                const result = await subject.removeCommandVariant(testCommandDefaultVariant, defaultVariant);
+                const result = await subject.removeCommandVariant(testCommandAllVariants, testVariants[0]);
+                const texts = await CommandResponseTextDbo.findAll({
+                    where: {
+                        commandResponseId: commands.map(x => x.id),
+                    },
+                    paranoid: false,
+                });
 
                 // Assert
                 expect(mockLogger.error)
                     .not.toHaveBeenCalled();
                 expect(result).toBe(true);
+                // Validate child record deletes
+                expect(texts.length).toBe(1);
+                expect(texts.every(x => x.deletedAt !== null)).toBe(true);
             });
 
             it('should NOT remove the unknown command variant record', async () => {
@@ -534,19 +612,37 @@ describe('CommandResponse.Repository (postgres)', () => {
                 expect(result).toBe(false);
             });
 
-            it('should log error when failing database', async () => {
+            it('should log error when failing database (with rollback)', async () => {
                 // Arrange
                 const spy = jest.spyOn(CommandResponseDbo, 'destroy')
                     .mockImplementation(() => { throw mockError; });
 
                 // Act
-                const result = await subject.removeCommandVariant(testCommandDefaultVariant, defaultVariant);
+                const result = await subject.removeCommandVariant(testCommandAllVariants, testVariants[0]);
+                const commands = await CommandResponseDbo.findAll({
+                    where: {
+                        commandName: testCommandAllVariants,
+                        variant: testVariants[0],
+                    },
+                    paranoid: false,
+                });
+                const texts = await CommandResponseTextDbo.findAll({
+                    where: {
+                        commandResponseId: commands.map(x => x.id),
+                    },
+                    paranoid: false,
+                });
 
                 // Assert
                 expect(mockLogger.error)
                     .toHaveBeenCalledWith(expect.any(String), expect.any(Error));
 
                 expect(result).toBe(false);
+                // Validate Rollback effect
+                expect(commands.length).toBe(1);
+                expect(commands.every(x => x.deletedAt === null)).toBe(true);
+                expect(texts.length).toBe(1);
+                expect(texts.every(x => x.deletedAt === null)).toBe(true);
 
                 spy.mockRestore();
             });
