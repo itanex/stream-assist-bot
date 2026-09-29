@@ -40,18 +40,34 @@ export default class CommandResponseRepository {
                 })));
 
         try {
-            await CommandResponseDbo
-            .bulkCreate(
-                records,
-                {
-                    ignoreDuplicates: true,
-                        include: {
-                            model: CommandResponseTextDbo,
-                            as: 'texts',
+            await this.database.transaction(async transaction => {
+                const existingRecords = new Set((await CommandResponseDbo
+                    .findAll({
+                        paranoid: false,
+                        transaction,
+                    }))
+                    .map(x => JSON.stringify([x.commandName, x.variant])));
+
+                const newRecords = records
+                    .filter(x => !existingRecords.has(JSON.stringify([x.commandName, x.variant])));
+
+                if (newRecords.length === 0) {
+                    return;
+                }
+
+                await CommandResponseDbo
+                    .bulkCreate(
+                        newRecords,
+                        {
+                            include: {
+                                model: CommandResponseTextDbo,
+                                as: 'texts',
+                            },
+                            validate: true,
+                            transaction,
                         },
-                    validate: true,
-                },
-            );
+                    );
+            });
         } catch (error) {
             this.logger.error(`Failed to Seed Data for CommandResponse/Text`, error);
         }

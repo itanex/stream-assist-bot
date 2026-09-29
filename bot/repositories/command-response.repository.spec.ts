@@ -152,10 +152,10 @@ describe('CommandResponse.Repository (postgres)', () => {
                 }, {});
 
                 // Assert
-                expect(mockLogger.error).toHaveBeenCalledWith(expect.any(String));
+                expect(mockLogger.error).toHaveBeenCalledWith(expect.any(String), expect.any(Error));
                 expect(actualByCommand).toEqual(expect.objectContaining({
                     ...seedEntries,
-                    'test-key-1': { '': validText },
+                    'test-key-1': { '': [validText] },
                 }));
             });
         });
