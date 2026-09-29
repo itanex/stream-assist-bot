@@ -9,11 +9,26 @@ export type CommandResponseText = {
     weight: number,
 };
 
+function toCommandResponseText(x: CommandResponseTextDbo): CommandResponseText {
+    return ({
+        text: x.text,
+        weight: Number(x.weight),
+    });
+}
+
 export type CommandResponse = {
     commandName: string,
     variant: string,
     texts: CommandResponseText[],
 };
+
+function toCommandResponse(x: CommandResponseDbo): CommandResponse {
+    return ({
+        commandName: x.commandName,
+        variant: x.variant,
+        texts: (x.texts ?? []).map(toCommandResponseText),
+    });
+}
 
 export type CommandResponseUpdate = CommandResponse & {
     originalName?: string,
@@ -74,8 +89,9 @@ export default class CommandResponseRepository {
     }
 
     async findAll(): Promise<CommandResponse[]> {
-        return CommandResponse
-            .findAll();
+        return (await CommandResponseDbo
+            .findAll({ include: CommandResponseTextDbo }))
+            .map(toCommandResponse);
     }
 
     /**
@@ -94,10 +110,8 @@ export default class CommandResponseRepository {
                 include: CommandResponseTextDbo,
             });
 
-        const textResponses = records?.texts.map(x => ({
-            text: x.text,
-            weight: x.weight,
-        } as CommandResponseText));
+        const textResponses = records?.texts
+            .map(toCommandResponseText);
 
         return textResponses ?? [];
     }
@@ -146,11 +160,7 @@ export default class CommandResponseRepository {
                 await record.restore();
             }
 
-            return {
-                commandName: record.commandName,
-                variant: record.variant,
-                texts: [],
-            } as CommandResponse;
+            return toCommandResponse(record);
         } catch (error) {
             this.logger.error(`Failed to create CommandResponse in database`, error);
         }
@@ -241,11 +251,7 @@ export default class CommandResponseRepository {
                 await record.restore();
             }
 
-            return {
-                commandName: record.commandName,
-                variant: record.variant,
-                texts: [],
-            } as CommandResponse;
+            return toCommandResponse(record);
         } catch (error) {
             this.logger.error(`Failed to create CommandResponse in database`, error);
         }
@@ -472,14 +478,7 @@ export default class CommandResponseRepository {
                     });
             });
 
-            return records.map(x => (<unknown>{
-                commandName: x.commandName,
-                variant: x.variant,
-                texts: x.texts.map(y => ({
-                    text: y.text,
-                    weight: y.weight,
-                }) as CommandResponseText),
-            } as CommandResponse));
+            return records.map(toCommandResponse);
         } catch (error) {
             this.logger.error(`There was an error restoring the CommandResponse for the command`, error);
         }

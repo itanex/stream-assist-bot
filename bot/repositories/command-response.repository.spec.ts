@@ -160,6 +160,30 @@ describe('CommandResponse.Repository (postgres)', () => {
             });
         });
 
+        describe('findAll()', () => {
+            beforeEach(async () => {
+                await subject.seed(seedEntries);
+            });
+
+            it('should return all seeded commands', async () => {
+                // Arrange
+                const expectedLength = Object.entries(seedEntries)
+                    .flatMap(([command, variants]) => Object
+                        .entries(variants)
+                        .map(([variant, texts]) => ({
+                            command,
+                            variant,
+                            texts,
+                        }))).length;
+
+                // Act
+                const results = await subject.findAll();
+
+                // Assert
+                expect(results.length).toBe(expectedLength);
+            });
+        });
+
         describe('getCommandText()', () => {
             beforeEach(async () => {
                 await subject.seed(seedEntries);
