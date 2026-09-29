@@ -43,7 +43,12 @@ describe('CommandResponse.Repository (postgres)', () => {
 
     beforeAll(async () => {
         try {
-            container = await new PostgreSqlContainer('postgres:latest').start();
+            container = await new PostgreSqlContainer('postgres:latest')
+                .withExposedPorts({
+                    container: 5432,
+                    host: 33000,
+                })
+                .start();
         } catch (error: any) {
             const message = error instanceof Error ? error.message : String(error);
 
