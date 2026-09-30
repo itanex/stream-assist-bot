@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
-import CommandResponseRepository, { CommandResponse, CommandResponseUpdate } from './command-response.repository.js';
+import CommandResponseRepository, { CommandResponse } from './command-response.repository.js';
 import { mockError, mockLogger } from '../../tests/common.mocks.js';
 import { CommandResponseDbo, CommandResponseTextDbo } from '../../database/index.js';
 
@@ -139,29 +139,24 @@ describe('CommandResponse.Repository (postgres)', () => {
                 }, {});
 
                 // Assert
+                expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
                 expect(mockLogger.error).not.toHaveBeenCalled();
                 expect(actualByCommand).toMatchObject(seedEntries);
             });
 
-            it('should not overwrite existing values', async () => {
-                // Arrange - beforeEach()
+            it('should log error when failing database', async () => {
+                // Arrange
+                const spy = jest.spyOn(CommandResponseDbo, 'bulkCreate')
+                    .mockImplementation(() => { throw mockError; });
+
                 // Act
                 await subject.seed(seedEntries);
-                await subject.updateCommandText('test-key-1', validText);
-                await subject.seed(seedEntries);
-
-                const actualByCommand = (await subject.findAll()).reduce<Record<string, Record<string, string[]>>>((acc, row) => {
-                    acc[row.commandName] ??= {};
-                    acc[row.commandName][row.variant] = row.texts.map(x => x.text);
-                    return acc;
-                }, {});
 
                 // Assert
-                expect(mockLogger.error).toHaveBeenCalledWith(expect.any(String), expect.any(Error));
-                expect(actualByCommand).toEqual(expect.objectContaining({
-                    ...seedEntries,
-                    'test-key-1': { '': [validText] },
-                }));
+                expect(mockLogger.error)
+                    .toHaveBeenCalledWith(expect.any(String), expect.any(Error));
+
+                spy.mockRestore();
             });
         });
 

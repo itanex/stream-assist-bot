@@ -56,23 +56,20 @@ export default class CommandResponseRepository {
 
         try {
             await this.database.transaction(async transaction => {
-                const existingRecords = new Set((await CommandResponseDbo
-                    .findAll({
+                const hasCommands = (await CommandResponseDbo
+                    .count({
                         paranoid: false,
                         transaction,
-                    }))
-                    .map(x => JSON.stringify([x.commandName, x.variant])));
+                    })) > 0;
 
-                const newRecords = records
-                    .filter(x => !existingRecords.has(JSON.stringify([x.commandName, x.variant])));
-
-                if (newRecords.length === 0) {
+                if (hasCommands) {
+                    this.logger.info('Database::CommandReponse/Text Attempted to seed after database seeded');
                     return;
                 }
 
                 await CommandResponseDbo
                     .bulkCreate(
-                        newRecords,
+                        records,
                         {
                             include: {
                                 model: CommandResponseTextDbo,
