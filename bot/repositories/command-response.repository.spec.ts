@@ -36,10 +36,19 @@ describe('CommandResponse.Repository (postgres)', () => {
 
     const defaultVariant = '';
     const validText = 'test-extra-text-value';
+    const invalidText = 'short';
     const newCommandName = 'new-command-name';
     const newVariantName = 'new-variant-name';
 
     let subject: CommandResponseRepository;
+
+    /** Find a command text record by its value, including removed records */
+    const findText = (text: string) => CommandResponseTextDbo.findOne({
+        where: {
+            text,
+        },
+        paranoid: false,
+    });
 
     beforeAll(async () => {
         try {
@@ -406,6 +415,7 @@ describe('CommandResponse.Repository (postgres)', () => {
                     commandName,
                     variant,
                     texts: [{
+                        id: expect.any(Number),
                         text,
                         weight: 1,
                     }],
@@ -425,10 +435,96 @@ describe('CommandResponse.Repository (postgres)', () => {
                     commandName,
                     variant: '',
                     texts: [{
+                        id: expect.any(Number),
                         text,
                         weight: 1,
                     }],
                 });
+            });
+
+            it('should clear the deletion marker of a restored command variant', async () => {
+                // Arrange
+                const removed = await subject.removeCommandVariant(testCommandAllVariants, testVariants[0]);
+
+                // Act
+                await subject.addCommandText(testCommandAllVariants, validText, testVariants[0]);
+                const command = await CommandResponseDbo.findOne({
+                    where: {
+                        commandName: testCommandAllVariants,
+                        variant: testVariants[0],
+                    },
+                });
+
+                // Assert
+                expect(removed).toBe(true);
+                expect(command?.deletionId).toBeNull();
+            });
+
+            it('should restore a removed text instead of inserting', async () => {
+                // Arrange
+                const seededText = seedEntries[testCommandAllVariants][testVariants[1]][0];
+                const original = await findText(seededText);
+                const removed = await subject.removeCommandVariant(testCommandAllVariants, testVariants[1]);
+
+                // Act
+                const result = await subject.addCommandText(testCommandAllVariants, seededText, testVariants[1]);
+                const records = await CommandResponseTextDbo.findAll({
+                    where: {
+                        commandResponseId: original?.commandResponseId,
+                    },
+                    paranoid: false,
+                });
+
+                // Assert
+                expect(removed).toBe(true);
+                expect(result?.texts).toStrictEqual([{
+                    id: original?.id,
+                    text: seededText,
+                    weight: 1,
+                }]);
+                expect(records.length).toBe(1);
+                expect(records[0].deletedAt).toBeNull();
+                expect(records[0].deletionId).toBeNull();
+            });
+
+            it('should reject an active duplicate text', async () => {
+                // Arrange
+                const seededText = seedEntries[testCommandDefaultVariant][defaultVariant][0];
+
+                // Act & Assert
+                await expect(subject.addCommandText(testCommandDefaultVariant, seededText))
+                    .rejects.toMatchObject({ name: 'SequelizeUniqueConstraintError' });
+            });
+
+            it('should reject an active duplicate text with different casing', async () => {
+                // Arrange
+                const seededText = seedEntries[testCommandDefaultVariant][defaultVariant][0];
+
+                // Act & Assert
+                await expect(subject.addCommandText(testCommandDefaultVariant, seededText.toUpperCase()))
+                    .rejects.toMatchObject({ name: 'SequelizeUniqueConstraintError' });
+            });
+
+            it('should reject an invalid text', async () => {
+                // Arrange - beforeEach()
+                // Act & Assert
+                await expect(subject.addCommandText(testCommandDefaultVariant, invalidText))
+                    .rejects.toMatchObject({ name: 'SequelizeValidationError' });
+            });
+
+            it('should allow the same text under another command variant', async () => {
+                // Arrange
+                const seededText = seedEntries[testCommandDefaultVariant][defaultVariant][0];
+
+                // Act
+                const result = await subject.addCommandText(testCommandAllVariants, seededText, testVariants[0]);
+
+                // Assert
+                expect(result?.texts).toStrictEqual([{
+                    id: expect.any(Number),
+                    text: seededText,
+                    weight: 1,
+                }]);
             });
 
             it('should return null when parentCommand fails', async () => {
@@ -475,6 +571,101 @@ describe('CommandResponse.Repository (postgres)', () => {
                 expect(mockLogger.error)
                     .toHaveBeenCalledWith(expect.any(String), expect.any(Error));
                 expect(result).toEqual(null);
+
+                spy.mockRestore();
+            });
+        });
+
+        describe('updateCommandText()', () => {
+            const seededText = seedEntries[testCommandDefaultVariant][defaultVariant][0];
+
+            beforeEach(async () => {
+                await subject.seed(seedEntries);
+            });
+
+            it('should update the text of the record', async () => {
+                // Arrange
+                const original = await findText(seededText);
+
+                // Act
+                const result = await subject.updateCommandText(original?.id as number, { text: validText });
+
+                // Assert
+                expect(result).toStrictEqual({
+                    id: original?.id,
+                    text: validText,
+                    weight: 1,
+                });
+            });
+
+            it('should update the weight of the record', async () => {
+                // Arrange
+                const original = await findText(seededText);
+
+                // Act
+                const result = await subject.updateCommandText(original?.id as number, { weight: 5 });
+
+                // Assert
+                expect(result).toStrictEqual({
+                    id: original?.id,
+                    text: seededText,
+                    weight: 5,
+                });
+            });
+
+            it('should return null for an unknown record', async () => {
+                // Arrange
+                const unknownId = 0;
+
+                // Act
+                const result = await subject.updateCommandText(unknownId, { text: validText });
+
+                // Assert
+                expect(mockLogger.error).not.toHaveBeenCalled();
+                expect(result).toBeNull();
+            });
+
+            it('should reject a text that already exists under the command variant', async () => {
+                // Arrange
+                await subject.addCommandText(testCommandDefaultVariant, validText);
+                const original = await findText(seededText);
+
+                // Act & Assert
+                await expect(subject.updateCommandText(original?.id as number, { text: validText.toUpperCase() }))
+                    .rejects.toMatchObject({ name: 'SequelizeUniqueConstraintError' });
+            });
+
+            it('should reject an invalid text', async () => {
+                // Arrange
+                const original = await findText(seededText);
+
+                // Act & Assert
+                await expect(subject.updateCommandText(original?.id as number, { text: invalidText }))
+                    .rejects.toMatchObject({ name: 'SequelizeValidationError' });
+            });
+
+            it('should reject an invalid weight', async () => {
+                // Arrange
+                const original = await findText(seededText);
+
+                // Act & Assert
+                await expect(subject.updateCommandText(original?.id as number, { weight: 100 }))
+                    .rejects.toMatchObject({ name: 'SequelizeValidationError' });
+            });
+
+            it('should log error when failing database', async () => {
+                // Arrange
+                const original = await findText(seededText);
+                const spy = jest.spyOn(CommandResponseTextDbo, 'findByPk')
+                    .mockImplementation(() => { throw mockError; });
+
+                // Act
+                const result = await subject.updateCommandText(original?.id as number, { text: validText });
+
+                // Assert
+                expect(mockLogger.error)
+                    .toHaveBeenCalledWith(expect.any(String), expect.any(Error));
+                expect(result).toBeNull();
 
                 spy.mockRestore();
             });
@@ -823,10 +1014,70 @@ describe('CommandResponse.Repository (postgres)', () => {
         });
 
         describe('removeCommandText()', () => {
+            const seededText = seedEntries[testCommandDefaultVariant][defaultVariant][0];
+
             beforeEach(async () => {
                 await subject.seed(seedEntries);
             });
-            // TODO
+
+            it('should remove only the specified text', async () => {
+                // Arrange
+                await subject.addCommandText(testCommandDefaultVariant, validText);
+                const original = await findText(seededText);
+
+                // Act
+                const result = await subject.removeCommandText(original?.id as number);
+                const removedRecord = await findText(seededText);
+                const otherRecord = await findText(validText);
+
+                // Assert
+                expect(result).toBe(true);
+                expect(removedRecord?.deletedAt).not.toBeNull();
+                expect(removedRecord?.deletionId).toBeNull();
+                expect(otherRecord?.deletedAt).toBeNull();
+            });
+
+            it('should remove the last text of a command variant', async () => {
+                // Arrange
+                const original = await findText(seededText);
+
+                // Act
+                const result = await subject.removeCommandText(original?.id as number);
+                const texts = await subject.getCommandText(testCommandDefaultVariant);
+
+                // Assert
+                expect(result).toBe(true);
+                expect(texts).toEqual([]);
+            });
+
+            it('should return false for an unknown record', async () => {
+                // Arrange
+                const unknownId = 0;
+
+                // Act
+                const result = await subject.removeCommandText(unknownId);
+
+                // Assert
+                expect(mockLogger.error).not.toHaveBeenCalled();
+                expect(result).toBe(false);
+            });
+
+            it('should log error when failing database', async () => {
+                // Arrange
+                const original = await findText(seededText);
+                const spy = jest.spyOn(CommandResponseTextDbo, 'destroy')
+                    .mockImplementation(() => { throw mockError; });
+
+                // Act
+                const result = await subject.removeCommandText(original?.id as number);
+
+                // Assert
+                expect(mockLogger.error)
+                    .toHaveBeenCalledWith(expect.any(String), expect.any(Error));
+                expect(result).toBe(false);
+
+                spy.mockRestore();
+            });
         });
 
         describe('restoreCommand()', () => {
@@ -1096,92 +1347,104 @@ describe('CommandResponse.Repository (postgres)', () => {
         });
 
         describe('restoreCommandText()', () => {
+            const seededText = seedEntries[testCommandDefaultVariant][defaultVariant][0];
+            const seededVariantText = seedEntries[testCommandAllVariants][testVariants[1]][0];
+
             beforeEach(async () => {
                 await subject.seed(seedEntries);
             });
 
-            afterEach(async () => {
-                await CommandResponseDbo.destroy({ where: {}, force: true });
-            });
-
-            it('should restore command (default, no-variant)', async () => {
+            it('should restore the removed text', async () => {
                 // Arrange
-                // const removed = await subject.removeCommandText(testCommandDefaultVariant);
+                const original = await findText(seededText);
+                const removed = await subject.removeCommandText(original?.id as number);
 
                 // Act
-                const [restored, result] = await subject.restoreCommandText(testCommandDefaultVariant);
+                const result = await subject.restoreCommandText(original?.id as number);
+                const record = await findText(seededText);
 
                 // Assert
-                expect(restored).toBe(true);
-                expect(result).toEqual(expect.objectContaining({
-                    commandName: testCommandDefaultVariant,
-                    variant: '',
-                }));
+                expect(removed).toBe(true);
+                expect(result).toStrictEqual({
+                    id: original?.id,
+                    text: seededText,
+                    weight: 1,
+                });
+                expect(record?.deletedAt).toBeNull();
             });
 
-            it('should restore command (command, variant)', async () => {
+            it('should clear the deletion marker of the restored text', async () => {
                 // Arrange
-                const removed = await subject.removeCommandText(testCommandOnlyVariant, testVariants[0]);
+                const original = await findText(seededVariantText);
+                await subject.removeCommandVariant(testCommandAllVariants, testVariants[1]);
+                await subject.addCommandVariant(testCommandAllVariants, testVariants[1]);
+                const marked = await findText(seededVariantText);
 
                 // Act
-                const [restored, result] = await subject.restoreCommandText(testCommandOnlyVariant, testVariants[0]);
+                const result = await subject.restoreCommandText(original?.id as number);
+                const record = await findText(seededVariantText);
 
                 // Assert
-                expect(restored).toBe(true);
-                expect(result).toEqual(expect.objectContaining({
-                    commandName: testCommandOnlyVariant,
-                    variant: testVariants[0],
-                }));
+                expect(marked?.deletionId).toEqual(expect.any(String));
+                expect(result).toEqual(expect.objectContaining({ id: original?.id }));
+                expect(record?.deletedAt).toBeNull();
+                expect(record?.deletionId).toBeNull();
             });
 
-            it('should not restore existing command (default, no-variant)', async () => {
+            it('should NOT restore a text under a removed command variant', async () => {
                 // Arrange
+                const original = await findText(seededVariantText);
+                await subject.removeCommandVariant(testCommandAllVariants, testVariants[1]);
+
                 // Act
-                const [restored, result] = await subject.restoreCommandText(testCommandDefaultVariant);
+                const result = await subject.restoreCommandText(original?.id as number);
+                const record = await findText(seededVariantText);
 
                 // Assert
-                expect(restored).toBe(false);
-                expect(result).toEqual(expect.objectContaining({
-                    commandName: testCommandDefaultVariant,
-                    variant: '',
-                }));
+                expect(result).toBeNull();
+                expect(record?.deletedAt).not.toBeNull();
             });
 
-            it('should not restore existing command (command, variant)', async () => {
-                // Arrange - beforeEach()
+            it('should return null for an active text', async () => {
+                // Arrange
+                const original = await findText(seededText);
+
                 // Act
-                const [restored, result] = await subject.restoreCommandText(testCommandOnlyVariant, testVariants[0]);
+                const result = await subject.restoreCommandText(original?.id as number);
 
                 // Assert
-                expect(restored).toBe(false);
-                expect(result).toEqual(expect.objectContaining({
-                    commandName: testCommandOnlyVariant,
-                    variant: testVariants[0],
-                }));
+                expect(mockLogger.error).not.toHaveBeenCalled();
+                expect(result).toBeNull();
             });
 
-            it('should no-op with unknown command (command, no-variant)', async () => {
-                // Arrange - beforeEach()
-                const commandName = 'unknownCommand';
+            it('should return null for an unknown record', async () => {
+                // Arrange
+                const unknownId = 0;
 
                 // Act
-                const [restored, result] = await subject.restoreCommandText(commandName);
+                const result = await subject.restoreCommandText(unknownId);
 
                 // Assert
-                expect(restored).toBe(false);
-                expect(result).toBe(null);
+                expect(mockLogger.error).not.toHaveBeenCalled();
+                expect(result).toBeNull();
             });
 
-            it('should no-op with unknown command (command, variant)', async () => {
-                // Arrange - beforeEach()
-                const variant = 'unknownCommand';
+            it('should log error when failing database', async () => {
+                // Arrange
+                const original = await findText(seededText);
+                await subject.removeCommandText(original?.id as number);
+                const spy = jest.spyOn(CommandResponseTextDbo, 'findByPk')
+                    .mockImplementation(() => { throw mockError; });
 
                 // Act
-                const [restored, result] = await subject.restoreCommandText(testCommandDefaultVariant, variant);
+                const result = await subject.restoreCommandText(original?.id as number);
 
                 // Assert
-                expect(restored).toBe(false);
-                expect(result).toBe(null);
+                expect(mockLogger.error)
+                    .toHaveBeenCalledWith(expect.any(String), expect.any(Error));
+                expect(result).toBeNull();
+
+                spy.mockRestore();
             });
         });
     });

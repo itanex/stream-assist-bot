@@ -1,18 +1,30 @@
 import { randomUUID } from 'crypto';
 import { inject, injectable } from 'inversify';
-import { Op, Transaction } from 'sequelize';
+import {
+    col,
+    fn,
+    Op,
+    Transaction,
+    UniqueConstraintError,
+    ValidationError,
+    where,
+} from 'sequelize';
 import winston from 'winston';
 import { CommandResponseDbo, CommandResponseTextDbo } from '../../database/index.js';
 import InjectionTypes from '../../dependency-management/types.js';
 import Database from '../../database/database.js';
 
 export type CommandResponseText = {
+    id: number,
     text: string,
     weight: number,
 };
 
+export type CommandResponseTextChanges = Partial<Pick<CommandResponseText, 'text' | 'weight'>>;
+
 function toCommandResponseText(x: CommandResponseTextDbo): CommandResponseText {
     return ({
+        id: x.id,
         text: x.text,
         weight: Number(x.weight),
     });
@@ -259,11 +271,12 @@ export default class CommandResponseRepository {
     }
 
     /**
-     * Inserts the provided command with variant and text
+     * Inserts the provided command with variant and text, restoring a matching removed text instead of inserting
      * @param commandName The command name to fetch
      * @param text new text value for the Command
      * @param variant The command name variant to fetch
-     * @returns The created command if successful, rejected error otherwise
+     * @returns The created command if successful, null otherwise
+     * @throws ValidationError when the text is invalid, UniqueConstraintError when the text already exists
      */
     async addCommandText(commandName: string, text: string, variant: string = ''): Promise<CommandResponse | null> {
         try {
@@ -288,24 +301,42 @@ export default class CommandResponseRepository {
                     await parentRecord.restore({
                         transaction,
                     });
-                }
 
-                const record = await CommandResponseTextDbo
-                    .create({
-                        commandResponseId: parentRecord.id,
-                        text,
+                    await parentRecord.update({
+                        deletionId: null,
                     }, {
                         transaction,
                     });
+                }
+
+                const removedRecord = await CommandResponseTextDbo
+                    .findOne({
+                        where: {
+                            [Op.and]: [
+                                { commandResponseId: parentRecord.id },
+                                { deletedAt: { [Op.ne]: null } },
+                                where(fn('lower', col('text')), fn('lower', text?.trim())),
+                            ],
+                        },
+                        paranoid: false,
+                        transaction,
+                    });
+
+                const record = removedRecord
+                    ? await this.restoreText(removedRecord, transaction)
+                    : await CommandResponseTextDbo
+                        .create({
+                            commandResponseId: parentRecord.id,
+                            text,
+                        }, {
+                            transaction,
+                        });
 
                 if (record) {
                     return {
                         commandName: parentRecord.commandName,
                         variant: parentRecord.variant,
-                        texts: [{
-                            text: record.text,
-                            weight: Number(record.weight),
-                        } as CommandResponseText],
+                        texts: [toCommandResponseText(record)],
                     } as CommandResponse;
                 }
 
@@ -313,6 +344,10 @@ export default class CommandResponseRepository {
                 return null;
             });
         } catch (error) {
+            if (error instanceof UniqueConstraintError || error instanceof ValidationError) {
+                throw error;
+            }
+
             this.logger.error(`Error creating command records in the database`, error);
         }
 
@@ -320,25 +355,33 @@ export default class CommandResponseRepository {
     }
 
     /**
-     * Update existing command based on the provided text
-     * @param commandName The command name to update
-     * @param text new text value for the Command
-     * @param variant The command name variant to update
-     * @returns boolean flag denoting if the provided command was updated
+     * Update the specified command text
+     * @param id The command text record to update
+     * @param changes The text and/or weight to apply
+     * @returns The updated command text if found, null otherwise
+     * @throws ValidationError when the changes are invalid, UniqueConstraintError when the text already exists
      */
-    async updateCommandText(commandName: string, text: string, variant: string = ''): Promise<boolean> {
-        const [count] = await CommandResponseDbo
-            .update(
-                { texts: [text] },
-                {
-                    where: {
-                        commandName,
-                        variant,
-                    },
-                },
-            );
+    async updateCommandText(id: number, changes: CommandResponseTextChanges): Promise<CommandResponseText | null> {
+        try {
+            const record = await CommandResponseTextDbo
+                .findByPk(id);
 
-        return count === 1;
+            if (!record) {
+                return null;
+            }
+
+            await record.update(changes);
+
+            return toCommandResponseText(record);
+        } catch (error) {
+            if (error instanceof UniqueConstraintError || error instanceof ValidationError) {
+                throw error;
+            }
+
+            this.logger.error(`Failed to update CommandResponseText in database`, error);
+        }
+
+        return null;
     }
 
     /**
@@ -408,30 +451,19 @@ export default class CommandResponseRepository {
 
     /**
      * Soft-Delete specified command text, if present
-     * @param commandName The command name to remove
-     * @param variant The command name variant to remove
-     * @returns boolean flag denoting if the provided command was removed
+     * @param id The command text record to remove
+     * @returns boolean flag denoting if the provided command text was removed
      */
-    async removeCommandText(commandName: string, variant: string): Promise<boolean> {
+    async removeCommandText(id: number): Promise<boolean> {
         try {
-            const record = await CommandResponseDbo
-                .findOne({
+            const count = await CommandResponseTextDbo
+                .destroy({
                     where: {
-                        commandName,
-                        variant,
+                        id,
                     },
                 });
 
-            if (record) {
-                const count = await CommandResponseTextDbo
-                    .destroy({
-                        where: {
-                            commandResponseId: record.id,
-                        },
-                    });
-
-                return count === 1;
-            }
+            return count === 1;
         } catch (error) {
             this.logger.error(`Error removing the command text from database`, error);
         }
@@ -538,34 +570,39 @@ export default class CommandResponseRepository {
     }
 
     /**
-     * Restore specified command, if present
-     * @param commandName The command name to restore
-     * @param variant The command name variant to restore
-     * @returns boolean flag denoting if the provided command was restored
+     * Restore the specified command text, if removed and its command variant is active
+     * @param id The command text record to restore
+     * @returns The restored command text if restored, null otherwise
      */
-    async restoreCommandText(commandName: string, variant: string = ''): Promise<[boolean, CommandResponseDbo | null]> {
-        const command = await CommandResponseDbo
-            .findOne({
-                where: {
-                    commandName,
-                    variant,
-                },
-                paranoid: false,
+    async restoreCommandText(id: number): Promise<CommandResponseText | null> {
+        try {
+            return await this.database.transaction(async transaction => {
+                const record = await CommandResponseTextDbo
+                    .findByPk(id, {
+                        paranoid: false,
+                        transaction,
+                    });
+
+                if (!record?.isSoftDeleted()) {
+                    return null;
+                }
+
+                const parent = await CommandResponseDbo
+                    .findByPk(record.commandResponseId, {
+                        transaction,
+                    });
+
+                if (!parent) {
+                    return null;
+                }
+
+                return toCommandResponseText(await this.restoreText(record, transaction));
             });
-
-        if (command?.deletedAt) {
-            await CommandResponseDbo
-                .restore({
-                    where: {
-                        commandName,
-                        variant,
-                    },
-                });
-
-            return [true, command];
+        } catch (error) {
+            this.logger.error(`Error restoring the command text in database`, error);
         }
 
-        return [false, command];
+        return null;
     }
 
     /**
@@ -613,6 +650,24 @@ export default class CommandResponseRepository {
                 },
                 transaction,
             });
+    }
+
+    /**
+     * Restore the provided command text and clear its deletion marker
+     * @param record The command text record to restore
+     * @param transaction The transaction to run within
+     * @returns The restored command text record
+     */
+    private async restoreText(record: CommandResponseTextDbo, transaction: Transaction): Promise<CommandResponseTextDbo> {
+        await record.restore({
+            transaction,
+        });
+
+        return record.update({
+            deletionId: null,
+        }, {
+            transaction,
+        });
     }
 
     /**

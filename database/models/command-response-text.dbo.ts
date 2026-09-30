@@ -1,9 +1,20 @@
+import { col, fn } from 'sequelize';
 import { Table, Model, ForeignKey, Column, DataType, BelongsTo } from 'sequelize-typescript';
 import CommandResponseDbo from './command-response.dbo.js';
+
+const COMMAND_TEXT_UNIQUE_INDEX = 'commandResponseId-text';
 
 @Table({
     tableName: 'CommandResponseText',
     paranoid: true,
+    indexes: [{
+        name: COMMAND_TEXT_UNIQUE_INDEX,
+        unique: true,
+        fields: [
+            'commandResponseId',
+            fn('lower', col('text')),
+        ],
+    }],
 })
 export default class CommandResponseTextDbo extends Model {
     @ForeignKey(() => CommandResponseDbo)
