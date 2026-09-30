@@ -23,6 +23,12 @@ export default class CommandResponseDbo extends Model {
     })
     variant!: string;
 
+    @Column({
+        allowNull: true,
+        type: DataType.UUID,
+    })
+    deletionId!: string | null;
+
     @HasMany(() => CommandResponseTextDbo, {
         foreignKey: 'commandResponseId',
         as: 'texts',

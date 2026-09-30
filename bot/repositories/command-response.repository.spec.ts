@@ -35,7 +35,7 @@ describe('CommandResponse.Repository (postgres)', () => {
     const testCommandAllVariants = 'test-key-3';
 
     const defaultVariant = '';
-    const validText = 'Edited Text';
+    const validText = 'test-extra-text-value';
     const newCommandName = 'new-command-name';
     const newVariantName = 'new-variant-name';
 
@@ -581,6 +581,60 @@ describe('CommandResponse.Repository (postgres)', () => {
                 expect(texts.every(x => x.deletedAt !== null)).toBe(true);
             });
 
+            it('should mark all command variants and texts with a shared deletion marker', async () => {
+                // Arrange - beforeEach()
+                // Act
+                const result = await subject.removeCommand(testCommandAllVariants);
+                const commands = await CommandResponseDbo.findAll({
+                    where: {
+                        commandName: testCommandAllVariants,
+                    },
+                    paranoid: false,
+                });
+                const texts = await CommandResponseTextDbo.findAll({
+                    where: {
+                        commandResponseId: commands.map(x => x.id),
+                    },
+                    paranoid: false,
+                });
+                const [{ deletionId }] = commands;
+
+                // Assert
+                expect(result).toBe(true);
+                expect(deletionId).toEqual(expect.any(String));
+                expect(commands.every(x => x.deletionId === deletionId)).toBe(true);
+                expect(texts.every(x => x.deletionId === deletionId)).toBe(true);
+            });
+
+            it('should NOT mark variants removed before the command', async () => {
+                // Arrange
+                await subject.removeCommandVariant(testCommandAllVariants, testVariants[0]);
+                const previous = await CommandResponseDbo.findOne({
+                    where: {
+                        commandName: testCommandAllVariants,
+                        variant: testVariants[0],
+                    },
+                    paranoid: false,
+                });
+
+                // Act
+                const result = await subject.removeCommand(testCommandAllVariants);
+                const commands = await CommandResponseDbo.findAll({
+                    where: {
+                        commandName: testCommandAllVariants,
+                    },
+                    paranoid: false,
+                });
+                const variantRecord = commands.find(x => x.variant === testVariants[0]);
+                const defaultRecord = commands.find(x => x.variant === defaultVariant);
+
+                // Assert
+                expect(result).toBe(true);
+                expect(previous?.deletionId).toEqual(expect.any(String));
+                expect(variantRecord?.deletionId).toBe(previous?.deletionId);
+                expect(defaultRecord?.deletionId).not.toBe(previous?.deletionId);
+            });
+
             it('should NOT remove the unknown command record', async () => {
                 // Arrange - beforeEach()
                 const unknownCommand = 'unknown-command-name';
@@ -621,9 +675,9 @@ describe('CommandResponse.Repository (postgres)', () => {
                 expect(result).toBe(false);
                 // Validate Rollback effect
                 expect(commands.length).toBe(1);
-                expect(commands.every(x => x.deletedAt === null)).toBe(true);
+                expect(commands.every(x => x.deletedAt === null && x.deletionId === null)).toBe(true);
                 expect(texts.length).toBe(1);
-                expect(texts.every(x => x.deletedAt === null)).toBe(true);
+                expect(texts.every(x => x.deletedAt === null && x.deletionId === null)).toBe(true);
 
                 spy.mockRestore();
             });
@@ -659,6 +713,64 @@ describe('CommandResponse.Repository (postgres)', () => {
                 // Validate child record deletes
                 expect(texts.length).toBe(1);
                 expect(texts.every(x => x.deletedAt !== null)).toBe(true);
+            });
+
+            it('should mark the command variant and texts with a shared deletion marker', async () => {
+                // Arrange - beforeEach()
+                // Act
+                const result = await subject.removeCommandVariant(testCommandAllVariants, testVariants[0]);
+                const command = await CommandResponseDbo.findOne({
+                    where: {
+                        commandName: testCommandAllVariants,
+                        variant: testVariants[0],
+                    },
+                    paranoid: false,
+                });
+                const texts = await CommandResponseTextDbo.findAll({
+                    where: {
+                        commandResponseId: command?.id,
+                    },
+                    paranoid: false,
+                });
+
+                // Assert
+                expect(result).toBe(true);
+                expect(command?.deletionId).toEqual(expect.any(String));
+                expect(texts.every(x => x.deletionId === command?.deletionId)).toBe(true);
+            });
+
+            it('should NOT mark texts removed before the command variant', async () => {
+                // Arrange
+                await subject.addCommandText(testCommandAllVariants, validText, testVariants[0]);
+                await CommandResponseTextDbo.destroy({
+                    where: {
+                        text: validText,
+                    },
+                });
+
+                // Act
+                const result = await subject.removeCommandVariant(testCommandAllVariants, testVariants[0]);
+                const command = await CommandResponseDbo.findOne({
+                    where: {
+                        commandName: testCommandAllVariants,
+                        variant: testVariants[0],
+                    },
+                    paranoid: false,
+                });
+                const texts = await CommandResponseTextDbo.findAll({
+                    where: {
+                        commandResponseId: command?.id,
+                    },
+                    paranoid: false,
+                });
+                const previousText = texts.find(x => x.text === validText);
+                const currentTexts = texts.filter(x => x.text !== validText);
+
+                // Assert
+                expect(result).toBe(true);
+                expect(previousText?.deletionId).toBeNull();
+                expect(currentTexts.length).toBe(1);
+                expect(currentTexts.every(x => x.deletionId === command?.deletionId)).toBe(true);
             });
 
             it('should NOT remove the unknown command variant record', async () => {
@@ -702,9 +814,9 @@ describe('CommandResponse.Repository (postgres)', () => {
                 expect(result).toBe(false);
                 // Validate Rollback effect
                 expect(commands.length).toBe(1);
-                expect(commands.every(x => x.deletedAt === null)).toBe(true);
+                expect(commands.every(x => x.deletedAt === null && x.deletionId === null)).toBe(true);
                 expect(texts.length).toBe(1);
-                expect(texts.every(x => x.deletedAt === null)).toBe(true);
+                expect(texts.every(x => x.deletedAt === null && x.deletionId === null)).toBe(true);
 
                 spy.mockRestore();
             });
@@ -742,11 +854,78 @@ describe('CommandResponse.Repository (postgres)', () => {
                 expect(result).toStrictEqual(expected);
             });
 
-            it('should exit early if no records are restored', async () => {
+            it('should restore only the variants removed with the command', async () => {
                 // Arrange
-                const spy = jest.spyOn(CommandResponseDbo, 'findAll')
-                    .mockImplementation(async () => []);
+                await subject.removeCommandVariant(testCommandAllVariants, testVariants[0]);
+                const removed = await subject.removeCommand(testCommandAllVariants);
 
+                // Act
+                const result = await subject.restoreCommand(testCommandAllVariants);
+                const previous = await CommandResponseDbo.findOne({
+                    where: {
+                        commandName: testCommandAllVariants,
+                        variant: testVariants[0],
+                    },
+                    paranoid: false,
+                });
+
+                // Assert
+                expect(removed).toBe(true);
+                expect(result.map(x => x.variant)).toEqual(expect.arrayContaining([defaultVariant, testVariants[1]]));
+                expect(result.map(x => x.variant)).not.toContain(testVariants[0]);
+                expect(previous?.deletedAt).not.toBeNull();
+            });
+
+            it('should NOT restore texts removed before the command', async () => {
+                // Arrange
+                await subject.addCommandText(testCommandAllVariants, validText, defaultVariant);
+                await CommandResponseTextDbo.destroy({
+                    where: {
+                        text: validText,
+                    },
+                });
+                const removed = await subject.removeCommand(testCommandAllVariants);
+
+                // Act
+                const result = await subject.restoreCommand(testCommandAllVariants);
+                const previousText = await CommandResponseTextDbo.findOne({
+                    where: {
+                        text: validText,
+                    },
+                    paranoid: false,
+                });
+                const defaultRecord = result.find(x => x.variant === defaultVariant);
+
+                // Assert
+                expect(removed).toBe(true);
+                expect(previousText?.deletedAt).not.toBeNull();
+                expect(defaultRecord?.texts.map(x => x.text)).toEqual(seedEntries[testCommandAllVariants][defaultVariant]);
+            });
+
+            it('should clear the deletion marker on restored records', async () => {
+                // Arrange
+                await subject.removeCommand(testCommandAllVariants);
+
+                // Act
+                await subject.restoreCommand(testCommandAllVariants);
+                const commands = await CommandResponseDbo.findAll({
+                    where: {
+                        commandName: testCommandAllVariants,
+                    },
+                });
+                const texts = await CommandResponseTextDbo.findAll({
+                    where: {
+                        commandResponseId: commands.map(x => x.id),
+                    },
+                });
+
+                // Assert
+                expect(commands.every(x => x.deletionId === null)).toBe(true);
+                expect(texts.every(x => x.deletionId === null)).toBe(true);
+            });
+
+            it('should exit early if no records are removed', async () => {
+                // Arrange - beforeEach()
                 // Act
                 const result = await subject.restoreCommand(testCommandAllVariants);
 
@@ -754,12 +933,11 @@ describe('CommandResponse.Repository (postgres)', () => {
                 expect(mockLogger.error).not.toHaveBeenCalled();
 
                 expect(result).toEqual([]);
-
-                spy.mockRestore();
             });
 
             it('should log error when failing database', async () => {
                 // Arrange
+                await subject.removeCommand(testCommandAllVariants);
                 const spy = jest.spyOn(CommandResponseDbo, 'restore')
                     .mockImplementation(() => { throw mockError; });
 
@@ -801,6 +979,87 @@ describe('CommandResponse.Repository (postgres)', () => {
                 expect(result).toStrictEqual(expected);
             });
 
+            it('should NOT restore texts removed before the command variant', async () => {
+                // Arrange
+                await subject.addCommandText(testCommandAllVariants, validText, testVariants[0]);
+                await CommandResponseTextDbo.destroy({
+                    where: {
+                        text: validText,
+                    },
+                });
+                const removed = await subject.removeCommandVariant(testCommandAllVariants, testVariants[0]);
+
+                // Act
+                const result = await subject.restoreCommandVariant(testCommandAllVariants, testVariants[0]);
+                const previousText = await CommandResponseTextDbo.findOne({
+                    where: {
+                        text: validText,
+                    },
+                    paranoid: false,
+                });
+
+                // Assert
+                expect(removed).toBe(true);
+                expect(previousText?.deletedAt).not.toBeNull();
+                expect(result?.texts.map(x => x.text)).toEqual(seedEntries[testCommandAllVariants][testVariants[0]]);
+            });
+
+            it('should restore only the command variant when removed with the command', async () => {
+                // Arrange
+                const removed = await subject.removeCommand(testCommandAllVariants);
+
+                // Act
+                const result = await subject.restoreCommandVariant(testCommandAllVariants, testVariants[0]);
+                const others = await CommandResponseDbo.findAll({
+                    where: {
+                        commandName: testCommandAllVariants,
+                    },
+                    paranoid: false,
+                });
+                const otherTexts = await CommandResponseTextDbo.findAll({
+                    where: {
+                        commandResponseId: others
+                            .filter(x => x.variant !== testVariants[0])
+                            .map(x => x.id),
+                    },
+                    paranoid: false,
+                });
+
+                // Assert
+                expect(removed).toBe(true);
+                expect(result).toEqual(expect.objectContaining({
+                    commandName: testCommandAllVariants,
+                    variant: testVariants[0],
+                }));
+                expect(others
+                    .filter(x => x.variant !== testVariants[0])
+                    .every(x => x.deletedAt !== null)).toBe(true);
+                expect(otherTexts.every(x => x.deletedAt !== null)).toBe(true);
+            });
+
+            it('should NOT restore texts of an active command variant', async () => {
+                // Arrange
+                await subject.addCommandText(testCommandAllVariants, validText, testVariants[0]);
+                await CommandResponseTextDbo.destroy({
+                    where: {
+                        text: validText,
+                    },
+                });
+
+                // Act
+                const result = await subject.restoreCommandVariant(testCommandAllVariants, testVariants[0]);
+                const previousText = await CommandResponseTextDbo.findOne({
+                    where: {
+                        text: validText,
+                    },
+                    paranoid: false,
+                });
+
+                // Assert
+                expect(previousText?.deletedAt).not.toBeNull();
+                expect(result?.texts.map(x => x.text)).toEqual(seedEntries[testCommandAllVariants][testVariants[0]]);
+            });
+
             it('should exit early if no record is restored', async () => {
                 // Arrange
                 const spy = jest.spyOn(CommandResponseDbo, 'findOne')
@@ -819,6 +1078,7 @@ describe('CommandResponse.Repository (postgres)', () => {
 
             it('should log error when failing database', async () => {
                 // Arrange
+                await subject.removeCommandVariant(testCommandAllVariants, testVariants[0]);
                 const spy = jest.spyOn(CommandResponseDbo, 'restore')
                     .mockImplementation(() => { throw mockError; });
 

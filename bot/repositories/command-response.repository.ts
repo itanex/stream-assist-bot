@@ -1,4 +1,6 @@
+import { randomUUID } from 'crypto';
 import { inject, injectable } from 'inversify';
+import { Op, Transaction } from 'sequelize';
 import winston from 'winston';
 import { CommandResponseDbo, CommandResponseTextDbo } from '../../database/index.js';
 import InjectionTypes from '../../dependency-management/types.js';
@@ -360,21 +362,7 @@ export default class CommandResponseRepository {
                     return false;
                 }
 
-                await CommandResponseTextDbo
-                    .destroy({
-                        where: {
-                            commandResponseId: commands.map(x => x.id),
-                        },
-                        transaction,
-                    });
-
-                const count = await CommandResponseDbo
-                    .destroy({
-                        where: {
-                            commandName,
-                        },
-                        transaction,
-                    });
+                const count = await this.softDeleteWithTexts(commands.map(x => x.id), transaction);
 
                 return count > 0;
             });
@@ -407,22 +395,7 @@ export default class CommandResponseRepository {
                     return false;
                 }
 
-                await CommandResponseTextDbo
-                    .destroy({
-                        where: {
-                            commandResponseId: commands.map(x => x.id),
-                        },
-                        transaction,
-                    });
-
-                const count = await CommandResponseDbo
-                    .destroy({
-                        where: {
-                            commandName,
-                            variant,
-                        },
-                        transaction,
-                    });
+                const count = await this.softDeleteWithTexts(commands.map(x => x.id), transaction);
 
                 return count === 1;
             });
@@ -474,33 +447,33 @@ export default class CommandResponseRepository {
     async restoreCommand(commandName: string): Promise<CommandResponse[]> {
         try {
             const records = await this.database.transaction(async transaction => {
-                await CommandResponseDbo
-                    .restore({
+                const latest = await CommandResponseDbo
+                    .findOne({
                         where: {
                             commandName,
+                            deletedAt: { [Op.ne]: null },
+                            deletionId: { [Op.ne]: null },
                         },
+                        order: [['deletedAt', 'DESC']],
+                        paranoid: false,
                         transaction,
                     });
+
+                if (!latest?.deletionId) {
+                    return [];
+                }
 
                 const parents = await CommandResponseDbo
                     .findAll({
                         where: {
                             commandName,
+                            deletionId: latest.deletionId,
                         },
+                        paranoid: false,
                         transaction,
                     });
 
-                if (parents.length === 0) {
-                    return [];
-                }
-
-                await CommandResponseTextDbo
-                    .restore({
-                        where: {
-                            commandResponseId: parents.map(x => x.id),
-                        },
-                        transaction,
-                    });
+                await this.restoreDeletion(latest.deletionId, parents.map(x => x.id), transaction);
 
                 return CommandResponseDbo
                     .findAll({
@@ -523,21 +496,13 @@ export default class CommandResponseRepository {
     async restoreCommandVariant(commandName: string, variant: string): Promise<CommandResponse | null> {
         try {
             const record = await this.database.transaction(async transaction => {
-                await CommandResponseDbo
-                    .restore({
-                        where: {
-                            commandName,
-                            variant,
-                        },
-                        transaction,
-                    });
-
                 const parent = await CommandResponseDbo
                     .findOne({
                         where: {
                             commandName,
                             variant,
                         },
+                        paranoid: false,
                         transaction,
                     });
 
@@ -545,13 +510,9 @@ export default class CommandResponseRepository {
                     return null;
                 }
 
-                await CommandResponseTextDbo
-                    .restore({
-                        where: {
-                            commandResponseId: parent.id,
-                        },
-                        transaction,
-                    });
+                if (parent.isSoftDeleted() && parent.deletionId) {
+                    await this.restoreDeletion(parent.deletionId, [parent.id], transaction);
+                }
 
                 return CommandResponseDbo
                     .findOne({
@@ -605,5 +566,100 @@ export default class CommandResponseRepository {
         }
 
         return [false, command];
+    }
+
+    /**
+     * Soft-Delete the provided commands and their active texts under a shared deletion marker
+     * @param commandResponseIds The command records to remove
+     * @param transaction The transaction to run within
+     * @returns count of command records removed
+     */
+    private async softDeleteWithTexts(commandResponseIds: number[], transaction: Transaction): Promise<number> {
+        const deletionId = randomUUID();
+
+        await CommandResponseTextDbo
+            .update({
+                deletionId,
+            }, {
+                where: {
+                    commandResponseId: commandResponseIds,
+                    deletedAt: null,
+                },
+                transaction,
+            });
+
+        await CommandResponseTextDbo
+            .destroy({
+                where: {
+                    deletionId,
+                },
+                transaction,
+            });
+
+        await CommandResponseDbo
+            .update({
+                deletionId,
+            }, {
+                where: {
+                    id: commandResponseIds,
+                },
+                transaction,
+            });
+
+        return CommandResponseDbo
+            .destroy({
+                where: {
+                    deletionId,
+                },
+                transaction,
+            });
+    }
+
+    /**
+     * Restore the provided commands and their texts removed under the deletion marker, then clear the marker
+     * @param deletionId The deletion marker to restore
+     * @param commandResponseIds The command records to restore
+     * @param transaction The transaction to run within
+     */
+    private async restoreDeletion(deletionId: string, commandResponseIds: number[], transaction: Transaction): Promise<void> {
+        await CommandResponseDbo
+            .restore({
+                where: {
+                    id: commandResponseIds,
+                    deletionId,
+                },
+                transaction,
+            });
+
+        await CommandResponseTextDbo
+            .restore({
+                where: {
+                    commandResponseId: commandResponseIds,
+                    deletionId,
+                },
+                transaction,
+            });
+
+        await CommandResponseDbo
+            .update({
+                deletionId: null,
+            }, {
+                where: {
+                    id: commandResponseIds,
+                    deletionId,
+                },
+                transaction,
+            });
+
+        await CommandResponseTextDbo
+            .update({
+                deletionId: null,
+            }, {
+                where: {
+                    commandResponseId: commandResponseIds,
+                    deletionId,
+                },
+                transaction,
+            });
     }
 }

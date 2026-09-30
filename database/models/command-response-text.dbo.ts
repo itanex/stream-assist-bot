@@ -40,4 +40,10 @@ export default class CommandResponseTextDbo extends Model {
         },
     })
     weight!: number;
+
+    @Column({
+        allowNull: true,
+        type: DataType.UUID,
+    })
+    deletionId!: string | null;
 }
