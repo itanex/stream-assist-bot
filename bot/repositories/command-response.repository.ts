@@ -266,21 +266,21 @@ export default class CommandResponseRepository {
     async addCommandText(commandName: string, text: string, variant: string = ''): Promise<CommandResponse | null> {
         try {
             return await this.database.transaction(async transaction => {
-            const [parentRecord] = await CommandResponseDbo
-                .findOrCreate({
-                    where: {
-                        commandName,
-                        variant,
-                    },
-                    defaults: {
-                commandName,
-                variant,
-                    },
+                const [parentRecord] = await CommandResponseDbo
+                    .findOrCreate({
+                        where: {
+                            commandName,
+                            variant,
+                        },
+                        defaults: {
+                            commandName,
+                            variant,
+                        },
                         paranoid: false,
-                isNewRecord: true,
-                validate: true,
+                        isNewRecord: true,
+                        validate: true,
                         transaction,
-            });
+                    });
 
                 if (parentRecord.isSoftDeleted()) {
                     await parentRecord.restore({
@@ -288,26 +288,26 @@ export default class CommandResponseRepository {
                     });
                 }
 
-            const record = await CommandResponseTextDbo
-                .create({
-                    commandResponseId: parentRecord.id,
-                    text,
+                const record = await CommandResponseTextDbo
+                    .create({
+                        commandResponseId: parentRecord.id,
+                        text,
                     }, {
                         transaction,
-                });
+                    });
 
-            if (record) {
-                return {
-                    commandName: parentRecord.commandName,
-                    variant: parentRecord.variant,
-                    texts: [{
-                        text: record.text,
-                        weight: Number(record.weight),
-                    } as CommandResponseText],
-                } as CommandResponse;
-            }
+                if (record) {
+                    return {
+                        commandName: parentRecord.commandName,
+                        variant: parentRecord.variant,
+                        texts: [{
+                            text: record.text,
+                            weight: Number(record.weight),
+                        } as CommandResponseText],
+                    } as CommandResponse;
+                }
 
-            this.logger.warn(`Failed to create CommandResponseText`);
+                this.logger.warn(`Failed to create CommandResponseText`);
                 return null;
             });
         } catch (error) {
@@ -434,6 +434,39 @@ export default class CommandResponseRepository {
     }
 
     /**
+     * Soft-Delete specified command text, if present
+     * @param commandName The command name to remove
+     * @param variant The command name variant to remove
+     * @returns boolean flag denoting if the provided command was removed
+     */
+    async removeCommandText(commandName: string, variant: string): Promise<boolean> {
+        try {
+            const record = await CommandResponseDbo
+                .findOne({
+                    where: {
+                        commandName,
+                        variant,
+                    },
+                });
+
+            if (record) {
+                const count = await CommandResponseTextDbo
+                    .destroy({
+                        where: {
+                            commandResponseId: record.id,
+                        },
+                    });
+
+                return count === 1;
+            }
+        } catch (error) {
+            this.logger.error(`Error removing the command text from database`, error);
+        }
+
+        return false;
+    }
+
+    /**
      * Restores the specific command provided
      * @param commandName The command to restore
      * @returns all restored records with text
@@ -549,8 +582,8 @@ export default class CommandResponseRepository {
      * @param variant The command name variant to restore
      * @returns boolean flag denoting if the provided command was restored
      */
-    async restoreCommandText(commandName: string, variant: string = ''): Promise<[boolean, CommandResponse | null]> {
-        const command = await CommandResponse
+    async restoreCommandText(commandName: string, variant: string = ''): Promise<[boolean, CommandResponseDbo | null]> {
+        const command = await CommandResponseDbo
             .findOne({
                 where: {
                     commandName,
@@ -560,7 +593,7 @@ export default class CommandResponseRepository {
             });
 
         if (command?.deletedAt) {
-            await CommandResponse
+            await CommandResponseDbo
                 .restore({
                     where: {
                         commandName,

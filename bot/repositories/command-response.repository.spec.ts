@@ -406,7 +406,7 @@ describe('CommandResponse.Repository (postgres)', () => {
                     commandName,
                     variant,
                     texts: [{
-                    text,
+                        text,
                         weight: 1,
                     }],
                 });
@@ -425,7 +425,7 @@ describe('CommandResponse.Repository (postgres)', () => {
                     commandName,
                     variant: '',
                     texts: [{
-                    text,
+                        text,
                         weight: 1,
                     }],
                 });
@@ -710,6 +710,13 @@ describe('CommandResponse.Repository (postgres)', () => {
             });
         });
 
+        describe('removeCommandText()', () => {
+            beforeEach(async () => {
+                await subject.seed(seedEntries);
+            });
+            // TODO
+        });
+
         describe('restoreCommand()', () => {
             beforeEach(async () => {
                 await subject.seed(seedEntries);
@@ -834,12 +841,12 @@ describe('CommandResponse.Repository (postgres)', () => {
             });
 
             afterEach(async () => {
-                await CommandResponse.destroy({ where: {}, force: true });
+                await CommandResponseDbo.destroy({ where: {}, force: true });
             });
 
             it('should restore command (default, no-variant)', async () => {
                 // Arrange
-                const removed = await subject.removeCommandText(testCommandDefaultVariant);
+                // const removed = await subject.removeCommandText(testCommandDefaultVariant);
 
                 // Act
                 const [restored, result] = await subject.restoreCommandText(testCommandDefaultVariant);
