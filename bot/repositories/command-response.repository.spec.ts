@@ -740,6 +740,22 @@ describe('CommandResponse.Repository (postgres)', () => {
                 expect(result).toStrictEqual(expected);
             });
 
+            it('should exit early if no records are restored', async () => {
+                // Arrange
+                const spy = jest.spyOn(CommandResponseDbo, 'findAll')
+                    .mockImplementation(async () => []);
+
+                // Act
+                const result = await subject.restoreCommand(testCommandAllVariants);
+
+                // Assert
+                expect(mockLogger.error).not.toHaveBeenCalled();
+
+                expect(result).toEqual([]);
+
+                spy.mockRestore();
+            });
+
             it('should log error when failing database', async () => {
                 // Arrange
                 const spy = jest.spyOn(CommandResponseDbo, 'restore')
@@ -753,6 +769,65 @@ describe('CommandResponse.Repository (postgres)', () => {
                     .toHaveBeenCalledWith(expect.any(String), expect.any(Error));
 
                 expect(result).toEqual([]);
+
+                spy.mockRestore();
+            });
+        });
+
+        describe('restoreCommandVariant()', () => {
+            beforeEach(async () => {
+                await subject.seed(seedEntries);
+            });
+
+            it('should restore command variant and text responses', async () => {
+                // Arrange
+                const expected = {
+                    commandName: testCommandAllVariants,
+                    variant: testVariants[0],
+                    texts: expect.arrayContaining(
+                        seedEntries[testCommandAllVariants][testVariants[0]]
+                            .map(x => expect.objectContaining({ text: x })),
+                    ),
+                };
+                const removed = await subject.removeCommandVariant(testCommandAllVariants, testVariants[0]);
+
+                // Act
+                const result = await subject.restoreCommandVariant(testCommandAllVariants, testVariants[0]);
+
+                // Assert
+                expect(removed).toBe(true);
+                expect(result).toStrictEqual(expected);
+            });
+
+            it('should exit early if no record is restored', async () => {
+                // Arrange
+                const spy = jest.spyOn(CommandResponseDbo, 'findOne')
+                    .mockImplementation(async () => null);
+
+                // Act
+                const result = await subject.restoreCommandVariant(testCommandAllVariants, testVariants[0]);
+
+                // Assert
+                expect(mockLogger.error).not.toHaveBeenCalled();
+
+                expect(result).toEqual(null);
+
+                spy.mockRestore();
+            });
+
+            it('should log error when failing database', async () => {
+                // Arrange
+                const spy = jest.spyOn(CommandResponseDbo, 'restore')
+                    .mockImplementation(() => { throw mockError; });
+
+                // Act
+                const result = await subject.restoreCommandVariant(testCommandAllVariants, testVariants[0]);
+
+                // Assert
+                expect(mockLogger.error)
+                    .toHaveBeenCalledWith(expect.any(String), expect.any(Error));
+
+                expect(result).toEqual(null);
 
                 spy.mockRestore();
             });

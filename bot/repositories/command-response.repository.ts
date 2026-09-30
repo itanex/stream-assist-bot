@@ -149,7 +149,7 @@ export default class CommandResponseRepository {
                         variant: '',
                     },
                     defaults: {
-                    commandName,
+                        commandName,
                     },
                     paranoid: false,
                     isNewRecord: true,
@@ -371,15 +371,15 @@ export default class CommandResponseRepository {
                         transaction,
                     });
 
-            const count = await CommandResponseDbo
-                .destroy({
-                    where: {
-                        commandName,
-                    },
+                const count = await CommandResponseDbo
+                    .destroy({
+                        where: {
+                            commandName,
+                        },
                         transaction,
-                });
+                    });
 
-            return count > 0;
+                return count > 0;
             });
         } catch (error) {
             this.logger.error(`Error removing the command from database`, error);
@@ -418,16 +418,16 @@ export default class CommandResponseRepository {
                         transaction,
                     });
 
-            const count = await CommandResponseDbo
-            .destroy({
-                where: {
-                    commandName,
-                    variant,
-                },
+                const count = await CommandResponseDbo
+                    .destroy({
+                        where: {
+                            commandName,
+                            variant,
+                        },
                         transaction,
-            });
+                    });
 
-        return count === 1;
+                return count === 1;
             });
         } catch (error) {
             this.logger.error(`Error removing the command variant from database`, error);
@@ -460,7 +460,11 @@ export default class CommandResponseRepository {
                         transaction,
                     });
 
-                const textRecords = await CommandResponseTextDbo
+                if (parents.length === 0) {
+                    return [];
+                }
+
+                await CommandResponseTextDbo
                     .restore({
                         where: {
                             commandResponseId: parents.map(x => x.id),
@@ -484,6 +488,62 @@ export default class CommandResponseRepository {
         }
 
         return [];
+    }
+
+    async restoreCommandVariant(commandName: string, variant: string): Promise<CommandResponse | null> {
+        try {
+            const record = await this.database.transaction(async transaction => {
+                await CommandResponseDbo
+                    .restore({
+                        where: {
+                            commandName,
+                            variant,
+                        },
+                        transaction,
+                    });
+
+                const parent = await CommandResponseDbo
+                    .findOne({
+                        where: {
+                            commandName,
+                            variant,
+                        },
+                        transaction,
+                    });
+
+                if (!parent) {
+                    return null;
+                }
+
+                await CommandResponseTextDbo
+                    .restore({
+                        where: {
+                            commandResponseId: parent.id,
+                        },
+                        transaction,
+                    });
+
+                return CommandResponseDbo
+                    .findOne({
+                        where: {
+                            commandName,
+                            variant,
+                        },
+                        include: [CommandResponseTextDbo],
+                        transaction,
+                    });
+            });
+
+            if (record) {
+                return toCommandResponse(record);
+            }
+
+            return null;
+        } catch (error) {
+            this.logger.error(`There was an error restoring the CommandResponses`, error);
+        }
+
+        return null;
     }
 
     /**
