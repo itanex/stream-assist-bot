@@ -35,7 +35,7 @@ export class LurkCommand implements ICommandHandler {
         const [user, created] = await this.lurkRespository.setUserToLurk(userstate);
 
         if (created) {
-            const result = this.commandResponseService.getCommandText(this.commandName)
+            const result = this.commandResponseService.getCommandResponse(this.commandName)
                 ?? defaultResponses.lurk[''];
 
             const context: TransientContext = {
@@ -77,7 +77,7 @@ export class UnLurkCommand implements ICommandHandler {
         const unlurkedUser = await this.lurkRespository.setUserToUnlurk(userstate);
 
         if (unlurkedUser) {
-            const result = this.commandResponseService.getCommandText(this.commandName)
+            const result = this.commandResponseService.getCommandResponse(this.commandName)
                 ?? defaultResponses.unlurk[''];
 
             const context: TransientContext = {

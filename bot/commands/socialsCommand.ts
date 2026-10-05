@@ -30,7 +30,7 @@ export class SocialsCommand implements ICommandHandler {
 
     cooldownKey(args: string[]): string {
         const [variant] = args as string[];
-        const isKnown = !!this.commandResponseService.getCommandText(this.commandName, variant);
+        const isKnown = !!this.commandResponseService.getCommandResponse(this.commandName, variant);
 
         return !!variant && isKnown ? `${SocialsCommand.name}:${variant}` : SocialsCommand.name;
     }
@@ -38,7 +38,7 @@ export class SocialsCommand implements ICommandHandler {
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         const [variant] = args as string[];
 
-        const response = this.commandResponseService.getCommandText(this.commandName, variant);
+        const response = this.commandResponseService.getCommandResponse(this.commandName, variant);
 
         if (response) {
             await this.chatClient.say(channel, response);

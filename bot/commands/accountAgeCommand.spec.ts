@@ -50,7 +50,7 @@ describe('Account Age Command Tests', () => {
                 .mockResolvedValue(targetUser);
 
             mockCommandResponseService
-                .getCommandText
+                .getCommandResponse
                 .mockReturnValue(`%${transientKeywords.targetuser}%, %${transientKeywords.accountage}%`);
 
             const age = getAgeReport(Timespan.fromNow(targetUser.creationDate));
@@ -60,7 +60,7 @@ describe('Account Age Command Tests', () => {
 
             // Assert
             expect(mockApiClient.users.getUserByName).toHaveBeenCalledWith(targetUser.displayName);
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName);
+            expect(mockCommandResponseService.getCommandResponse).toHaveBeenCalledWith(subject.commandName);
 
             expect(mockChatClient.say)
                 .toHaveBeenCalledWith(channel, expect.stringContaining(targetUser.displayName));
@@ -86,7 +86,7 @@ describe('Account Age Command Tests', () => {
                 .mockResolvedValue(targetUser);
 
             mockCommandResponseService
-                .getCommandText
+                .getCommandResponse
                 .mockReturnValue(`%${transientKeywords.targetuser}%, %${transientKeywords.accountage}%`);
 
             const age = getAgeReport(Timespan.fromNow(targetUser.creationDate));
@@ -96,7 +96,7 @@ describe('Account Age Command Tests', () => {
 
             // Assert
             expect(mockApiClient.users.getUserByName).toHaveBeenCalledWith(expectedApiClientParameter);
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName);
+            expect(mockCommandResponseService.getCommandResponse).toHaveBeenCalledWith(subject.commandName);
 
             expect(mockChatClient.say)
                 .toHaveBeenCalledWith(channel, expect.stringContaining(targetUser.displayName));
@@ -134,7 +134,7 @@ describe('Account Age Command Tests', () => {
                 .mockResolvedValue(targetUser);
 
             mockCommandResponseService
-                .getCommandText
+                .getCommandResponse
                 .mockReturnValue(undefined);
 
             // Act
@@ -142,7 +142,7 @@ describe('Account Age Command Tests', () => {
 
             // Assert
             expect(mockApiClient.users.getUserByName).toHaveBeenCalled();
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName);
+            expect(mockCommandResponseService.getCommandResponse).toHaveBeenCalledWith(subject.commandName);
             expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(subject.commandName));
             expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
         });

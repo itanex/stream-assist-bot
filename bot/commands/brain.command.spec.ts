@@ -33,7 +33,7 @@ describe('Brain Command Tests', () => {
             const args: string[] = [];
 
             mockCommandResponseService
-                .getCommandText
+                .getCommandResponse
                 .mockReturnValue(`%${transientKeywords.targetuser}%, %${transientKeywords.percent}%`);
 
             // Act
@@ -51,7 +51,7 @@ describe('Brain Command Tests', () => {
             ];
 
             mockCommandResponseService
-                .getCommandText
+                .getCommandResponse
                 .mockReturnValue(`%${transientKeywords.targetuser}%, %${transientKeywords.percent}%`);
 
             // Act
@@ -67,7 +67,7 @@ describe('Brain Command Tests', () => {
             const args: string[] = [];
 
             mockCommandResponseService
-                .getCommandText
+                .getCommandResponse
                 .mockReturnValue(undefined);
 
             // Act

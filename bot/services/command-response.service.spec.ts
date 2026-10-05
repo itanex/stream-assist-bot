@@ -203,7 +203,7 @@ describe('CommandResponse.Service (postgres)', () => {
             it('should return the command (cache, no-variant)', () => {
                 // Arrange - beforeEach()
                 // Act
-                const result = subject.getCommandText(testCommandName);
+                const result = subject.getCommandResponse(testCommandName);
 
                 // Assert
                 expect(result).toBe(testCommandText);
@@ -212,7 +212,7 @@ describe('CommandResponse.Service (postgres)', () => {
             it('should return the command (cache, variant)', () => {
                 // Arrange - beforeEach()
                 // Act
-                const result = subject.getCommandText(testCommandName, testVariant);
+                const result = subject.getCommandResponse(testCommandName, testVariant);
 
                 // Assert
                 expect(result).toBe(testCommandVariantText);
@@ -223,7 +223,7 @@ describe('CommandResponse.Service (postgres)', () => {
                 const variant = 'unknownVariant';
 
                 // Act
-                const result = subject.getCommandText(testCommandName, variant);
+                const result = subject.getCommandResponse(testCommandName, variant);
 
                 // Assert
                 expect(result).toBe(undefined);
@@ -232,7 +232,7 @@ describe('CommandResponse.Service (postgres)', () => {
             it('should return undefined for invalid commandName', () => {
                 // Arrange - beforeEach()
                 // Act
-                const result = subject.getCommandText('');
+                const result = subject.getCommandResponse('');
 
                 // Assert
                 expect(result).toBe(undefined);
@@ -243,7 +243,7 @@ describe('CommandResponse.Service (postgres)', () => {
                 const commandName = 'unknownCommandName';
 
                 // Act
-                const result = subject.getCommandText(commandName);
+                const result = subject.getCommandResponse(commandName);
 
                 // Assert
                 expect(result).toBe(undefined);
@@ -275,7 +275,7 @@ describe('CommandResponse.Service (postgres)', () => {
 
                 // Act
                 const result = await subject.updateCommandText(commandName, validText);
-                const cacheRecord = subject.getCommandText(commandName);
+                const cacheRecord = subject.getCommandResponse(commandName);
 
                 // Assert
                 expect(result).toBe<CommandTextUpdateResult>('notEditable');
@@ -288,7 +288,7 @@ describe('CommandResponse.Service (postgres)', () => {
 
                 // Act
                 const result = await subject.updateCommandText(testCommandName, validText, variant);
-                const cacheRecord = subject.getCommandText(testCommandName, variant);
+                const cacheRecord = subject.getCommandResponse(testCommandName, variant);
 
                 // Assert
                 expect(result).toBe<CommandTextUpdateResult>('notEditable');
@@ -303,7 +303,7 @@ describe('CommandResponse.Service (postgres)', () => {
 
                 // Act
                 const result = await subject.updateCommandText(testCommandName, validText, testVariant);
-                const cached = subject.getCommandText(testCommandName, testVariant);
+                const cached = subject.getCommandResponse(testCommandName, testVariant);
 
                 // Assert
                 expect(result).toBe<CommandTextUpdateResult>('updated');
@@ -318,7 +318,7 @@ describe('CommandResponse.Service (postgres)', () => {
 
                 // Act
                 const result = await subject.updateCommandText(testCommandName, validText);
-                const cached = subject.getCommandText(testCommandName);
+                const cached = subject.getCommandResponse(testCommandName);
 
                 // Assert
                 expect(result).toBe<CommandTextUpdateResult>('updated');
@@ -662,7 +662,7 @@ describe('CommandResponse.Service (postgres)', () => {
 
             // Act
             const result = await subject.restoreCommandText(testCommandName, testVariant);
-            const cachedResult = subject.getCommandText(testCommandName, testVariant);
+            const cachedResult = subject.getCommandResponse(testCommandName, testVariant);
 
             // Assert
             expect(result).toBe<CommandTextRestoreResult>('restored');

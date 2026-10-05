@@ -40,7 +40,7 @@ export class AccountAgeCommand implements ICommandHandler {
         const user = await this.apiClient.users.getUserByName(username);
 
         if (user) {
-            const result = this.commandResponseService.getCommandText(this.commandName);
+            const result = this.commandResponseService.getCommandResponse(this.commandName);
 
             if (result) {
                 const context: TransientContext = {

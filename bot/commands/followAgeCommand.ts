@@ -60,7 +60,7 @@ export class FollowAgeCommand implements ICommandHandler {
                 .getChannelFollowers(this.environment.twitchBot.broadcaster.id, followingUser.id);
 
             if (follower.data[0]) {
-                const result = this.commandResponseService.getCommandText(this.commandName);
+                const result = this.commandResponseService.getCommandResponse(this.commandName);
 
                 if (result) {
                     const context: TransientContext = {

@@ -4,6 +4,7 @@ import winston from 'winston';
 import { defaultResponses, CommandFamilies } from '../utilities/default-responses.js';
 import InjectionTypes from '../../dependency-management/types.js';
 import { CommandResponseRepository } from '../repositories/index.js';
+import { type CommandResponseText } from '../repositories/command-response.repository.js';
 
 export type CommandTextValidationResult =
     'invalidInput' |
@@ -17,6 +18,7 @@ export type CommandTextUpdateResult = CommandTextValidationResult |
 export type CommandTextInsertResult = CommandTextValidationResult |
     'alreadyExists' |
     'invalidCommandName' |
+    'insertFailed' |
     'inserted';
 
 export type CommandTextRemoveResult = CommandTextValidationResult |
@@ -29,7 +31,10 @@ export type CommandTextRestoreResult = CommandTextValidationResult |
     'alreadyActive' |
     'restored';
 
-type ResponseEntry = { variant: string; text: string };
+type ResponseEntry = {
+    variant: string;
+    responses: CommandResponseText[]
+};
 
 export const cacheKey = (name: string, variant: string = ''): string => (variant ? `${name}.${variant}` : name);
 
@@ -50,7 +55,10 @@ export default class CommandResponseService {
         this.responseCache = new Map(rows
             .map((row): [string, ResponseEntry] => [
                 cacheKey(row.commandName, row.variant),
-                { variant: row.variant, text: row.text },
+                {
+                    variant: row.variant,
+                    responses: row.texts,
+                },
             ]));
     }
 
@@ -68,12 +76,21 @@ export default class CommandResponseService {
             .map(([, entry]) => entry.variant);
     }
 
-    getCommandText(commandName: string, variant: string = ''): string | undefined {
+    getCommandResponse(commandName: string, variant: string): string | undefined {
         if (!commandName) {
             return undefined;
         }
 
-        return this.responseCache.get(cacheKey(commandName, variant))?.text;
+        const responses = this.responseCache.get(cacheKey(commandName, variant))?.responses;
+
+        if (responses?.length) {
+            // TODO: Update this to a weighted random selection algorithm (#155)
+            const index = Math.floor(Math.random() * responses.length);
+
+            return responses[index].text;
+        }
+
+        return undefined;
     }
 
     /**
@@ -81,7 +98,6 @@ export default class CommandResponseService {
      * @param commandName Command to add
      * @param text new text value for the Command
      * @param variant The command name variant to add
-     * @returns boolean flag denoting if the provided command/variant was created
      */
     async addCommandText(commandName: string, text: string, variant: string = ''): Promise<CommandTextInsertResult> {
         if (!commandName || !text) {
@@ -92,23 +108,24 @@ export default class CommandResponseService {
             return 'invalidCommandName';
         }
 
-        if (this.responseCache.has(cacheKey(commandName, variant))) {
-            return 'alreadyExists';
-        }
-
         try {
-            const [restored] = await this.commandResponseRepository
-                .restoreCommandText(commandName, variant);
+            const addedResponse = await this.commandResponseRepository
+                .addCommandText(commandName, text, variant);
 
-            if (restored) {
-                await this.commandResponseRepository
-                    .updateCommandText(commandName, text, variant);
-            } else {
-                await this.commandResponseRepository
-                    .addCommandText(commandName, text, variant);
+            if (!addedResponse) {
+                return 'insertFailed';
             }
 
-            this.responseCache.set(cacheKey(commandName, variant), { variant, text });
+            const records = this.responseCache.get(cacheKey(commandName, variant));
+
+            if (records) {
+                records.responses.push(addedResponse.texts[0]);
+            } else {
+                this.responseCache.set(cacheKey(commandName, variant), {
+                    variant,
+                    responses: addedResponse.texts,
+                });
+            }
 
             return 'inserted';
         } catch (error) {

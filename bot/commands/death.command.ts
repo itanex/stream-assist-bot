@@ -152,7 +152,7 @@ export class LastDeathCountCommmand implements ICommandHandler {
             const records = await this.deathCountRepository
                 .getLastStreamDeathCount(stream.id);
 
-            const result = this.commandResponseService.getCommandText(this.commandName);
+            const result = this.commandResponseService.getCommandResponse(this.commandName);
 
             if (result) {
                 const games = records

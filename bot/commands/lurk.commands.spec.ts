@@ -58,7 +58,7 @@ describe('Lurk Commands Tests', () => {
                 ]);
 
             mockCommandResponseService
-                .getCommandText
+                .getCommandResponse
                 .mockReturnValue(responseText);
 
             // Act
@@ -70,7 +70,7 @@ describe('Lurk Commands Tests', () => {
             expect(mockLurkRepository.setUserToLurk)
                 .toHaveBeenCalledWith(user);
 
-            expect(mockCommandResponseService.getCommandText)
+            expect(mockCommandResponseService.getCommandResponse)
                 .toHaveBeenNthCalledWith(1, subject.commandName);
 
             expect(mockChatClient.say)
@@ -138,7 +138,7 @@ describe('Lurk Commands Tests', () => {
                 .mockResolvedValue(calledUser);
 
             mockCommandResponseService
-                .getCommandText
+                .getCommandResponse
                 .mockReturnValue(responseText);
 
             // Act
@@ -151,7 +151,7 @@ describe('Lurk Commands Tests', () => {
             expect(calledUser.duration).toHaveBeenCalledTimes(1);
             expect(calledUser.duration().humanize).toHaveBeenCalledTimes(1);
 
-            expect(mockCommandResponseService.getCommandText)
+            expect(mockCommandResponseService.getCommandResponse)
                 .toHaveBeenNthCalledWith(1, subject.commandName);
             expect(mockChatClient.say)
                 .toHaveBeenNthCalledWith(1, channel, expect.stringContaining(calledUser.displayName));

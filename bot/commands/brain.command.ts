@@ -30,7 +30,7 @@ export default class BrainCommand implements ICommandHandler {
     }
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        const result = this.commandResponseService.getCommandText(this.commandName);
+        const result = this.commandResponseService.getCommandResponse(this.commandName);
 
         if (result) {
             const targetuser = args[0]

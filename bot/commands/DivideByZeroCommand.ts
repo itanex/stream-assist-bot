@@ -29,7 +29,7 @@ export class DivideByZeroCommand implements ICommandHandler {
     }
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        const commandText = this.commandResponseService.getCommandText(this.commandName);
+        const commandText = this.commandResponseService.getCommandResponse(this.commandName);
 
         if (!commandText) {
             this.logger.warn(`* Command Text not found for ${command} in ${channel} || ${userstate.displayName} > ${message}`);

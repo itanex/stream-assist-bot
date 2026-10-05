@@ -32,7 +32,7 @@ describe('Drink Command Tests', () => {
     it('says the configured text in chat', async () => {
         // Arrange
         mockCommandResponseService
-            .getCommandText
+            .getCommandResponse
             .mockReturnValue(configuredText);
 
         // Act
@@ -46,7 +46,7 @@ describe('Drink Command Tests', () => {
     it('says the default text and logs a warning when no text is configured', async () => {
         // Arrange
         mockCommandResponseService
-            .getCommandText
+            .getCommandResponse
             .mockReturnValue(undefined);
 
         // Act

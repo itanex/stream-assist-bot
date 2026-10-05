@@ -38,7 +38,7 @@ export class CuddleCommand implements ICommandHandler {
             const targetUser = await this.apiClient.users.getUserByName(targetUsername);
 
             if (targetUser && userstate.displayName !== targetUser.displayName) {
-                const result = this.commandResponseService.getCommandText(this.commandName);
+                const result = this.commandResponseService.getCommandResponse(this.commandName);
 
                 if (result) {
                     const context: TransientContext = {

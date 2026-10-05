@@ -255,7 +255,7 @@ describe('Death Commands Tests', () => {
                 .mockResolvedValue(records);
 
             mockCommandResponseService
-                .getCommandText
+                .getCommandResponse
                 .mockReturnValue(`%${transientKeywords.streamdate}%, %${transientKeywords.deathtotal}%, %${transientKeywords.streamcategory}%`);
 
             // Act
@@ -269,7 +269,7 @@ describe('Death Commands Tests', () => {
             expect(mockDeathCountRepository.getLastStreamDeathCount)
                 .toHaveBeenCalledWith(streamData.id);
 
-            expect(mockCommandResponseService.getCommandText)
+            expect(mockCommandResponseService.getCommandResponse)
                 .toHaveBeenCalledWith(subject.commandName);
             expect(mockChatClient.say)
                 .toHaveBeenCalledTimes(1);
@@ -284,7 +284,7 @@ describe('Death Commands Tests', () => {
         it('logs a warning when no death count record is found', async () => {
             // Arrange
             mockCommandResponseService
-                .getCommandText
+                .getCommandResponse
                 .mockReturnValue(undefined);
 
             // Act

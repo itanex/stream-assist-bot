@@ -80,7 +80,7 @@ describe('Follow Age Command Tests', () => {
                 });
 
             mockCommandResponseService
-                .getCommandText
+                .getCommandResponse
                 .mockReturnValue(`%${transientKeywords.targetuser}%, %${transientKeywords.followage}%`);
 
             // Act
@@ -94,7 +94,7 @@ describe('Follow Age Command Tests', () => {
                     mockEnvironment.twitchBot.broadcaster.id,
                     chatUser.userId,
                 );
-            expect(mockCommandResponseService.getCommandText)
+            expect(mockCommandResponseService.getCommandResponse)
                 .toHaveBeenCalledWith(subject.commandName);
             expect(mockBroadcaster.getBroadcaster).toHaveBeenCalled();
             expect(mockChatClient.say)
@@ -133,7 +133,7 @@ describe('Follow Age Command Tests', () => {
                 });
 
             mockCommandResponseService
-                .getCommandText
+                .getCommandResponse
                 .mockReturnValue(`%${transientKeywords.targetuser}%, %${transientKeywords.followage}%`);
 
             // Act
@@ -149,7 +149,7 @@ describe('Follow Age Command Tests', () => {
                     mockEnvironment.twitchBot.broadcaster.id,
                     chatUser.userId,
                 );
-            expect(mockCommandResponseService.getCommandText)
+            expect(mockCommandResponseService.getCommandResponse)
                 .toHaveBeenCalledWith(subject.commandName);
             expect(mockBroadcaster.getBroadcaster).toHaveBeenCalled();
             expect(mockChatClient.say)
@@ -192,7 +192,7 @@ describe('Follow Age Command Tests', () => {
                     mockEnvironment.twitchBot.broadcaster.id,
                     chatUser.userId,
                 );
-            expect(mockCommandResponseService.getCommandText)
+            expect(mockCommandResponseService.getCommandResponse)
                 .not.toHaveBeenCalled();
             expect(mockBroadcaster.getBroadcaster)
                 .not.toHaveBeenCalled();
@@ -218,7 +218,7 @@ describe('Follow Age Command Tests', () => {
                 .toHaveBeenCalledWith(expectedApiUsername);
             expect(mockApiClient.channels.getChannelFollowers)
                 .not.toHaveBeenCalled();
-            expect(mockCommandResponseService.getCommandText)
+            expect(mockCommandResponseService.getCommandResponse)
                 .not.toHaveBeenCalled();
             expect(mockBroadcaster.getBroadcaster)
                 .not.toHaveBeenCalled();
@@ -243,7 +243,7 @@ describe('Follow Age Command Tests', () => {
                 });
 
             mockCommandResponseService
-                .getCommandText
+                .getCommandResponse
                 .mockReturnValue(undefined);
 
             // Act
@@ -257,7 +257,7 @@ describe('Follow Age Command Tests', () => {
                     mockEnvironment.twitchBot.broadcaster.id,
                     chatUser.userId,
                 );
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName);
+            expect(mockCommandResponseService.getCommandResponse).toHaveBeenCalledWith(subject.commandName);
             expect(mockBroadcaster.getBroadcaster).not.toHaveBeenCalled();
             expect(mockChatClient.say).not.toHaveBeenCalled();
             expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
@@ -278,7 +278,7 @@ describe('Follow Age Command Tests', () => {
                 .not.toHaveBeenCalled();
             expect(mockApiClient.channels.getChannelFollowers)
                 .not.toHaveBeenCalled();
-            expect(mockCommandResponseService.getCommandText)
+            expect(mockCommandResponseService.getCommandResponse)
                 .not.toHaveBeenCalled();
             expect(mockBroadcaster.getBroadcaster)
                 .not.toHaveBeenCalled();
