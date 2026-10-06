@@ -10,7 +10,7 @@ import {
 } from './command-response.service.js';
 import { mockLogger } from '../../tests/common.mocks.js';
 import { CommandResponseRepository } from '../repositories/index.js';
-import { type CommandResponse } from '../repositories/command-response.repository.js';
+import { type CommandResponse, type CommandResponseTextChanges } from '../repositories/command-response.repository.js';
 
 type CommandResponseServiceModule = typeof import('./command-response.service.js');
 type MockDefaultResponses = { testResponse: string };
@@ -259,130 +259,136 @@ describe('CommandResponse.Service (postgres)', () => {
         });
 
         describe('updateCommandText()', () => {
-            it(`should return 'invalidInput' with empty commandName`, async () => {
+            it.each`
+                scenario                       | commandName        | changes
+                ${'empty commandName'}         | ${''}              | ${{ text: validText }}
+                ${'no changes'}                | ${testCommandName} | ${{}}
+                ${'empty text with weight'}    | ${testCommandName} | ${{ text: '', weight: 5 }}
+            `(`should return 'invalidInput' with $scenario`, async ({ commandName, changes }: { commandName: string, changes: CommandResponseTextChanges }) => {
                 // Arrange - beforeEach()
                 // Act
-                const result = await subject.updateCommandText('', 'Valid text...');
+                const result = await subject.updateCommandText(commandName, defaultVariant, 0, changes);
 
                 // Assert
+                expect(mockCommandResponseRepository.updateCommandText)
+                    .not.toHaveBeenCalled();
+
                 expect(result).toBe<CommandTextValidationResult>('invalidInput');
             });
 
-            it(`should return 'invalidInput' with empty text`, async () => {
+            it.each`
+                scenario                       | commandName              | variant             | id
+                ${'no cache record'}           | ${'unknownCommandName'}  | ${defaultVariant}   | ${0}
+                ${'unknown id'}                | ${testCommandName}       | ${defaultVariant}   | ${99}
+            `(`should return 'notEditable' with $scenario`, async ({ commandName, variant, id }: { commandName: string, variant: string, id: number }) => {
                 // Arrange - beforeEach()
                 // Act
-                const result = await subject.updateCommandText(validName, '');
+                const result = await subject.updateCommandText(commandName, variant, id, { text: validText });
 
                 // Assert
-                expect(result).toBe<CommandTextValidationResult>('invalidInput');
-            });
+                expect(mockCommandResponseRepository.updateCommandText)
+                    .not.toHaveBeenCalled();
 
-            it(`should return 'notEditable' with unknown commandName`, async () => {
-                // Arrange - beforeEach()
-                const commandName = 'unknownCommandName';
-
-                // Act
-                const result = await subject.updateCommandText(commandName, validText);
-                const cacheRecord = subject.getCommandResponse(commandName, defaultVariant);
-
-                // Assert
                 expect(result).toBe<CommandTextUpdateResult>('notEditable');
-                expect(cacheRecord).toBe(undefined);
             });
 
-            it(`should return 'notEditable' with commandName and unknown variant`, async () => {
-                // Arrange - beforeEach()
-                const variant = 'unknownVariant';
-
-                // Act
-                const result = await subject.updateCommandText(testCommandName, validText, variant);
-                const cacheRecord = subject.getCommandResponse(testCommandName, variant);
-
-                // Assert
-                expect(result).toBe<CommandTextUpdateResult>('notEditable');
-                expect(cacheRecord).toBe(undefined);
-            });
-
-            it('row updated and gets new text (variant)', async () => {
+            it.each`
+                scenario                       | changes
+                ${'text change'}               | ${{ text: validText }}
+                ${'weight-only change (0)'}    | ${{ weight: 0 }}
+            `(`row 'updated' and replaces cached text with $scenario`, async ({ changes }: { changes: CommandResponseTextChanges }) => {
                 // Arrange
+                const [seededText] = testCommandResponse.texts;
+                const updatedText = { ...seededText, ...changes };
+
+                mockCommandResponseRepository
+                    .findAll
+                    .mockResolvedValue([
+                        { ...testCommandResponse, texts: [...testCommandResponse.texts] },
+                        testCommandResponseVariant,
+                    ]);
+
+                await subject.initialize();
+
                 mockCommandResponseRepository
                     .updateCommandText
-                    .mockResolvedValue(true);
+                    .mockResolvedValue(updatedText);
 
                 // Act
-                const result = await subject.updateCommandText(testCommandName, validText, testVariant);
-                const cached = subject.getCommandResponse(testCommandName, testVariant);
+                const result = await subject.updateCommandText(testCommandName, defaultVariant, seededText.id, changes);
 
                 // Assert
+                expect(mockCommandResponseRepository.updateCommandText)
+                    .toHaveBeenCalledWith(seededText.id, changes);
+
+                expect(subject['responseCache'].get(cacheKey(testCommandName, defaultVariant)))
+                    .toEqual(expect.objectContaining({
+                        variant: defaultVariant,
+                        responses: [updatedText],
+                    }));
+
                 expect(result).toBe<CommandTextUpdateResult>('updated');
-                expect(cached).toBe(validText);
-            });
-
-            it('row updated and gets new text (no-variant)', async () => {
-                // Arrange
-                mockCommandResponseRepository
-                    .updateCommandText
-                    .mockResolvedValue(true);
-
-                // Act
-                const result = await subject.updateCommandText(testCommandName, validText);
-                const cached = subject.getCommandResponse(testCommandName, defaultVariant);
-
-                // Assert
-                expect(result).toBe<CommandTextUpdateResult>('updated');
-                expect(cached).toBe(validText);
             });
 
             it(`row update fails returning 'updateFailed'`, async () => {
                 // Arrange
+                const [seededText] = testCommandResponse.texts;
+                const changes = { text: validText };
+
                 mockCommandResponseRepository
                     .updateCommandText
-                    .mockResolvedValue(false);
+                    .mockResolvedValue(null);
 
                 // Act
-                const result = await subject.updateCommandText(testCommandName, validText, testVariant);
+                const result = await subject.updateCommandText(testCommandName, defaultVariant, seededText.id, changes);
 
                 // Assert
+                expect(mockCommandResponseRepository.updateCommandText)
+                    .toHaveBeenCalledWith(seededText.id, changes);
                 expect(mockLogger.warn)
                     .toHaveBeenCalledWith(expect.any(String));
 
                 expect(result).toBe<CommandTextUpdateResult>('updateFailed');
             });
 
-            it('invalid text (too short) rejected', async () => {
+            it.each`
+                scenario                       | error                                                                    | expected
+                ${'ValidationError'}           | ${new ValidationError('test-validation-error', [])}                      | ${'invalidText'}
+                ${'UniqueConstraintError'}     | ${new UniqueConstraintError({ message: 'test-unique-constraint-error' })} | ${'alreadyExists'}
+            `(`database $scenario returns '$expected'`, async ({ error, expected }: { error: Error, expected: CommandTextUpdateResult }) => {
                 // Arrange
-                const badtext = 'BAD!';
-                const validationError = new ValidationError(
-                    'test-validation-error',
-                    [],
-                );
+                const [seededText] = testCommandResponse.texts;
+                const changes = { text: 'test-reliable-text' };
 
                 mockCommandResponseRepository
                     .updateCommandText
-                    .mockImplementation(() => { throw validationError; });
+                    .mockImplementation(() => { throw error; });
 
                 // Act
-                const result = await subject.updateCommandText(testCommandName, badtext);
+                const result = await subject.updateCommandText(testCommandName, defaultVariant, seededText.id, changes);
 
                 // Assert
                 expect(mockCommandResponseRepository.updateCommandText)
-                    .toHaveBeenCalledWith(testCommandName, badtext, '');
+                    .toHaveBeenCalledWith(seededText.id, changes);
 
-                expect(result).toBe<CommandTextUpdateResult>('invalidText');
+                expect(result).toBe<CommandTextUpdateResult>(expected);
             });
 
             it('non-validation error propagates', async () => {
                 // Arrange
+                const [seededText] = testCommandResponse.texts;
+                const changes = { text: validText };
+
                 mockCommandResponseRepository
                     .updateCommandText
                     .mockImplementation(() => { throw new Error('connection lost'); });
 
                 // Act & Assert
-                await expect(subject.updateCommandText(testCommandName, testCommandText))
+                await expect(subject.updateCommandText(testCommandName, defaultVariant, seededText.id, changes))
                     .rejects.toThrow('connection lost');
 
                 expect(mockCommandResponseRepository.updateCommandText)
-                    .toHaveBeenCalledWith(testCommandName, testCommandText, '');
+                    .toHaveBeenCalledWith(seededText.id, changes);
             });
         });
     });

@@ -4,13 +4,14 @@ import winston from 'winston';
 import { defaultResponses, CommandFamilies } from '../utilities/default-responses.js';
 import InjectionTypes from '../../dependency-management/types.js';
 import { CommandResponseRepository } from '../repositories/index.js';
-import { type CommandResponseText } from '../repositories/command-response.repository.js';
+import { CommandResponseTextChanges, type CommandResponseText } from '../repositories/command-response.repository.js';
 
 export type CommandTextValidationResult =
     'invalidInput' |
     'invalidText';
 
 export type CommandTextUpdateResult = CommandTextValidationResult |
+    'alreadyExists' |
     'notEditable' |
     'updated' |
     'updateFailed';
@@ -94,7 +95,7 @@ export default class CommandResponseService {
     }
 
     /**
-     * Add the command/variant with the provided text
+     * Add the command/variant with the provided text/weight
      * @param commandName Command to add
      * @param text new text value for the Command
      * @param variant The command name variant to add
@@ -140,36 +141,46 @@ export default class CommandResponseService {
     }
 
     /**
-     * Update the command/variant with the provided text
+     * Update the command/variant with the provided text/weight
      * @param commandName Command to update
-     * @param text new text value for the Command
      * @param variant The command name variant to update
-     * @returns boolean flag denoting if the provided command was updated
+     * @param id the id of the text to update
+     * @param changes The text and/or weight to apply
      */
-    async updateCommandText(commandName: string, text: string, variant: string = ''): Promise<CommandTextUpdateResult> {
-        if (!commandName || !text) {
+    async updateCommandText(commandName: string, variant: string, id: number, changes: CommandResponseTextChanges): Promise<CommandTextUpdateResult> {
+        if (!commandName || (changes.text !== undefined && !changes.text) || (!changes.text && changes.weight === undefined)) {
             return 'invalidInput';
         }
 
-        if (!this.responseCache.has(cacheKey(commandName, variant))) {
+        const cacheRecord = this.responseCache.get(cacheKey(commandName, variant));
+        const index = cacheRecord
+            ?.responses
+            ?.findIndex(x => x.id === id) ?? -1;
+
+        if (!cacheRecord || index === -1) {
             return 'notEditable';
         }
 
         try {
             const command = await this.commandResponseRepository
-                .updateCommandText(commandName, text, variant);
+                .updateCommandText(id, changes);
 
             if (command) {
-                this.responseCache.set(cacheKey(commandName, variant), { variant, text });
+                cacheRecord.responses[index] = command;
 
                 return 'updated';
             }
 
-            this.logger.warn(` Valid command (${cacheKey(commandName, variant)}) database update attempt failed.`);
+            this.logger.warn(` Valid command (${cacheKey(commandName, variant)}) textid: ${id} database update attempt failed.`);
         } catch (error) {
+            if (error instanceof UniqueConstraintError) {
+                return 'alreadyExists';
+            }
+
             if (error instanceof ValidationError) {
                 return 'invalidText';
             }
+
             throw error;
         }
 
