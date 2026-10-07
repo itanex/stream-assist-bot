@@ -1360,7 +1360,7 @@ describe('CommandResponse.Repository (postgres)', () => {
                 const removed = await subject.removeCommandText(original?.id as number);
 
                 // Act
-                const result = await subject.restoreCommandText(original?.id as number);
+                const result = await subject.restoreCommandText(testCommandDefaultVariant, defaultVariant, original?.id as number);
                 const record = await findText(seededText);
 
                 // Assert
@@ -1381,7 +1381,7 @@ describe('CommandResponse.Repository (postgres)', () => {
                 const marked = await findText(seededVariantText);
 
                 // Act
-                const result = await subject.restoreCommandText(original?.id as number);
+                const result = await subject.restoreCommandText(testCommandAllVariants, testVariants[1], original?.id as number);
                 const record = await findText(seededVariantText);
 
                 // Assert
@@ -1397,10 +1397,25 @@ describe('CommandResponse.Repository (postgres)', () => {
                 await subject.removeCommandVariant(testCommandAllVariants, testVariants[1]);
 
                 // Act
-                const result = await subject.restoreCommandText(original?.id as number);
+                const result = await subject.restoreCommandText(testCommandAllVariants, testVariants[1], original?.id as number);
                 const record = await findText(seededVariantText);
 
                 // Assert
+                expect(result).toBeNull();
+                expect(record?.deletedAt).not.toBeNull();
+            });
+
+            it('should NOT restore a text owned by a different command variant', async () => {
+                // Arrange
+                const original = await findText(seededText);
+                await subject.removeCommandText(original?.id as number);
+
+                // Act
+                const result = await subject.restoreCommandText(testCommandAllVariants, testVariants[1], original?.id as number);
+                const record = await findText(seededText);
+
+                // Assert
+                expect(mockLogger.error).not.toHaveBeenCalled();
                 expect(result).toBeNull();
                 expect(record?.deletedAt).not.toBeNull();
             });
@@ -1410,7 +1425,7 @@ describe('CommandResponse.Repository (postgres)', () => {
                 const original = await findText(seededText);
 
                 // Act
-                const result = await subject.restoreCommandText(original?.id as number);
+                const result = await subject.restoreCommandText(testCommandDefaultVariant, defaultVariant, original?.id as number);
 
                 // Assert
                 expect(mockLogger.error).not.toHaveBeenCalled();
@@ -1422,7 +1437,7 @@ describe('CommandResponse.Repository (postgres)', () => {
                 const unknownId = 0;
 
                 // Act
-                const result = await subject.restoreCommandText(unknownId);
+                const result = await subject.restoreCommandText(testCommandDefaultVariant, defaultVariant, unknownId);
 
                 // Assert
                 expect(mockLogger.error).not.toHaveBeenCalled();
@@ -1437,7 +1452,7 @@ describe('CommandResponse.Repository (postgres)', () => {
                     .mockImplementation(() => { throw mockError; });
 
                 // Act
-                const result = await subject.restoreCommandText(original?.id as number);
+                const result = await subject.restoreCommandText(testCommandDefaultVariant, defaultVariant, original?.id as number);
 
                 // Assert
                 expect(mockLogger.error)

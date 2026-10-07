@@ -571,10 +571,12 @@ export default class CommandResponseRepository {
 
     /**
      * Restore the specified command text, if removed and its command variant is active
+     * @param commandName The command name that owns the text
+     * @param variant The command name variant that owns the text
      * @param id The command text record to restore
      * @returns The restored command text if restored, null otherwise
      */
-    async restoreCommandText(id: number): Promise<CommandResponseText | null> {
+    async restoreCommandText(commandName: string, variant: string, id: number): Promise<CommandResponseText | null> {
         try {
             return await this.database.transaction(async transaction => {
                 const record = await CommandResponseTextDbo
@@ -588,7 +590,12 @@ export default class CommandResponseRepository {
                 }
 
                 const parent = await CommandResponseDbo
-                    .findByPk(record.commandResponseId, {
+                    .findOne({
+                        where: {
+                            id: record.commandResponseId,
+                            commandName,
+                            variant,
+                        },
                         transaction,
                     });
 

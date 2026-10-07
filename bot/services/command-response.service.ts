@@ -220,27 +220,38 @@ export default class CommandResponseService {
     }
 
     /**
-     * Restore the command/variant from its soft-delete state
+     * Restore the command/variant text
      * @param commandName Command to restore
      * @param variant The command variant to restore
-     * @returns boolean flag denoting if the provided command/variant was restored
+     * @param id of the text string to remove
      */
-    async restoreCommandText(commandName: string, variant: string): Promise<CommandTextRestoreResult> {
-        if (!commandName) {
+    async restoreCommandText(commandName: string, variant: string, id: number): Promise<CommandTextRestoreResult> {
+        if (!commandName || id === undefined) {
             return 'invalidInput';
         }
 
-        const cached = this.responseCache.has(cacheKey(commandName, variant));
+        const cacheRecord = this.responseCache.get(cacheKey(commandName, variant));
+        const index = cacheRecord
+            ?.responses
+            ?.findIndex(x => x.id === id) ?? -1;
 
-        if (cached) {
+        if (index > -1) {
             return 'alreadyActive';
         }
 
-        const [restored, command] = await this.commandResponseRepository
-            .restoreCommandText(commandName, variant);
+        const restoredResponse = await this.commandResponseRepository
+            .restoreCommandText(commandName, variant, id);
 
-        if (restored && command) {
-            this.responseCache.set(cacheKey(command.commandName, command.variant), { variant: command.variant, text: command.text });
+        if (restoredResponse) {
+            if (cacheRecord) {
+                cacheRecord.responses.push(restoredResponse);
+            } else {
+                this.responseCache.set(cacheKey(commandName, variant), {
+                    variant,
+                    responses: [restoredResponse],
+                });
+            }
+
             return 'restored';
         }
 
