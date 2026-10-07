@@ -391,6 +391,104 @@ describe('CommandResponse.Service (postgres)', () => {
                     .toHaveBeenCalledWith(seededText.id, changes);
             });
         });
+
+        describe('removeCommandText()', () => {
+            it.each`
+                scenario                       | commandName        | id
+                ${'empty commandName'}         | ${''}              | ${0}
+                ${'undefined id'}              | ${testCommandName} | ${undefined}
+            `(`should return 'invalidInput' with $scenario`, async ({ commandName, id }: { commandName: string, id: number }) => {
+                // Arrange - beforeEach()
+                // Act
+                const result = await subject.removeCommandText(commandName, defaultVariant, id);
+
+                // Assert
+                expect(mockCommandResponseRepository.removeCommandText)
+                    .not.toHaveBeenCalled();
+
+                expect(result).toBe<CommandTextValidationResult>('invalidInput');
+            });
+
+            it.each`
+                scenario                       | commandName              | variant              | id
+                ${'no cache record'}           | ${'unknownCommandName'}  | ${defaultVariant}    | ${0}
+                ${'unknown variant'}           | ${testCommandName}       | ${'unknownVariant'}  | ${0}
+                ${'unknown id'}                | ${testCommandName}       | ${defaultVariant}    | ${99}
+            `(`should return 'notFound' with $scenario`, async ({ commandName, variant, id }: { commandName: string, variant: string, id: number }) => {
+                // Arrange - beforeEach()
+                // Act
+                const result = await subject.removeCommandText(commandName, variant, id);
+
+                // Assert
+                expect(mockCommandResponseRepository.removeCommandText)
+                    .not.toHaveBeenCalled();
+
+                expect(result).toBe<CommandTextRemoveResult>('notFound');
+            });
+
+            it.each`
+                scenario                       | fixture
+                ${'no-variant'}                | ${testCommandResponse}
+                ${'variant'}                   | ${testCommandResponseVariant}
+            `(`row 'removed' and removes cached text with $scenario`, async ({ fixture }: { fixture: CommandResponse }) => {
+                // Arrange
+                const [seededText] = fixture.texts;
+
+                mockCommandResponseRepository
+                    .findAll
+                    .mockResolvedValue([
+                        { ...testCommandResponse, texts: [...testCommandResponse.texts] },
+                        { ...testCommandResponseVariant, texts: [...testCommandResponseVariant.texts] },
+                    ]);
+
+                await subject.initialize();
+
+                mockCommandResponseRepository
+                    .removeCommandText
+                    .mockResolvedValue(true);
+
+                // Act
+                const result = await subject.removeCommandText(testCommandName, fixture.variant, seededText.id);
+
+                // Assert
+                expect(mockCommandResponseRepository.removeCommandText)
+                    .toHaveBeenCalledWith(seededText.id);
+
+                expect(subject['responseCache'].get(cacheKey(testCommandName, fixture.variant)))
+                    .toEqual(expect.objectContaining({
+                        variant: fixture.variant,
+                        responses: [],
+                    }));
+
+                expect(result).toBe<CommandTextRemoveResult>('removed');
+            });
+
+            it(`row remove fails returning 'removeFailed'`, async () => {
+                // Arrange
+                const [seededText] = testCommandResponse.texts;
+
+                mockCommandResponseRepository
+                    .removeCommandText
+                    .mockResolvedValue(false);
+
+                // Act
+                const result = await subject.removeCommandText(testCommandName, defaultVariant, seededText.id);
+
+                // Assert
+                expect(mockCommandResponseRepository.removeCommandText)
+                    .toHaveBeenCalledWith(seededText.id);
+                expect(mockLogger.warn)
+                    .toHaveBeenCalledWith(expect.any(String));
+
+                expect(subject['responseCache'].get(cacheKey(testCommandName, defaultVariant)))
+                    .toEqual(expect.objectContaining({
+                        variant: defaultVariant,
+                        responses: [seededText],
+                    }));
+
+                expect(result).toBe<CommandTextRemoveResult>('removeFailed');
+            });
+        });
     });
 
     describe('addCommandText()', () => {
@@ -569,82 +667,6 @@ describe('CommandResponse.Service (postgres)', () => {
 
             expect(mockCommandResponseRepository.addCommandText)
                 .toHaveBeenCalledWith(testCommandName, testCommandText, testVariant);
-        });
-    });
-
-    describe('removeCommandText()', () => {
-        it(`should return 'invalidInput' with empty commandName`, async () => {
-            // Arrange
-            const commandName = '';
-
-            // Act
-            const result = await subject.removeCommandText(commandName, defaultVariant);
-
-            // Assert
-            expect(result).toBe<CommandTextValidationResult>('invalidInput');
-        });
-
-        it(`should return 'notFound' with unknown commandName`, async () => {
-            // Arrange
-            const commandName = 'unknownCommandName';
-
-            // Act
-            const result = await subject.removeCommandText(commandName, defaultVariant);
-
-            // Assert
-            expect(result).toBe<CommandTextRemoveResult>('notFound');
-        });
-
-        it(`should return 'notFound' with commandName and unknown variant`, async () => {
-            // Arrange
-            const variant = 'unknownVariant';
-
-            // Act
-            const result = await subject.removeCommandText(testCommandName, variant);
-
-            // Assert
-            expect(result).toBe<CommandTextRemoveResult>('notFound');
-        });
-
-        it('should remove record from database records and cache', async () => {
-            // Arrange
-            mockCommandResponseRepository
-                .removeCommandText
-                .mockResolvedValue(true);
-
-            subject['responseCache'].set(cacheKey(testCommandName, defaultVariant), { variant: defaultVariant, text: testCommandText });
-
-            // Act
-            const result = await subject.removeCommandText(testCommandName, defaultVariant);
-            const variants = subject.getCommandVariants(testCommandName);
-
-            // Assert
-            expect(mockCommandResponseRepository.removeCommandText)
-                .toHaveBeenCalledWith(testCommandName, defaultVariant);
-
-            expect(result).toBe<CommandTextRemoveResult>('removed');
-            expect(variants).not.toEqual(expect.arrayContaining([
-                testCommandText,
-            ]));
-        });
-
-        it('should remove record from database records and cache', async () => {
-            // Arrange
-            mockCommandResponseRepository
-                .removeCommandText
-                .mockResolvedValue(false);
-
-            subject['responseCache'].set(cacheKey(testCommandName, defaultVariant), { variant: defaultVariant, text: testCommandText });
-
-            // Act
-            const result = await subject.removeCommandText(testCommandName, defaultVariant);
-
-            // Assert
-            expect(mockCommandResponseRepository.removeCommandText)
-                .toHaveBeenCalledWith(testCommandName, defaultVariant);
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(String));
-
-            expect(result).toBe<CommandTextRemoveResult>('removeFailed');
         });
     });
 

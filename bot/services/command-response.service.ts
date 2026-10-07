@@ -188,25 +188,30 @@ export default class CommandResponseService {
     }
 
     /**
-     * Remove (soft-delete) the command/variant
+     * Remove (soft-delete) the command/variant text
      * @param commandName Command to remove
      * @param variant The command variant to remove
-     * @returns boolean flag denoting if the provided command/variant was removed
+     * @param id of the text string to remove
      */
-    async removeCommandText(commandName: string, variant: string): Promise<CommandTextRemoveResult> {
-        if (!commandName) {
+    async removeCommandText(commandName: string, variant: string, id: number): Promise<CommandTextRemoveResult> {
+        if (!commandName || id === undefined) {
             return 'invalidInput';
         }
 
-        if (!this.responseCache.has(cacheKey(commandName, variant))) {
+        const cacheRecord = this.responseCache.get(cacheKey(commandName, variant));
+        const index = cacheRecord
+            ?.responses
+            ?.findIndex(x => x.id === id) ?? -1;
+
+        if (!cacheRecord || index === -1) {
             return 'notFound';
         }
 
         const result = await this.commandResponseRepository
-            .removeCommandText(commandName, variant);
+            .removeCommandText(id);
 
         if (result) {
-            this.responseCache.delete(cacheKey(commandName, variant));
+            cacheRecord.responses.splice(index, 1);
             return 'removed';
         }
 
