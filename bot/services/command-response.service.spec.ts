@@ -13,13 +13,13 @@ import { CommandResponseRepository } from '../repositories/index.js';
 import { type CommandResponse, type CommandResponseTextChanges } from '../repositories/command-response.repository.js';
 
 type CommandResponseServiceModule = typeof import('./command-response.service.js');
-type MockDefaultResponses = { testResponse: string };
+type MockDefaultResponses = { testResponse: Record<string, string[]> };
 type MockCommandFamilies = { testCommand: string };
 
 jest.unstable_mockModule('../utilities/default-responses', () => ({
     __esModule: true,
     CommandFamilies: { 'test-command-name': 'test-command-name' },
-    defaultResponses: { testResponse: 'Test about response' },
+    defaultResponses: { testResponse: { '': ['Test about response'] } },
 }));
 
 const mockCommandResponseRepository = <unknown>{
@@ -110,7 +110,7 @@ describe('CommandResponse.Service (postgres)', () => {
             expect(subject['responseCache'].get(cacheKey(testCommandName)))
                 .toEqual(expect.objectContaining({
                     variant: defaultVariant,
-                    responses: [testCommandText],
+                    responses: testCommandResponse.texts,
                 }));
         });
 
@@ -134,7 +134,7 @@ describe('CommandResponse.Service (postgres)', () => {
             expect(subject['responseCache'].get(cacheKey(testCommandName)))
                 .toEqual(expect.objectContaining({
                     variant: defaultVariant,
-                    text: testCommandText,
+                    responses: testCommandResponse.texts,
                 }));
         });
     });
