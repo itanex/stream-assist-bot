@@ -163,7 +163,7 @@ export default class CommandResponseService {
 
         try {
             const command = await this.commandResponseRepository
-                .updateCommandText(id, changes);
+                .updateCommandText(commandName, variant, id, changes);
 
             if (command) {
                 cacheRecord.responses[index] = command;
@@ -208,7 +208,7 @@ export default class CommandResponseService {
         }
 
         const result = await this.commandResponseRepository
-            .removeCommandText(id);
+            .removeCommandText(commandName, variant, id);
 
         if (result) {
             cacheRecord.responses.splice(index, 1);

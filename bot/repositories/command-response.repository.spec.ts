@@ -588,7 +588,7 @@ describe('CommandResponse.Repository (postgres)', () => {
                 const original = await findText(seededText);
 
                 // Act
-                const result = await subject.updateCommandText(original?.id as number, { text: validText });
+                const result = await subject.updateCommandText(testCommandDefaultVariant, defaultVariant, original?.id as number, { text: validText });
 
                 // Assert
                 expect(result).toStrictEqual({
@@ -603,7 +603,7 @@ describe('CommandResponse.Repository (postgres)', () => {
                 const original = await findText(seededText);
 
                 // Act
-                const result = await subject.updateCommandText(original?.id as number, { weight: 5 });
+                const result = await subject.updateCommandText(testCommandDefaultVariant, defaultVariant, original?.id as number, { weight: 5 });
 
                 // Assert
                 expect(result).toStrictEqual({
@@ -618,11 +618,25 @@ describe('CommandResponse.Repository (postgres)', () => {
                 const unknownId = 0;
 
                 // Act
-                const result = await subject.updateCommandText(unknownId, { text: validText });
+                const result = await subject.updateCommandText(testCommandDefaultVariant, defaultVariant, unknownId, { text: validText });
 
                 // Assert
                 expect(mockLogger.error).not.toHaveBeenCalled();
                 expect(result).toBeNull();
+            });
+
+            it('should NOT update a text owned by a different command variant', async () => {
+                // Arrange
+                const original = await findText(seededText);
+
+                // Act
+                const result = await subject.updateCommandText(testCommandAllVariants, testVariants[1], original?.id as number, { text: validText });
+                const record = await findText(seededText);
+
+                // Assert
+                expect(mockLogger.error).not.toHaveBeenCalled();
+                expect(result).toBeNull();
+                expect(record?.text).toBe(seededText);
             });
 
             it('should reject a text that already exists under the command variant', async () => {
@@ -631,7 +645,7 @@ describe('CommandResponse.Repository (postgres)', () => {
                 const original = await findText(seededText);
 
                 // Act & Assert
-                await expect(subject.updateCommandText(original?.id as number, { text: validText.toUpperCase() }))
+                await expect(subject.updateCommandText(testCommandDefaultVariant, defaultVariant, original?.id as number, { text: validText.toUpperCase() }))
                     .rejects.toMatchObject({ name: 'SequelizeUniqueConstraintError' });
             });
 
@@ -640,7 +654,7 @@ describe('CommandResponse.Repository (postgres)', () => {
                 const original = await findText(seededText);
 
                 // Act & Assert
-                await expect(subject.updateCommandText(original?.id as number, { text: invalidText }))
+                await expect(subject.updateCommandText(testCommandDefaultVariant, defaultVariant, original?.id as number, { text: invalidText }))
                     .rejects.toMatchObject({ name: 'SequelizeValidationError' });
             });
 
@@ -649,18 +663,18 @@ describe('CommandResponse.Repository (postgres)', () => {
                 const original = await findText(seededText);
 
                 // Act & Assert
-                await expect(subject.updateCommandText(original?.id as number, { weight: 100 }))
+                await expect(subject.updateCommandText(testCommandDefaultVariant, defaultVariant, original?.id as number, { weight: 100 }))
                     .rejects.toMatchObject({ name: 'SequelizeValidationError' });
             });
 
             it('should log error when failing database', async () => {
                 // Arrange
                 const original = await findText(seededText);
-                const spy = jest.spyOn(CommandResponseTextDbo, 'findByPk')
+                const spy = jest.spyOn(CommandResponseTextDbo, 'update')
                     .mockImplementation(() => { throw mockError; });
 
                 // Act
-                const result = await subject.updateCommandText(original?.id as number, { text: validText });
+                const result = await subject.updateCommandText(testCommandDefaultVariant, defaultVariant, original?.id as number, { text: validText });
 
                 // Assert
                 expect(mockLogger.error)
@@ -1026,7 +1040,7 @@ describe('CommandResponse.Repository (postgres)', () => {
                 const original = await findText(seededText);
 
                 // Act
-                const result = await subject.removeCommandText(original?.id as number);
+                const result = await subject.removeCommandText(testCommandDefaultVariant, defaultVariant, original?.id as number);
                 const removedRecord = await findText(seededText);
                 const otherRecord = await findText(validText);
 
@@ -1042,7 +1056,7 @@ describe('CommandResponse.Repository (postgres)', () => {
                 const original = await findText(seededText);
 
                 // Act
-                const result = await subject.removeCommandText(original?.id as number);
+                const result = await subject.removeCommandText(testCommandDefaultVariant, defaultVariant, original?.id as number);
                 const texts = await subject.getCommandText(testCommandDefaultVariant);
 
                 // Assert
@@ -1055,11 +1069,25 @@ describe('CommandResponse.Repository (postgres)', () => {
                 const unknownId = 0;
 
                 // Act
-                const result = await subject.removeCommandText(unknownId);
+                const result = await subject.removeCommandText(testCommandDefaultVariant, defaultVariant, unknownId);
 
                 // Assert
                 expect(mockLogger.error).not.toHaveBeenCalled();
                 expect(result).toBe(false);
+            });
+
+            it('should NOT remove a text owned by a different command variant', async () => {
+                // Arrange
+                const original = await findText(seededText);
+
+                // Act
+                const result = await subject.removeCommandText(testCommandAllVariants, testVariants[1], original?.id as number);
+                const record = await findText(seededText);
+
+                // Assert
+                expect(mockLogger.error).not.toHaveBeenCalled();
+                expect(result).toBe(false);
+                expect(record?.deletedAt).toBeNull();
             });
 
             it('should log error when failing database', async () => {
@@ -1069,7 +1097,7 @@ describe('CommandResponse.Repository (postgres)', () => {
                     .mockImplementation(() => { throw mockError; });
 
                 // Act
-                const result = await subject.removeCommandText(original?.id as number);
+                const result = await subject.removeCommandText(testCommandDefaultVariant, defaultVariant, original?.id as number);
 
                 // Assert
                 expect(mockLogger.error)
@@ -1357,7 +1385,7 @@ describe('CommandResponse.Repository (postgres)', () => {
             it('should restore the removed text', async () => {
                 // Arrange
                 const original = await findText(seededText);
-                const removed = await subject.removeCommandText(original?.id as number);
+                const removed = await subject.removeCommandText(testCommandDefaultVariant, defaultVariant, original?.id as number);
 
                 // Act
                 const result = await subject.restoreCommandText(testCommandDefaultVariant, defaultVariant, original?.id as number);
@@ -1408,7 +1436,7 @@ describe('CommandResponse.Repository (postgres)', () => {
             it('should NOT restore a text owned by a different command variant', async () => {
                 // Arrange
                 const original = await findText(seededText);
-                await subject.removeCommandText(original?.id as number);
+                await subject.removeCommandText(testCommandDefaultVariant, defaultVariant, original?.id as number);
 
                 // Act
                 const result = await subject.restoreCommandText(testCommandAllVariants, testVariants[1], original?.id as number);
@@ -1447,8 +1475,8 @@ describe('CommandResponse.Repository (postgres)', () => {
             it('should log error when failing database', async () => {
                 // Arrange
                 const original = await findText(seededText);
-                await subject.removeCommandText(original?.id as number);
-                const spy = jest.spyOn(CommandResponseTextDbo, 'findByPk')
+                await subject.removeCommandText(testCommandDefaultVariant, defaultVariant, original?.id as number);
+                const spy = jest.spyOn(CommandResponseTextDbo, 'findOne')
                     .mockImplementation(() => { throw mockError; });
 
                 // Act

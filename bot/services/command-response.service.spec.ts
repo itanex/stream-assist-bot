@@ -319,7 +319,7 @@ describe('CommandResponse.Service (postgres)', () => {
 
                 // Assert
                 expect(mockCommandResponseRepository.updateCommandText)
-                    .toHaveBeenCalledWith(seededText.id, changes);
+                    .toHaveBeenCalledWith(testCommandName, defaultVariant, seededText.id, changes);
 
                 expect(subject['responseCache'].get(cacheKey(testCommandName, defaultVariant)))
                     .toEqual(expect.objectContaining({
@@ -344,7 +344,7 @@ describe('CommandResponse.Service (postgres)', () => {
 
                 // Assert
                 expect(mockCommandResponseRepository.updateCommandText)
-                    .toHaveBeenCalledWith(seededText.id, changes);
+                    .toHaveBeenCalledWith(testCommandName, defaultVariant, seededText.id, changes);
                 expect(mockLogger.warn)
                     .toHaveBeenCalledWith(expect.any(String));
 
@@ -369,7 +369,7 @@ describe('CommandResponse.Service (postgres)', () => {
 
                 // Assert
                 expect(mockCommandResponseRepository.updateCommandText)
-                    .toHaveBeenCalledWith(seededText.id, changes);
+                    .toHaveBeenCalledWith(testCommandName, defaultVariant, seededText.id, changes);
 
                 expect(result).toBe<CommandTextUpdateResult>(expected);
             });
@@ -388,7 +388,7 @@ describe('CommandResponse.Service (postgres)', () => {
                     .rejects.toThrow('connection lost');
 
                 expect(mockCommandResponseRepository.updateCommandText)
-                    .toHaveBeenCalledWith(seededText.id, changes);
+                    .toHaveBeenCalledWith(testCommandName, defaultVariant, seededText.id, changes);
             });
         });
 
@@ -452,7 +452,7 @@ describe('CommandResponse.Service (postgres)', () => {
 
                 // Assert
                 expect(mockCommandResponseRepository.removeCommandText)
-                    .toHaveBeenCalledWith(seededText.id);
+                    .toHaveBeenCalledWith(testCommandName, fixture.variant, seededText.id);
 
                 expect(subject['responseCache'].get(cacheKey(testCommandName, fixture.variant)))
                     .toEqual(expect.objectContaining({
@@ -476,7 +476,7 @@ describe('CommandResponse.Service (postgres)', () => {
 
                 // Assert
                 expect(mockCommandResponseRepository.removeCommandText)
-                    .toHaveBeenCalledWith(seededText.id);
+                    .toHaveBeenCalledWith(testCommandName, defaultVariant, seededText.id);
                 expect(mockLogger.warn)
                     .toHaveBeenCalledWith(expect.any(String));
 

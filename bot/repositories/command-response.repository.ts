@@ -355,24 +355,42 @@ export default class CommandResponseRepository {
     }
 
     /**
-     * Update the specified command text
+     * Update the specified command text, if owned by the command variant
+     * @param commandName The command name that owns the text
+     * @param variant The command name variant that owns the text
      * @param id The command text record to update
      * @param changes The text and/or weight to apply
      * @returns The updated command text if found, null otherwise
      * @throws ValidationError when the changes are invalid, UniqueConstraintError when the text already exists
      */
-    async updateCommandText(id: number, changes: CommandResponseTextChanges): Promise<CommandResponseText | null> {
+    async updateCommandText(commandName: string, variant: string, id: number, changes: CommandResponseTextChanges): Promise<CommandResponseText | null> {
         try {
-            const record = await CommandResponseTextDbo
-                .findByPk(id);
+            return await this.database.transaction(async transaction => {
+                const parent = await CommandResponseDbo
+                    .findOne({
+                        where: {
+                            commandName,
+                            variant,
+                        },
+                        transaction,
+                    });
 
-            if (!record) {
-                return null;
-            }
+                if (!parent) {
+                    return null;
+                }
 
-            await record.update(changes);
+                const [, [record]] = await CommandResponseTextDbo
+                    .update(changes, {
+                        where: {
+                            id,
+                            commandResponseId: parent.id,
+                        },
+                        returning: true,
+                        transaction,
+                    });
 
-            return toCommandResponseText(record);
+                return record ? toCommandResponseText(record) : null;
+            });
         } catch (error) {
             if (error instanceof UniqueConstraintError || error instanceof ValidationError) {
                 throw error;
@@ -450,20 +468,39 @@ export default class CommandResponseRepository {
     }
 
     /**
-     * Soft-Delete specified command text, if present
+     * Soft-Delete specified command text, if present and owned by the command variant
+     * @param commandName The command name that owns the text
+     * @param variant The command name variant that owns the text
      * @param id The command text record to remove
      * @returns boolean flag denoting if the provided command text was removed
      */
-    async removeCommandText(id: number): Promise<boolean> {
+    async removeCommandText(commandName: string, variant: string, id: number): Promise<boolean> {
         try {
-            const count = await CommandResponseTextDbo
-                .destroy({
-                    where: {
-                        id,
-                    },
-                });
+            return await this.database.transaction(async transaction => {
+                const parent = await CommandResponseDbo
+                    .findOne({
+                        where: {
+                            commandName,
+                            variant,
+                        },
+                        transaction,
+                    });
 
-            return count === 1;
+                if (!parent) {
+                    return false;
+                }
+
+                const count = await CommandResponseTextDbo
+                    .destroy({
+                        where: {
+                            id,
+                            commandResponseId: parent.id,
+                        },
+                        transaction,
+                    });
+
+                return count === 1;
+            });
         } catch (error) {
             this.logger.error(`Error removing the command text from database`, error);
         }
@@ -579,20 +616,9 @@ export default class CommandResponseRepository {
     async restoreCommandText(commandName: string, variant: string, id: number): Promise<CommandResponseText | null> {
         try {
             return await this.database.transaction(async transaction => {
-                const record = await CommandResponseTextDbo
-                    .findByPk(id, {
-                        paranoid: false,
-                        transaction,
-                    });
-
-                if (!record?.isSoftDeleted()) {
-                    return null;
-                }
-
                 const parent = await CommandResponseDbo
                     .findOne({
                         where: {
-                            id: record.commandResponseId,
                             commandName,
                             variant,
                         },
@@ -600,6 +626,20 @@ export default class CommandResponseRepository {
                     });
 
                 if (!parent) {
+                    return null;
+                }
+
+                const record = await CommandResponseTextDbo
+                    .findOne({
+                        where: {
+                            id,
+                            commandResponseId: parent.id,
+                        },
+                        paranoid: false,
+                        transaction,
+                    });
+
+                if (!record?.isSoftDeleted()) {
                     return null;
                 }
 
