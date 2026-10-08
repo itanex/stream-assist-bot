@@ -39,7 +39,7 @@ export interface ICommandHandler {
 | Property | Type | Description |
 |---|---|---|
 | `exp` | `RegExp` | Pattern matched against the raw chat message. The first capture group is the command name; subsequent groups become `args`. |
-| `commandName` | `CommandName?` | Key into the database-backed response text - either a `defaultResponses` key (single fixed text) or a `CommandFamilies` key (multiple variants). Omit for commands with computed or fixed responses. |
+| `commandName` | `CommandName?` | Key into the database-backed response text - a `defaultResponses` key (seeded texts) or a `CommandFamilies` key (a family with no seeded texts). Every command that says text in chat declares one. |
 | `timeout` | `number` | Cooldown period in seconds. Privileged users (mod, VIP, subscriber, etc.) receive half this duration. |
 | `leadMod` | `boolean` | (optional) Allow channel lead moderators. |
 | `mod` | `boolean` | Allow channel moderators. |
@@ -76,8 +76,8 @@ Broadcaster (`ChatUser.isBroadcaster`) always passes regardless of flags.
 
 ### Implied Relationships
 
-- **Subscriber implies follower.** Twitch requires following before subscribing. A subscriber satisfies any command that allows followers.
-- **Roles do not imply subscription.** A mod or VIP who is not subscribed does not satisfy `subscriber: true`.
+* **Subscriber implies follower.** Twitch requires following before subscribing. A subscriber satisfies any command that allows followers.
+* **Roles do not imply subscription.** A mod or VIP who is not subscribed does not satisfy `subscriber: true`.
 
 ### Authorization Logic
 
@@ -113,30 +113,39 @@ The cooldown chat message always names the command (its class name), regardless 
 
 ## Database-Backed Responses
 
-Command response text can live in the database (`CommandResponse` table) instead of the class, making it editable at runtime without a redeploy.
+All command response text lives in the database (`CommandResponse` table), making it editable at runtime without a redeploy. Commands hold no response text of their own - no inline strings, no response arrays, no fallback.
 
-* Default text is declared in `bot/utilities/default-responses.ts`. `CommandName` is derived from its keys plus `CommandFamilies`' keys, so a command's `commandName` must have a matching entry in one of the two or the build fails.
-* On startup, `CommandResponseRepository.initialize()` seeds any missing rows from the defaults. Existing rows are never overwritten - edits survive restarts.
-* Responses are cached in memory at startup and kept in sync on writes. Reads never hit the database per-message. Rows edited directly in the database are not visible until restart.
-* A command reads its response via `CommandResponseRepository.getCommandText(this.commandName)`, falling back to its `defaultResponses` entry if the lookup misses.
+* `defaultResponses` (`bot/utilities/default-responses.ts`) is the seed source only. It is shaped `commandName -> variant -> texts[]`; commands never read it directly.
+* On startup, `CommandResponseService.initialize()` seeds `defaultResponses` into an empty `CommandResponse` table, then loads every row into an in-memory cache. Seeding is skipped entirely once the table holds any rows, so new `defaultResponses` entries do not reach an already-seeded database.
+* Reads never hit the database per-message. Writes through the service keep the cache in sync; rows edited directly in the database are not visible until restart.
+* A command reads its text via `CommandResponseService.getCommandResponse(this.commandName, variant)`. When a variant holds several texts, one is picked at random.
+
+### Missing text
+
+If `getCommandResponse` returns nothing, the command logs a warning that carries the variant (`{ variant }`) and says nothing in chat. There is no fallback to `''` or to built-in text.
 
 ### Making a command's response editable
 
-1. Add an entry to `defaultResponses` with the command's trigger word as the key, written with `%token%` placeholders for any dynamic content
+1. Add the texts to `defaultResponses` under the command's name and variant(s), written with `%token%` placeholders for any dynamic content
 2. Declare `commandName` on the command class referencing that key
-3. Inject `CommandResponseRepository` and read the text in `handle`
+3. Inject `CommandResponseService` and read the text in `handle` with the variant the code path needs
 4. Build a `TransientContext` supplying a value for every token the template uses, and pass both to `templateResolver` (see [Template Rendering](#template-rendering))
+5. On a miss, log the warning with the variant and say nothing
 
-### Command Families and Variants
+### Variants
 
-Some commands respond with one of several named variants rather than a single text response (e.g. `!socials discord` vs `!socials twitter`). These set `commandName` to a `CommandFamilies` key instead of a `defaultResponses` key - the same field serves both cases.
+Every response row belongs to a `commandName` and a variant (`''` is the default variant). Variants are used in three ways:
 
-* Families are declared in the `CommandFamilies` registry (`bot/utilities/default-responses.ts`). A command sets `commandName` to one of these registered names.
-* Unlike single-reponse commands, family variants are never seeded from `defaultResponses` - that seed path only populates single-reponse commands. Family variant rows exist only once created via the `add` verb (see [Editing Reponses from Chat](#editing-reponses-from-chat)).
-* `CommandResponseRepository.getCommandText(commandName, variant?)` takes an optional `variant`. Omitting it looks up the base/empty-variant entry for that name.
-* A command reads its variant text via `CommandResponseRepository.getCommandText(this.commandName, variant)`, where `variant` comes from its own capture group in `exp`.
+* **Default only** - the command only reads `''`, which can hold several texts to choose from (e.g. `about`, `fall`, `eightball`).
+* **Command-driven** - the chat user picks the variant through an argument captured by `exp` (e.g. `!socials discord`).
+* **Programmatic** - the command's own branches pick from a fixed set of variants (e.g. `hug` uses `''`, `self`, `notfound`; `uptime` uses `''` and `offline`). Language form - singular vs plural, "Today", whether a category is quoted - is expressed as separate variants, so the text lives in the template rather than in code.
 
-Whether a `commandName` value resolves to a single fixed reponse or a family of reponses depends only on which registry it's drawn from - `defaultResponses` or `CommandFamilies` - not on a separate field.
+### Command Families
+
+`CommandFamilies` (`bot/utilities/default-responses.ts`) registers command names that have **no** `defaultResponses` entry (e.g. `socials`, whose variants are created at runtime). A name belongs in exactly one of the two registries; `CommandName` is the union of both.
+
+* `isValidCommandName` checks `CommandFamilies` only, so the `add` verb accepts family names only (see [Editing Reponses from Chat](#editing-reponses-from-chat)).
+* Family rows exist only once created via `add`.
 
 ---
 
@@ -150,7 +159,7 @@ templateResolver(template: string, context: TransientContext, logger: winston.Lo
 
 * Placeholders use `%tokenname%` syntax, matched case-insensitively
 * `context` is a `TransientContext` - a partial record keyed by `TransientKeyword`, the union of names registered in `transientKeywords` (`bot/utilities/default-responses.ts`)
-* Token names are per-command, not a fixed shared vocabulary - each command's response template only uses the tokens that command's `context` object populates (e.g. `targetuser`, `speakinguser`, `deathtotal`)
+* Token names are a shared, generic vocabulary (e.g. `targetuser`, `speakinguser`, `when`, `link`, `total`) reused across commands; each command's `context` only populates the tokens its templates use
 * If a template references a token missing from `context`, `templateResolver` logs a warning and leaves the literal `%token%` text in the output - nothing enforces that a template's tokens match what the command actually supplies, so keep both in sync by hand when editing either
 * Output longer than 500 characters (Twitch's chat message cap) is truncated to fit, with a `...` suffix, and a warning is logged
 
@@ -167,43 +176,34 @@ Two different sources exist for identity-related tokens, and they are not interc
 
 `ManageCommand` (`bot/commands/manage.command.ts`) provides runtime response management. Moderator or broadcaster only.
 
-    !command add <name>[.<variant>] <text>
-    !command edit <name>[.<variant>] <text>
-    !command remove <name>.<variant>
-    !command restore <name>.<variant>
-    !cmd add <name>[.<variant>] <text>
-    !cmd edit <name>[.<variant>] <text>
-    !cmd remove <name>.<variant>
-    !cmd restore <name>.<variant>
+    !command add <name>.<variant> <text>
+    !cmd add <name>.<variant> <text>
 
-* `<name>` is a `commandName` value - either a `defaultResponses` key or a `CommandFamilies` key; `<name>.<variant>` targets a specific family variant (e.g. `socials.discord`). The dot-compound form is chat-input only - `name` and `variant` are split apart before reaching `CommandResponseRepository`, storage never holds dotted keys.
+* `<name>` is a `commandName` value; `<name>.<variant>` targets a specific variant (e.g. `socials.discord`). The dot-compound form is chat-input only - `name` and `variant` are split apart before reaching `CommandResponseService`, storage never holds dotted keys.
 * `add` creates a new response row. `<name>` must be a registered `CommandFamilies` name, and `<variant>` is required and cannot be empty - `add` cannot create a base/single-response entry.
-* `edit` updates an existing row - a family variant or a single-response command. Only commands with an existing response row are editable - anything else replies "does not have an editable text"
-* `remove` soft-deletes an existing family variant row and evicts it from cache. `<variant>` is required and cannot be empty - baseline/single-response rows (`defaultResponses` entries) cannot be removed from chat.
-* A removed variant is gone from lookups and family listings (e.g. `!socials`) until restored. `add`-ing the same `<name>.<variant>` again un-deletes the row and overwrites its text with the newly supplied value, rather than failing with "already exists".
-* Text (`add`/`edit`) is trimmed and validated (length bounds); invalid text is rejected with a chat reply and the stored text is unchanged
-* A compound name with more than one dot (e.g. `a.b.c`) is rejected as an invalid command
-* A message missing its trailing text (e.g. `!command edit about`) still matches the pattern; `add`/`edit` reply with the generic invalid-input message rather than being silently ignored. `remove` never takes trailing text, so this doesn't apply to it.
-* `restore` un-deletes an existing soft-deleted family variant row and reinserts it into cache. `<variant>` is required and cannot be empty - baseline/single-response rows (`defaultResponses` entries) can never be soft-deleted from chat, so there's nothing for `restore` to act on.
+* `add`-ing the same `<name>.<variant>` as a removed row un-deletes the row and overwrites its text with the newly supplied value, rather than failing with "already exists".
+* Text is trimmed and validated (length bounds); invalid text is rejected with a chat reply and nothing is stored.
+* A compound name with more than one dot (e.g. `a.b.c`) is rejected as an invalid command.
+* A message missing its trailing text (e.g. `!command add socials.discord`) still matches the pattern and replies with the generic invalid-input message rather than being silently ignored.
+
+### Edit, Remove and Restore (deferred)
+
+Editing, removing and restoring response text operate on individual text ids and are moving to the management UI, tracked in [#159](https://github.com/itanex/stream-assist-bot/issues/159). Until then:
+
+* `!command edit|remove|restore ...` (and `!cmd ...`) still match, but reply with "Command \<verb\> is not available from chat yet" and make no change.
+* `UpdateReplies`, `RemoveReplies` and `RestoreReplies` remain exported from `manage.command.ts` for that work.
 
 ### Reply Messages
 
 | Result | Verb | Reply |
 |---|---|---|
-| `invalidInput` | add, edit, remove, restore | Invalid input: both [name] and [text] are required |
-| `invalidText` | add, edit | Invalid text for command '\<name\>' |
+| `invalidInput` | add | Invalid input: both [name] and [text] are required |
+| `invalidText` | add | Invalid text for command '\<name\>' |
 | `invalidCommandName` | add | Command \<name\> text family is not recognized |
 | `alreadyExists` | add | Command \<name\> text already exists |
+| `insertFailed` | add | Command \<name\> text failed to be inserted |
 | `inserted` | add | Command \<name\> text was inserted |
-| `notEditable` | edit | Command \<name\> does not have an editable text |
-| `updated` | edit | Command \<name\> text was updated |
-| `updateFailed` | edit | Command \<name\> text failed to update |
-| `notFound` | remove | Command \<name\> was not found |
-| `removed` | remove | Command \<name\> was removed |
-| `removeFailed` | remove | Command \<name\> failed to be removed |
-| `notFound` | restore | Command \<name\> was not found |
-| `alreadyActive` | restore | Command \<name\> is already active |
-| `restored` | restore | Command \<name\> was restored |
+| (deferred) | edit, remove, restore | Command \<verb\> is not available from chat yet |
 
 ---
 
@@ -246,13 +246,13 @@ export class MyCommand implements ICommandHandler {
 ```
 
 **Flag guidance:**
-- `viewer: true` - open to everyone (all other flags become irrelevant)
-- `follower: true` - requires following; set this for community participation commands
-- `subscriber: true` + `founder: true` - subscriber-exclusive perks
-- `vip: true` - high-trust viewer privilege
-- `leadMod: true` - lead moderation or privileged commands; exclude subscriber/follower/viewer
-- `mod: true` - moderation or privileged commands; exclude subscriber/follower/viewer
-- Multiple flags can be `true` simultaneously (a mod can also be a subscriber - both paths authorize them)
+* `viewer: true` - open to everyone (all other flags become irrelevant)
+* `follower: true` - requires following; set this for community participation commands
+* `subscriber: true` + `founder: true` - subscriber-exclusive perks
+* `vip: true` - high-trust viewer privilege
+* `leadMod: true` - lead moderation or privileged commands; exclude subscriber/follower/viewer
+* `mod: true` - moderation or privileged commands; exclude subscriber/follower/viewer
+* Multiple flags can be `true` simultaneously (a mod can also be a subscriber - both paths authorize them)
 
 ### 2. Register in the DI container
 
@@ -278,3 +278,18 @@ The following Twitch roles are not yet represented as permission flags because t
 |---|---|
 | Editor | `chatUser.badges.has('editor')` (badge key TBC) |
 | Business Manager | `chatUser.badges.has(...)` (badge key TBC) |
+
+---
+
+## Direct Repository Access (Known Exception)
+
+Commands access data through services only (see [Architecture - Layers and Dependency Direction](architecture.md#layers-and-dependency-direction)); response text is read only through `CommandResponseService`.
+
+The following commands still inject a repository directly because no service exists for it yet. Tracked in [#158](https://github.com/itanex/stream-assist-bot/issues/158). New commands must not add to this list.
+
+| Repository | Commands |
+|---|---|
+| `LurkRespository` | `LurkCommand`, `UnLurkCommand`, `WhoIsLurkingCommand`, `clearLurkingUsers` |
+| `DeathCountRepository` | `DeathCommand`, `DeathCountCommand`, `LastDeathCountCommmand` |
+| `RaidRepository` | `LastRaidCommand` |
+| `SubscriberRepository` | `LastSubCommand` |
