@@ -3,6 +3,8 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
+import { CommandName } from '../utilities/default-responses.js';
+import { CommandResponseService } from '../services/index.js';
 
 @injectable()
 export class FallCommand implements ICommandHandler {
@@ -17,28 +19,25 @@ export class FallCommand implements ICommandHandler {
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
-
-    responses = [
-        `Timy go down the hooooole!`,
-        `UH. Did Timy just fall down again?`,
-        `What? Is Timy down the again?! Better get @slopez!`,
-        `Hurry, I think Timy fell off the track again.`,
-        `Timy doesn't fall down. He just explores the new frontiers of the latest and greatest games.`,
-        `Timy didn't fall, he just doesn't understand level boundaries.`,
-        `Timy didn't fall, he's trying new ways to play.`,
-    ];
+    commandName: CommandName = 'fall';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        if (this.responses.length) {
-            await this.chatClient.say(channel, this.responses[Math.floor(Math.random() * this.responses.length)]);
+        const commandText = this.commandResponseService
+            .getCommandResponse(this.commandName, '');
 
-            this.logger.info(`* Executed ${command} in ${channel} :: ${userstate.displayName} > ${message}`);
+        if (commandText) {
+            await this.chatClient.say(channel, commandText);
+        } else {
+            this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant: '' });
         }
+
+        this.logger.info(`* Executed ${command} in ${channel} :: ${userstate.displayName} > ${message}`);
     }
 }

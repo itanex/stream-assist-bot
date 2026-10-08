@@ -1,9 +1,12 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { ChatUser } from '@twurple/chat';
-import { mockChatClient, mockLogger, mockCommandResponseService } from '../../tests/common.mocks.js';
+import {
+    mockChatClient,
+    mockCommandResponseService,
+    mockLogger,
+} from '../../tests/common.mocks.js';
 import { AboutCommand } from './aboutCommand.js';
-import { defaultResponses } from '../utilities/default-responses.js';
 
 describe('About Command Tests', () => {
     const channel = 'TestChannel';
@@ -11,46 +14,51 @@ describe('About Command Tests', () => {
     const user = <ChatUser>{ displayName: 'TestUser' };
     const message = 'TestMessage';
 
-    const configuredText = 'About Me';
+    const configuredText = 'About me response text';
+    const responses = { about: { '': [configuredText] } };
+    const unrelatedResponses = { unrelated: { '': ['unrelated response text'] } };
 
-    let subject: AboutCommand;
+    /** Serve getCommandResponse from the given entries (commandName -> variant -> texts) */
+    const createService = (entries: Record<string, Record<string, string[]>>) => {
+        mockCommandResponseService
+            .getCommandResponse
+            .mockImplementation((commandName, variant = '') => entries[commandName]?.[variant]?.[0]);
+
+        return mockCommandResponseService;
+    };
+
+    const createSubject = (entries: Record<string, Record<string, string[]>>) => new AboutCommand(
+        mockChatClient,
+        createService(entries),
+        mockLogger,
+    );
 
     beforeEach(() => {
         jest.resetAllMocks();
-
-        subject = new AboutCommand(
-            mockChatClient,
-            mockCommandResponseService,
-            mockLogger,
-        );
     });
 
     it('says the configured text in chat', async () => {
         // Arrange
-        mockCommandResponseService
-            .getCommandResponse
-            .mockReturnValue(configuredText);
+        const subject = createSubject(responses);
 
         // Act
         await subject.handle(channel, command, user, message);
 
         // Assert
         expect(mockChatClient.say).toHaveBeenNthCalledWith(1, channel, configuredText);
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
     });
 
-    it('says the default text and logs a warning when no text is configured', async () => {
+    it('logs a warning and says nothing when no text is configured', async () => {
         // Arrange
-        mockCommandResponseService
-            .getCommandResponse
-            .mockReturnValue(undefined);
+        const subject = createSubject(unrelatedResponses);
 
         // Act
         await subject.handle(channel, command, user, message);
 
         // Assert
-        expect(mockChatClient.say).toHaveBeenNthCalledWith(1, channel, defaultResponses.about['']);
-        expect(mockLogger.warn).toHaveBeenCalledWith(expect.anything());
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
+        expect(mockChatClient.say).not.toHaveBeenCalled();
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(String), { variant: '' });
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
     });
 });

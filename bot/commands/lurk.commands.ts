@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
-import { CommandName, defaultResponses, TransientContext } from '../utilities/default-responses.js';
+import { CommandName, TransientContext } from '../utilities/default-responses.js';
 import { templateResolver } from '../utilities/template-resolver.js';
 import { CommandResponseService } from '../services/index.js';
 import LurkRespository from '../repositories/lurk.respository.js';
@@ -35,14 +35,18 @@ export class LurkCommand implements ICommandHandler {
         const [user, created] = await this.lurkRespository.setUserToLurk(userstate);
 
         if (created) {
-            const result = this.commandResponseService.getCommandResponse(this.commandName)
-                ?? defaultResponses.lurk[''];
+            const commandText = this.commandResponseService
+                .getCommandResponse(this.commandName, '');
 
-            const context: TransientContext = {
-                speakinguser: user.displayName,
-            };
+            if (commandText) {
+                const context: TransientContext = {
+                    speakinguser: user.displayName,
+                };
 
-            await this.chatClient.say(channel, templateResolver(result, context, this.logger));
+                await this.chatClient.say(channel, templateResolver(commandText, context, this.logger));
+            } else {
+                this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant: '' });
+            }
         }
 
         // Don't say anything if the user is already lurking
@@ -77,16 +81,20 @@ export class UnLurkCommand implements ICommandHandler {
         const unlurkedUser = await this.lurkRespository.setUserToUnlurk(userstate);
 
         if (unlurkedUser) {
-            const result = this.commandResponseService.getCommandResponse(this.commandName)
-                ?? defaultResponses.unlurk[''];
+            const commandText = this.commandResponseService
+                .getCommandResponse(this.commandName, '');
 
-            const context: TransientContext = {
-                speakinguser: unlurkedUser.displayName,
-                lurkduration: unlurkedUser.duration().humanize(),
-            };
+            if (commandText) {
+                const context: TransientContext = {
+                    speakinguser: unlurkedUser.displayName,
+                    lurkduration: unlurkedUser.duration().humanize(),
+                };
 
-            // Report the command result
-            await this.chatClient.say(channel, templateResolver(result, context, this.logger));
+                // Report the command result
+                await this.chatClient.say(channel, templateResolver(commandText, context, this.logger));
+            } else {
+                this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant: '' });
+            }
         }
 
         this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);

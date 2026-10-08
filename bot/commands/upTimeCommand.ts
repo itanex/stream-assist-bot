@@ -6,6 +6,9 @@ import winston from 'winston';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import InjectionTypes from '../../dependency-management/types.js';
 import Broadcaster from '../utilities/broadcaster.js';
+import { CommandName, TransientContext } from '../utilities/default-responses.js';
+import { templateResolver } from '../utilities/template-resolver.js';
+import { CommandResponseService } from '../services/index.js';
 
 dayjs.extend(relativeTime);
 
@@ -22,10 +25,12 @@ export class UpTimeCommand implements ICommandHandler {
     viewer: boolean = true;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
+    commandName: CommandName = 'uptime';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(Broadcaster) private broadcaster: Broadcaster,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
@@ -35,10 +40,19 @@ export class UpTimeCommand implements ICommandHandler {
         const stream = await broadcaster.getStream();
         const startDate = dayjs(stream!.startDate);
 
-        if (stream!.type === 'live') {
-            await this.chatClient.say(channel, `${(broadcaster.displayName)} has been online for ${startDate.fromNow(true)}`);
+        const variant = stream!.type === 'live' ? '' : 'offline';
+        const commandText = this.commandResponseService
+            .getCommandResponse(this.commandName, variant);
+
+        if (commandText) {
+            const context: TransientContext = {
+                broadcaster: broadcaster.displayName,
+                duration: startDate.fromNow(true),
+            };
+
+            await this.chatClient.say(channel, templateResolver(commandText, context, this.logger));
         } else {
-            await this.chatClient.say(channel, `${(broadcaster.displayName)} has been offline for ${startDate.fromNow(true)}`);
+            this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant });
         }
 
         this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);

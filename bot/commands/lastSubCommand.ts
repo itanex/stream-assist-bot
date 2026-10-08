@@ -7,10 +7,10 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import InjectionTypes from '../../dependency-management/types.js';
-import {
-    SubscriptionType,
-} from '../../database/index.js';
 import SubscriberRepository from '../repositories/subscriber.repository.js';
+import { CommandName, TransientContext } from '../utilities/default-responses.js';
+import { templateResolver } from '../utilities/template-resolver.js';
+import { CommandResponseService } from '../services/index.js';
 
 dayjs.extend(isToday);
 dayjs.extend(relativeTime);
@@ -29,10 +29,12 @@ export class LastSubCommand implements ICommandHandler {
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
+    commandName: CommandName = 'lastsub';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(SubscriberRepository) private subscriberRepository: SubscriberRepository,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
@@ -43,23 +45,21 @@ export class LastSubCommand implements ICommandHandler {
             .then(async record => {
                 const lastDate = dayjs(record!.createdAt).fromNow();
 
-                // eslint-disable-next-line default-case
-                switch (record!.type) {
-                    case SubscriptionType.NewSub:
-                        await this.chatClient.say(channel, `${record!.subscriber}, subscribed as a new member of the colony ${lastDate}`);
-                        break;
-                    case SubscriptionType.PrimeSub:
-                        await this.chatClient.say(channel, `${record!.subscriber}, subscribed using their Prime Sub ${lastDate}`);
-                        break;
-                    case SubscriptionType.ReSub:
-                        await this.chatClient.say(channel, `${record!.subscriber} continued their colony membership ${lastDate}`);
-                        break;
-                    case SubscriptionType.GiftSub:
-                        await this.chatClient.say(channel, `${record!.gift.gifter} gifted, ${record!.subscriber}, recruiting them into the colony ${lastDate}`);
-                        break;
-                    case SubscriptionType.CommunitySub:
-                        await this.chatClient.say(channel, `${record!.gift.gifter} gifted ${record!.gift.giftCount} memberships into the colony ${lastDate}`);
-                        break;
+                const variant = record!.type.toLowerCase();
+                const commandText = this.commandResponseService
+                    .getCommandResponse(this.commandName, variant);
+
+                if (commandText) {
+                    const context: TransientContext = {
+                        subscriber: record!.subscriber,
+                        when: lastDate,
+                        gifter: record!.gift?.gifter,
+                        giftcount: record!.gift ? `${record!.gift.giftCount}` : undefined,
+                    };
+
+                    await this.chatClient.say(channel, templateResolver(commandText, context, this.logger));
+                } else {
+                    this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant });
                 }
             });
 

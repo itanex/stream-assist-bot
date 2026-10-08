@@ -38,12 +38,13 @@ export class SocialsCommand implements ICommandHandler {
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
         const [variant] = args as string[];
 
-        const response = this.commandResponseService.getCommandResponse(this.commandName, variant);
+        const commandText = this.commandResponseService
+            .getCommandResponse(this.commandName, variant);
 
-        if (response) {
-            await this.chatClient.say(channel, response);
+        if (commandText) {
+            await this.chatClient.say(channel, commandText);
         } else {
-            this.logger.warn(`Unknown Variant`, { variant, args, message });
+            this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant, args, message });
         }
 
         this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);

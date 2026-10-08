@@ -38,17 +38,18 @@ export class CuddleCommand implements ICommandHandler {
             const targetUser = await this.apiClient.users.getUserByName(targetUsername);
 
             if (targetUser && userstate.displayName !== targetUser.displayName) {
-                const result = this.commandResponseService.getCommandResponse(this.commandName);
+                const commandText = this.commandResponseService
+                    .getCommandResponse(this.commandName, '');
 
-                if (result) {
+                if (commandText) {
                     const context: TransientContext = {
                         speakinguser: userstate.displayName,
                         targetuser: targetUser.displayName,
                     };
 
-                    await this.chatClient.say(channel, templateResolver(result, context, this.logger));
+                    await this.chatClient.say(channel, templateResolver(commandText, context, this.logger));
                 } else {
-                    this.logger.warn(`Unable to retrieve ${this.commandName} response text`);
+                    this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant: '' });
                 }
             }
         }

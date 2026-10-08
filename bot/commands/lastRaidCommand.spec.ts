@@ -1,10 +1,18 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { ChatUser } from '@twurple/chat';
-import { mockChatClient, mockLogger } from '../../tests/common.mocks.js';
-import { LastRaidCommand } from './lastRaidCommand.js';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime.js';
+import {
+    mockChatClient,
+    mockCommandResponseService,
+    mockLogger,
+} from '../../tests/common.mocks.js';
 import { Raiders } from '../../database/index.js';
 import RaidRepository from '../repositories/raid.repository.js';
+import { LastRaidCommand } from './lastRaidCommand.js';
+
+dayjs.extend(relativeTime);
 
 const mockRaidRepository = <unknown>{
     getLastRaid: jest.fn<() => Promise<Raiders>>(),
@@ -16,27 +24,45 @@ describe('Last Raid Command Tests', () => {
     const message = 'TestMessage';
     const user = <ChatUser>{ displayName: 'TestUser' };
 
-    let subject: LastRaidCommand;
+    const raidTime = new Date(2020, 0, 1);
+    const responses = {
+        lastraid: {
+            '': ['viewers: %raider% %when% %viewercount%'],
+            single: ['single: %raider% %when%'],
+        },
+    };
+    const unrelatedResponses = { unrelated: { '': ['unrelated response text'] } };
+
+    /** Serve getCommandResponse from the given entries (commandName -> variant -> texts) */
+    const createService = (entries: Record<string, Record<string, string[]>>) => {
+        mockCommandResponseService
+            .getCommandResponse
+            .mockImplementation((commandName, variant = '') => entries[commandName]?.[variant]?.[0]);
+
+        return mockCommandResponseService;
+    };
+
+    const createSubject = (entries: Record<string, Record<string, string[]>>) => new LastRaidCommand(
+        mockChatClient,
+        mockRaidRepository,
+        createService(entries),
+        mockLogger,
+    );
 
     beforeEach(() => {
         jest.resetAllMocks();
-
-        subject = new LastRaidCommand(
-            mockChatClient,
-            mockRaidRepository,
-            mockLogger,
-        );
     });
 
     describe('should report in chat about the last raider', () => {
         it.each([
-            [0],
-            [1],
-            [30],
-        ])(`with viewer count of: '%s'`, async (viewerCount: number) => {
+            [0, 'single: TestRaidUser'],
+            [1, 'single: TestRaidUser'],
+            [30, 'viewers: TestRaidUser'],
+        ])(`with viewer count of: '%s'`, async (viewerCount: number, prefix: string) => {
             // Arrange
+            const subject = createSubject(responses);
             const mockRaider: Raiders = <unknown>{
-                time: new Date(2020, 0, 1),
+                time: raidTime,
                 viewerCount,
                 raider: 'TestRaidUser',
             } as Raiders;
@@ -45,26 +71,38 @@ describe('Last Raid Command Tests', () => {
                 .getLastRaid
                 .mockResolvedValue(mockRaider);
 
+            const when = dayjs(raidTime).fromNow();
+            const expected = viewerCount > 1
+                ? `${prefix} ${when} ${viewerCount}`
+                : `${prefix} ${when}`;
+
             // Act
             await subject.handle(channel, command, user, message, []);
 
             // Assert
             expect(mockRaidRepository.getLastRaid)
                 .toHaveBeenCalledTimes(1);
-
             expect(mockChatClient.say)
-                .toHaveBeenCalledTimes(1);
-            expect(mockChatClient.say)
-                .toHaveBeenCalledWith(channel, expect.stringContaining(mockRaider.raider!));
-
-            if (viewerCount > 1) {
-                expect(mockChatClient.say)
-                    .toHaveBeenCalledWith(channel, expect.stringContaining(`${mockRaider.viewerCount}`));
-            }
-
+                .toHaveBeenCalledWith(channel, expected);
             expect(mockLogger.info)
-                .toHaveBeenCalledWith(expect
-                    .stringMatching(`(?=.*\\b${command}\\b)(?=.*\\b${channel}\\b)(?=.*\\b${user.displayName}\\b)`));
+                .toHaveBeenCalledWith(expect.any(String));
         });
+    });
+
+    it('should say nothing and log warning when no text is configured', async () => {
+        // Arrange
+        const subject = createSubject(unrelatedResponses);
+
+        mockRaidRepository
+            .getLastRaid
+            .mockResolvedValue(<unknown>{ time: raidTime, viewerCount: 30, raider: 'TestRaidUser' } as Raiders);
+
+        // Act
+        await subject.handle(channel, command, user, message, []);
+
+        // Assert
+        expect(mockChatClient.say).not.toHaveBeenCalled();
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(String), { variant: '' });
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
     });
 });

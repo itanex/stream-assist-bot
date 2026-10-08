@@ -1,39 +1,64 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { ChatUser } from '@twurple/chat';
-import { mockChatClient, mockLogger } from '../../tests/common.mocks.js';
+import {
+    mockChatClient,
+    mockCommandResponseService,
+    mockLogger,
+} from '../../tests/common.mocks.js';
 import { WishListCommand } from './wishListCommand.js';
 
 describe('Wish List Command Tests', () => {
     const channel = 'TestChannel';
     const command = 'TestCommand';
-    const message = 'TestMessage';
     const user = <ChatUser>{ displayName: 'TestUser' };
+    const message = 'TestMessage';
 
-    let subject: WishListCommand;
+    const configuredText = 'Wish List response text';
+    const responses = { wishlist: { '': [configuredText] } };
+    const unrelatedResponses = { unrelated: { '': ['unrelated response text'] } };
+
+    /** Serve getCommandResponse from the given entries (commandName -> variant -> texts) */
+    const createService = (entries: Record<string, Record<string, string[]>>) => {
+        mockCommandResponseService
+            .getCommandResponse
+            .mockImplementation((commandName, variant = '') => entries[commandName]?.[variant]?.[0]);
+
+        return mockCommandResponseService;
+    };
+
+    const createSubject = (entries: Record<string, Record<string, string[]>>) => new WishListCommand(
+        mockChatClient,
+        createService(entries),
+        mockLogger,
+    );
 
     beforeEach(() => {
         jest.resetAllMocks();
-
-        subject = new WishListCommand(
-            mockChatClient,
-            mockLogger,
-        );
     });
 
-    it('should say something in chat about throne account', async () => {
+    it('says the configured text in chat', async () => {
         // Arrange
+        const subject = createSubject(responses);
+
         // Act
-        await subject.handle(channel, command, user, message, []);
+        await subject.handle(channel, command, user, message);
 
         // Assert
-        expect(mockChatClient.say)
-            .toHaveBeenCalledTimes(1);
-        expect(mockChatClient.say)
-            .toHaveBeenCalledWith(channel, expect.anything());
+        expect(mockChatClient.say).toHaveBeenNthCalledWith(1, channel, configuredText);
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
+    });
 
-        expect(mockLogger.info)
-            .toHaveBeenCalledWith(expect
-                .stringMatching(`(?=.*\\b${command}\\b)(?=.*\\b${channel}\\b)(?=.*\\b${user.displayName}\\b)(?=.*\\b${message}\\b)`));
+    it('logs a warning and says nothing when no text is configured', async () => {
+        // Arrange
+        const subject = createSubject(unrelatedResponses);
+
+        // Act
+        await subject.handle(channel, command, user, message);
+
+        // Assert
+        expect(mockChatClient.say).not.toHaveBeenCalled();
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(String), { variant: '' });
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
     });
 });

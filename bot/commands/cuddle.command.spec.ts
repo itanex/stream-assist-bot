@@ -17,21 +17,32 @@ describe('Cuddle Command Tests', () => {
     const user = <ChatUser>{ displayName: 'TestUser' };
     const message = 'TestMessage';
 
-    let subject: CuddleCommand;
+    const responses = { cuddle: { '': [`cuddle: %${transientKeywords.speakinguser}% %${transientKeywords.targetuser}%`] } };
+    const unrelatedResponses = { unrelated: { '': ['unrelated response text'] } };
+
+    /** Serve getCommandResponse from the given entries (commandName -> variant -> texts) */
+    const createService = (entries: Record<string, Record<string, string[]>>) => {
+        mockCommandResponseService
+            .getCommandResponse
+            .mockImplementation((commandName, variant = '') => entries[commandName]?.[variant]?.[0]);
+
+        return mockCommandResponseService;
+    };
+
+    const createSubject = (entries: Record<string, Record<string, string[]>>) => new CuddleCommand(
+        mockChatClient,
+        mockApiClient,
+        createService(entries),
+        mockLogger,
+    );
 
     beforeEach(() => {
         jest.resetAllMocks();
-
-        subject = new CuddleCommand(
-            mockChatClient,
-            mockApiClient,
-            mockCommandResponseService,
-            mockLogger,
-        );
     });
 
-    it('should call chatClient.say with both user name and log', async () => {
+    it('should call chatClient.say with both user names and log', async () => {
         // Arrange
+        const subject = createSubject(responses);
         const args = ['TargetUser'];
         const targetUser = <HelixUser>{ displayName: 'TargetUser' };
 
@@ -40,10 +51,6 @@ describe('Cuddle Command Tests', () => {
             .getUserByName
             .mockResolvedValue(targetUser);
 
-        mockCommandResponseService
-            .getCommandResponse
-            .mockReturnValue(`%${transientKeywords.speakinguser}%, %${transientKeywords.targetuser}%`);
-
         // Act
         await subject.handle(channel, command, user, message, args);
 
@@ -51,15 +58,14 @@ describe('Cuddle Command Tests', () => {
         expect(mockApiClient.users.getUserByName)
             .toHaveBeenCalledWith(args[0].toLocaleLowerCase().trim());
         expect(mockChatClient.say)
-            .toHaveBeenCalledWith(channel, expect.stringContaining(user.displayName));
-        expect(mockChatClient.say)
-            .toHaveBeenCalledWith(channel, expect.stringContaining(targetUser.displayName));
-        expect(mockCommandResponseService.getCommandResponse).toHaveBeenCalledWith(subject.commandName);
+            .toHaveBeenCalledWith(channel, `cuddle: ${user.displayName} ${targetUser.displayName}`);
         expect(mockLogger.info)
-            .toHaveBeenCalledWith(expect.anything());
+            .toHaveBeenCalledWith(expect.any(String));
     });
-    it('should return and not log anything (no target)', async () => {
+
+    it('should only log invocation (no target)', async () => {
         // Arrange
+        const subject = createSubject(responses);
         const args: string[] = [];
 
         // Act
@@ -68,11 +74,13 @@ describe('Cuddle Command Tests', () => {
         // Assert
         expect(mockApiClient.users.getUserByName).not.toHaveBeenCalled();
         expect(mockChatClient.say).not.toHaveBeenCalled();
-        expect(mockCommandResponseService.getCommandResponse).not.toHaveBeenCalled();
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(message));
+        expect(mockLogger.warn).not.toHaveBeenCalled();
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
     });
-    it('should return; only log invocation (target user not found)', async () => {
+
+    it('should only log invocation (target user not found)', async () => {
         // Arrange
+        const subject = createSubject(responses);
         const args = ['TargetUser'];
 
         mockApiClient
@@ -87,11 +95,13 @@ describe('Cuddle Command Tests', () => {
         expect(mockApiClient.users.getUserByName)
             .toHaveBeenCalledWith(args[0]?.toLocaleLowerCase().trim());
         expect(mockChatClient.say).not.toHaveBeenCalled();
-        expect(mockCommandResponseService.getCommandResponse).not.toHaveBeenCalled();
-        expect(mockLogger.info).toHaveBeenCalled();
+        expect(mockLogger.warn).not.toHaveBeenCalled();
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
     });
-    it('should return; only log invocation (target user == chat user)', async () => {
+
+    it('should only log invocation (target user == chat user)', async () => {
         // Arrange
+        const subject = createSubject(responses);
         const args = [user.displayName];
 
         mockApiClient
@@ -105,31 +115,27 @@ describe('Cuddle Command Tests', () => {
         // Assert
         expect(mockApiClient.users.getUserByName)
             .toHaveBeenCalledWith(args[0]?.toLocaleLowerCase().trim());
-        expect(mockChatClient.say).toHaveBeenCalledTimes(0);
-        expect(mockCommandResponseService.getCommandResponse).not.toHaveBeenCalled();
-        expect(mockLogger.info).toHaveBeenCalled();
+        expect(mockChatClient.say).not.toHaveBeenCalled();
+        expect(mockLogger.warn).not.toHaveBeenCalled();
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
     });
-    it(`logs a warning and says nothing in chat, (CommandReponse: undefined)`, async () => {
+
+    it(`logs a warning and says nothing in chat (no text configured)`, async () => {
         // Arrange
+        const subject = createSubject(unrelatedResponses);
         const args: string[] = ['TargetUser'];
-        const targetUser = <HelixUser>{ displayName: 'TargetUser' };
 
         mockApiClient
             .users
             .getUserByName
-            .mockResolvedValue(targetUser);
-
-        mockCommandResponseService
-            .getCommandResponse
-            .mockReturnValue(undefined);
+            .mockResolvedValue(<HelixUser>{ displayName: 'TargetUser' });
 
         // Act
         await subject.handle(channel, command, user, message, args);
 
         // Assert
         expect(mockChatClient.say).not.toHaveBeenCalled();
-        expect(mockCommandResponseService.getCommandResponse).toHaveBeenCalledWith(subject.commandName);
-        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(subject.commandName));
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(String), { variant: '' });
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
     });
 });

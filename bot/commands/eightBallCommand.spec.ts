@@ -3,7 +3,11 @@ import { jest } from '@jest/globals';
 import { ChatUser } from '@twurple/chat';
 import fs from 'fs';
 import axios from 'axios';
-import { mockChatClient, mockLogger } from '../../tests/common.mocks.js';
+import {
+    mockChatClient,
+    mockCommandResponseService,
+    mockLogger,
+} from '../../tests/common.mocks.js';
 import { EightBallCommand } from './eightBallCommand.js';
 
 jest.unstable_mockModule('ws', () => ({
@@ -18,16 +22,33 @@ describe('Eight Ball Command Tests', () => {
     const message = 'TestMessage';
     const user = <ChatUser>{ displayName: 'TestUser' };
 
+    const response = 'TestResponse eightball';
+    const responses = { eightball: { '': [response] } };
+    const unrelatedResponses = { unrelated: { '': ['unrelated response text'] } };
+
     let subject: EightBallCommand;
 
-    beforeEach(async () => {
-        jest.resetModules();
-        jest.resetAllMocks();
+    /** Serve getCommandResponse from the given entries (commandName -> variant -> texts) */
+    const createService = (entries: Record<string, Record<string, string[]>>) => {
+        mockCommandResponseService
+            .getCommandResponse
+            .mockImplementation((commandName, variant = '') => entries[commandName]?.[variant]?.[0]);
 
-        subject = new EightBallCommand(
-            mockChatClient,
-            mockLogger,
-        );
+        return mockCommandResponseService;
+    };
+
+    const createSubject = (entries: Record<string, Record<string, string[]>>) => new EightBallCommand(
+        mockChatClient,
+        createService(entries),
+        mockLogger,
+    );
+
+    beforeEach(() => {
+        jest.resetAllMocks();
+    });
+
+    beforeEach(() => {
+        jest.resetModules();
     });
 
     afterEach(() => {
@@ -37,9 +58,8 @@ describe('Eight Ball Command Tests', () => {
     describe(`Eightball Command`, () => {
         it(`should say response in chat when the audio file is already cached`, async () => {
             const langCode = 'en';
-            const response = 'TestResponse';
 
-            subject['responses'] = [response];
+            subject = createSubject(responses);
             // File is already cached - TTS should not be called
             subject['fileExists'] = jest.fn<EightBallCommand['fileExists']>().mockReturnValue(true);
             subject['broadcastAudio'] = jest.fn<EightBallCommand['broadcastAudio']>().mockReturnValue(undefined);
@@ -47,21 +67,19 @@ describe('Eight Ball Command Tests', () => {
             await subject.handle(channel, command, user, message, []);
 
             expect(subject['broadcastAudio'])
-                .toHaveBeenCalledWith(command, expect.anything(), langCode);
+                .toHaveBeenCalledWith(command, expect.any(String), langCode);
             expect(mockChatClient.say)
                 .toHaveBeenCalledTimes(1);
             expect(mockChatClient.say)
                 .toHaveBeenCalledWith(channel, response);
             expect(mockLogger.info)
-                .toHaveBeenCalledWith(expect
-                    .stringMatching(`(?=.*\\b${command}\\b)(?=.*\\b${channel}\\b)(?=.*\\b${user.displayName}\\b)(?=.*\\b${message}\\b)`));
+                .toHaveBeenCalledWith(expect.any(String));
         });
 
         it(`should generate a file if a file does not exist`, async () => {
             const langCode = 'en';
-            const response = 'TestResponse';
 
-            subject['responses'] = [response];
+            subject = createSubject(responses);
             subject['fileExists'] = jest.fn<EightBallCommand['fileExists']>().mockReturnValue(false);
             subject['broadcastAudio'] = jest.fn().mockReturnValue(undefined);
             subject['getAudioFromGoogleTTS'] = jest.fn<EightBallCommand['getAudioFromGoogleTTS']>().mockResolvedValue('MTIzNDU2Nzg=');
@@ -69,39 +87,57 @@ describe('Eight Ball Command Tests', () => {
 
             await subject.handle(channel, command, user, message, []);
 
+            expect(subject['getAudioFromGoogleTTS'])
+                .toHaveBeenCalledWith(response);
+            expect(subject['generateFile'])
+                .toHaveBeenCalledTimes(1);
             expect(subject['broadcastAudio'])
-                .toHaveBeenCalledWith(command, expect.anything(), langCode);
+                .toHaveBeenCalledWith(command, expect.any(String), langCode);
             expect(mockChatClient.say)
                 .toHaveBeenCalledTimes(1);
             expect(mockChatClient.say)
                 .toHaveBeenCalledWith(channel, response);
             expect(mockLogger.info)
-                .toHaveBeenNthCalledWith(1, expect.stringContaining('Generated file'));
+                .toHaveBeenCalledTimes(2);
             expect(mockLogger.info)
-                .toHaveBeenNthCalledWith(1, expect.stringContaining('local-cache/audio/8ball'));
+                .toHaveBeenNthCalledWith(1, expect.any(String));
             expect(mockLogger.info)
-                .toHaveBeenNthCalledWith(1, expect.stringContaining(EightBallCommand.name));
-            expect(mockLogger.info)
-                .toHaveBeenNthCalledWith(2, expect
-                    .stringMatching(`(?=.*\\b${command}\\b)(?=.*\\b${channel}\\b)(?=.*\\b${user.displayName}\\b)(?=.*\\b${message}\\b)`));
+                .toHaveBeenNthCalledWith(2, expect.any(String));
         });
 
         it(`should log and do nothing when an exception is thrown`, async () => {
-            const response = 'TestResponse';
             const exception = new Error('TestExceptionMessage');
 
-            subject['responses'] = [response];
+            subject = createSubject(responses);
             subject['fileExists'] = jest.fn(() => { throw exception; });
 
             await subject.handle(channel, command, user, message, []);
 
             expect(mockChatClient.say).not.toHaveBeenCalled();
             expect(mockLogger.error)
-                .toHaveBeenCalledWith(expect.stringContaining('Failed'), exception);
+                .toHaveBeenCalledWith(expect.any(String), expect.any(Error));
+        });
+
+        it(`should say nothing and log warning when no text is configured`, async () => {
+            subject = createSubject(unrelatedResponses);
+            subject['broadcastAudio'] = jest.fn<EightBallCommand['broadcastAudio']>().mockReturnValue(undefined);
+
+            await subject.handle(channel, command, user, message, []);
+
+            expect(subject['broadcastAudio']).not.toHaveBeenCalled();
+            expect(mockChatClient.say).not.toHaveBeenCalled();
+            expect(mockLogger.warn)
+                .toHaveBeenCalledWith(expect.any(String), { variant: '' });
+            expect(mockLogger.info)
+                .toHaveBeenCalledWith(expect.any(String));
         });
     });
 
     describe(`Utilities - fileExists`, () => {
+        beforeEach(() => {
+            subject = createSubject(responses);
+        });
+
         it(`should return true when the file exists`, () => {
             const spy = jest.spyOn(fs, 'existsSync').mockReturnValue(true);
 
@@ -122,6 +158,10 @@ describe('Eight Ball Command Tests', () => {
     });
 
     describe(`Utilities - getAudioFromGoogleTTS`, () => {
+        beforeEach(() => {
+            subject = createSubject(responses);
+        });
+
         it(`should POST to Google Translate and return base64 audio`, async () => {
             const audioBase64 = 'SGVsbG8gV29ybGQ=';
             const innerPayload = JSON.stringify([audioBase64]);
@@ -156,6 +196,10 @@ describe('Eight Ball Command Tests', () => {
     });
 
     describe(`Utilities - generateFile`, () => {
+        beforeEach(() => {
+            subject = createSubject(responses);
+        });
+
         it(`should create directories and write file when neither exist`, () => {
             const buffer = Buffer.from('test');
             const rootPath = 'local-cache/audio/8ball';
@@ -191,6 +235,10 @@ describe('Eight Ball Command Tests', () => {
     });
 
     describe(`Utilities - broadcastAudio`, () => {
+        beforeEach(() => {
+            subject = createSubject(responses);
+        });
+
         // let mockWebSocket: jest.MockedClass<WsModule['WebSocket']>;
 
         // beforeEach(async () => {

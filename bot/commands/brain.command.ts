@@ -30,9 +30,10 @@ export default class BrainCommand implements ICommandHandler {
     }
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        const result = this.commandResponseService.getCommandResponse(this.commandName);
+        const commandText = this.commandResponseService
+            .getCommandResponse(this.commandName, '');
 
-        if (result) {
+        if (commandText) {
             const targetuser = args[0]
                 ? args[0].trim()
                 : userstate.displayName;
@@ -44,9 +45,9 @@ export default class BrainCommand implements ICommandHandler {
                 targetuser,
             };
 
-            await this.chatClient.say(channel, templateResolver(result, context, this.logger));
+            await this.chatClient.say(channel, templateResolver(commandText, context, this.logger));
         } else {
-            this.logger.warn(`Unable to retrieve ${this.commandName} response text`);
+            this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant: '' });
         }
 
         this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);

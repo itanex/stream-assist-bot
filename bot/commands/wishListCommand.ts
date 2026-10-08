@@ -3,13 +3,8 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
-
-const wishListLink = 'https://jointhrone.com/u/timythetermite';
-const responses = [
-    `Checkout my Throne wishlist ${wishListLink}`,
-    `Want to buy me a gift? ${wishListLink}`,
-    `Support the channel, checkout my wishlist on Throne ${wishListLink}`,
-];
+import { CommandName } from '../utilities/default-responses.js';
+import { CommandResponseService } from '../services/index.js';
 
 @injectable()
 export class WishListCommand implements ICommandHandler {
@@ -24,18 +19,25 @@ export class WishListCommand implements ICommandHandler {
     viewer: boolean = true;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'always';
+    commandName: CommandName = 'wishlist';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        if (responses.length) {
-            await this.chatClient.say(channel, responses[Math.floor(Math.random() * responses.length)]);
+        const commandText = this.commandResponseService
+            .getCommandResponse(this.commandName, '');
 
-            this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
+        if (commandText) {
+            await this.chatClient.say(channel, commandText);
+        } else {
+            this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant: '' });
         }
+
+        this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }

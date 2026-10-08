@@ -16,6 +16,9 @@ import winston from 'winston';
 // import { HelixPaginatedScheduleResult } from '@twurple/api/lib/interfaces/endpoints/schedule.input';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import InjectionTypes from '../../dependency-management/types.js';
+import { CommandName, TransientContext } from '../utilities/default-responses.js';
+import { templateResolver } from '../utilities/template-resolver.js';
+import { CommandResponseService } from '../services/index.js';
 
 dayjs.extend(isToday);
 dayjs.extend(relativeTime);
@@ -34,12 +37,25 @@ export class ShoutOutCommand implements ICommandHandler {
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
+    commandName: CommandName = 'shoutout';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(ApiClient) private apiClient: ApiClient,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) { }
+
+    private async sayResponse(channel: string, variant: string, context: TransientContext): Promise<void> {
+        const commandText = this.commandResponseService
+            .getCommandResponse(this.commandName, variant);
+
+        if (commandText) {
+            await this.chatClient.say(channel, templateResolver(commandText, context, this.logger));
+        } else {
+            this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant });
+        }
+    }
 
     async getLatestSchedule(user: HelixUser, channel: string, link: string) {
         // Get schedule for the user
@@ -59,15 +75,16 @@ export class ShoutOutCommand implements ICommandHandler {
             const nextShow = schedule.data.segments[0];
             const startDate = dayjs(nextShow.startDate);
 
-            const entry = startDate.isToday() ? `Today, ` : '';
-            const topic = nextShow.categoryName != null ? `'${nextShow.categoryName}'` : '';
-            const when = `${startDate.fromNow()}`;
+            const variant = (startDate.isBefore(dayjs(), `seconds`) ? 'wasstreaming' : 'planstostream')
+                + (startDate.isToday() ? 'today' : '')
+                + (nextShow.categoryName != null ? '' : 'notopic');
 
-            if (startDate.isBefore(dayjs(), `seconds`)) {
-                await this.chatClient.say(channel, `${entry} @${user.displayName} was streaming ${topic} ${when} - ${link}`);
-            } else {
-                await this.chatClient.say(channel, `${entry} @${user.displayName} plans to stream ${topic} ${when} - ${link}`);
-            }
+            await this.sayResponse(channel, variant, {
+                targetuser: user.displayName,
+                streamcategory: nextShow.categoryName ?? undefined,
+                when: startDate.fromNow(),
+                link,
+            });
         } else {
             const videos: HelixPaginatedResult<HelixVideo> = await this.apiClient.videos
                 .getVideosByUser(user.id, <HelixPaginatedVideoFilter>{ orderBy: `time` })
@@ -81,13 +98,14 @@ export class ShoutOutCommand implements ICommandHandler {
                 const when = dayjs(videos.data[0].creationDate);
                 const diff = when.diff(dayjs(), `day`);
 
-                if (Math.abs(diff) < 10) {
-                    await this.chatClient.say(channel, `@${user.displayName} was last streaming '${channelDetails!.gameName}' ${when.fromNow()} - ${link}`);
-                } else {
-                    await this.chatClient.say(channel, `@${user.displayName} was last streaming '${channelDetails!.gameName}' - ${link}`);
-                }
+                await this.sayResponse(channel, Math.abs(diff) < 10 ? 'lastrecent' : 'last', {
+                    targetuser: user.displayName,
+                    streamcategory: channelDetails!.gameName,
+                    when: when.fromNow(),
+                    link,
+                });
             } else {
-                await this.chatClient.say(channel, `Check out @${user.displayName} at ${link}`);
+                await this.sayResponse(channel, 'checkout', { targetuser: user.displayName, link });
             }
         }
     }
@@ -96,9 +114,13 @@ export class ShoutOutCommand implements ICommandHandler {
         const stream = (await user.getStream());
 
         if (stream && stream.type === 'live') {
-            await this.chatClient.say(channel, `@${user.displayName} just finished streaming '${stream.gameName}' - ${link}`);
+            await this.sayResponse(channel, 'justfinished', {
+                targetuser: user.displayName,
+                streamcategory: stream.gameName,
+                link,
+            });
         } else {
-            await this.chatClient.say(channel, `Check out @${user.displayName} at ${link}`);
+            await this.sayResponse(channel, 'checkout', { targetuser: user.displayName, link });
         }
     }
 

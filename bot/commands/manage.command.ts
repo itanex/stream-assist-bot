@@ -21,11 +21,13 @@ export const InsertReplies: Record<CommandTextInsertResult, (name: string) => st
     ...GenericReplies,
     alreadyExists: name => `Command ${name} text already exists`,
     invalidCommandName: name => `Command ${name} text family is not recognized`,
+    insertFailed: name => `Command ${name} text failed to be inserted`,
     inserted: name => `Command ${name} text was inserted`,
 };
 
 export const UpdateReplies: Record<CommandTextUpdateResult, (name: string) => string> = {
     ...GenericReplies,
+    alreadyExists: name => `Command ${name} does not exist`,
     notEditable: name => `Command ${name} does not have an editable text`,
     updated: name => `Command ${name} text was updated`,
     updateFailed: name => `Command ${name} text failed to update`,
@@ -46,6 +48,8 @@ export const RestoreReplies: Record<CommandTextRestoreResult, (name: string) => 
 };
 
 export const UnsupportedMessage = (name: string) => `${name} is not a valid command`;
+
+export const DeferredMessage = (verb: string) => `Command ${verb} is not available from chat yet`;
 
 //
 // Suggested Trigger: !command <verb> <name> [args]
@@ -85,19 +89,12 @@ export default class ManageCommand implements ICommandHandler {
                     await this.chatClient.say(channel, InsertReplies[result](compoundName));
                     break;
                 }
-                case 'edit': {
-                    const result = await this.commandResponseService.updateCommandText(name, text, variant);
-                    await this.chatClient.say(channel, UpdateReplies[result](compoundName));
-                    break;
-                }
-                case 'remove': {
-                    const result = await this.commandResponseService.removeCommandText(name, variant);
-                    await this.chatClient.say(channel, RemoveReplies[result](compoundName));
-                    break;
-                }
+                // TODO(#159): edit/remove/restore operate on text ids and move to the management UI
+                case 'edit':
+                case 'remove':
                 case 'restore': {
-                    const result = await this.commandResponseService.restoreCommandText(name, variant);
-                    await this.chatClient.say(channel, RestoreReplies[result](compoundName));
+                    await this.chatClient.say(channel, DeferredMessage(subCommand.toLowerCase()));
+                    this.logger.warn(DeferredMessage(subCommand.toLowerCase()), { compoundName });
                     break;
                 }
             }

@@ -3,6 +3,9 @@ import { ChatClient, ChatUser } from '@twurple/chat';
 import winston from 'winston';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import InjectionTypes from '../../dependency-management/types.js';
+import { CommandName, TransientContext } from '../utilities/default-responses.js';
+import { templateResolver } from '../utilities/template-resolver.js';
+import { CommandResponseService } from '../services/index.js';
 
 @injectable()
 export default class ThrowCommand implements ICommandHandler {
@@ -17,18 +20,30 @@ export default class ThrowCommand implements ICommandHandler {
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
+    commandName: CommandName = 'throw';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        if (args[1]) {
-            await this.chatClient.say(channel, `${userstate.displayName} throws ${args[0]} at ${args[1]}`);
+        const variant = args[1] ? '' : 'room';
+        const commandText = this.commandResponseService
+            .getCommandResponse(this.commandName, variant);
+
+        if (commandText) {
+            const context: TransientContext = {
+                speakinguser: userstate.displayName,
+                item: args[0],
+                targetuser: args[1],
+            };
+
+            await this.chatClient.say(channel, templateResolver(commandText, context, this.logger));
         } else {
-            await this.chatClient.say(channel, `${userstate.displayName} throws ${args[0]} across the room`);
+            this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant });
         }
 
         this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
