@@ -38,10 +38,11 @@ describe('Brain Command Tests', () => {
     });
 
     describe('should report brain about target', () => {
-        it.each([
-            [[], 'TestUser'],
-            [['RandomChannelUser'], 'RandomChannelUser'],
-        ])(`args: '%s' reports on '%s'`, async (args: string[], targetuser: string) => {
+        it.each`
+            args                     | targetuser
+            ${[]}                    | ${'TestUser'}
+            ${['RandomChannelUser']} | ${'RandomChannelUser'}
+        `(`args: '$args' reports on '$targetuser'`, async ({ args, targetuser }: { args: string[], targetuser: string }) => {
             // Arrange
             const subject = createSubject(responses);
 

@@ -56,6 +56,7 @@ describe('Shout Out Command Tests', () => {
 
     // Anchored to noon (not the actual current hour) so an hour offset in either
     // direction can never cross a day boundary and make isToday() flaky.
+    // The clock is pinned to this anchor in beforeEach so past/future is deterministic too.
     const now = new Date();
     now.setHours(12, 0, 0, 0);
     const anHourAgo = new Date(
@@ -107,6 +108,11 @@ describe('Shout Out Command Tests', () => {
 
     beforeEach(() => {
         jest.resetAllMocks();
+        jest.useFakeTimers({ now, doNotFake: ['nextTick', 'queueMicrotask'] });
+    });
+
+    afterEach(() => {
+        jest.useRealTimers();
     });
 
     describe(`Shoutout command`, () => {
@@ -170,11 +176,20 @@ describe('Shout Out Command Tests', () => {
     });
 
     describe(`Utility Method - getUserStream`, () => {
-        it.each([
-            [null, `checkout: @${args[0]} ${apiUserTwitchLink}`],
-            [<HelixStream>{ type: 'live', gameName: 'TestGameName' }, `justfinished: @${args[0]} 'TestGameName' - ${apiUserTwitchLink}`],
-            [<HelixStream>{ type: '', gameName: 'TestGameName' }, `checkout: @${args[0]} ${apiUserTwitchLink}`],
-        ])(`should say something in chat about user '%s'`, async (stream: HelixStream | null, expected: string) => {
+        const liveStream = <HelixStream>{ type: 'live', gameName: 'TestGameName' };
+        const offlineStream = <HelixStream>{ type: '', gameName: 'TestGameName' };
+        const checkout = `checkout: @${args[0]} ${apiUserTwitchLink}`;
+        const justFinished = `justfinished: @${args[0]} 'TestGameName' - ${apiUserTwitchLink}`;
+
+        it.each`
+            label         | stream           | expected
+            ${'no data'}  | ${null}          | ${checkout}
+            ${'live'}     | ${liveStream}    | ${justFinished}
+            ${'offline'}  | ${offlineStream} | ${checkout}
+        `(`should say something in chat about a user ($label stream)`, async ({
+            stream,
+            expected,
+        }: { label: string, stream: HelixStream | null, expected: string }) => {
             // Arrange
             const subject = createSubject({} as ApiClient);
             apiUser.getStream = jest.fn<HelixUser['getStream']>().mockResolvedValue(stream);
@@ -220,12 +235,17 @@ describe('Shout Out Command Tests', () => {
                 .toHaveBeenNthCalledWith(2, expect.any(String));
         });
 
-        it.each([
-            [anHourAgo, 'TestCategoryName', 'wasstreamingtoday'],
-            [anHourFromNow, 'TestCategoryName', 'planstostreamtoday'],
-            [anHourAgo, null, 'wasstreamingtodaynotopic'],
-            [anHourFromNow, null, 'planstostreamtodaynotopic'],
-        ])(`should process schedule data: '%s', topic: '%s', variant: '%s'`, async (startDate: Date, topic: string | null, variant: string) => {
+        it.each`
+            startDate        | topic                 | variant
+            ${anHourAgo}     | ${'TestCategoryName'} | ${'wasstreamingtoday'}
+            ${anHourFromNow} | ${'TestCategoryName'} | ${'planstostreamtoday'}
+            ${anHourAgo}     | ${null}               | ${'wasstreamingtodaynotopic'}
+            ${anHourFromNow} | ${null}               | ${'planstostreamtodaynotopic'}
+        `(`should process schedule data as '$variant'`, async ({
+            startDate,
+            topic,
+            variant,
+        }: { startDate: Date, topic: string | null, variant: string }) => {
             // Arrange
             const when = dayjs(startDate).fromNow();
             const schedule: Awaited<ReturnType<HelixScheduleApi['getSchedule']>> = {
@@ -259,10 +279,11 @@ describe('Shout Out Command Tests', () => {
                 .toHaveBeenCalledWith(channel, expected);
         });
 
-        it.each([
-            [anHourAgo, 'lastrecent'],
-            [twoWeeksAgo, 'last'],
-        ])(`should process video data: '%s', variant: '%s'`, async (startDate: Date, variant: string) => {
+        it.each`
+            startDate      | variant
+            ${anHourAgo}   | ${'lastrecent'}
+            ${twoWeeksAgo} | ${'last'}
+        `(`should process video data as '$variant'`, async ({ startDate, variant }: { startDate: Date, variant: string }) => {
             // Arrange
             const topic = 'TestCategoryName';
             const when = dayjs(startDate).fromNow();

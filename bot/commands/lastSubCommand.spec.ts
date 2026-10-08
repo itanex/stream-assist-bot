@@ -67,13 +67,14 @@ describe('Last Sub Command Tests', () => {
     });
 
     describe('should report to chat who the last subscriber was', () => {
-        it.each([
-            [SubscriptionType.NewSub, 'newsub: TestSubscriber'],
-            [SubscriptionType.PrimeSub, 'primesub: TestSubscriber'],
-            [SubscriptionType.ReSub, 'resub: TestSubscriber'],
-            [SubscriptionType.GiftSub, 'giftsub: TestSubscriptionGifter TestSubscriber'],
-            [SubscriptionType.CommunitySub, 'communitysub: TestSubscriptionGifter 30'],
-        ])(`as a '%s' should say '%s'`, async (type: SubscriptionType, prefix: string) => {
+        it.each`
+            type                             | prefix
+            ${SubscriptionType.NewSub}       | ${'newsub: TestSubscriber'}
+            ${SubscriptionType.PrimeSub}     | ${'primesub: TestSubscriber'}
+            ${SubscriptionType.ReSub}        | ${'resub: TestSubscriber'}
+            ${SubscriptionType.GiftSub}      | ${'giftsub: TestSubscriptionGifter TestSubscriber'}
+            ${SubscriptionType.CommunitySub} | ${'communitysub: TestSubscriptionGifter 30'}
+        `(`as a '$type' should say '$prefix ...'`, async ({ type, prefix }: { type: SubscriptionType, prefix: string }) => {
             // Arrange
             const subject = createSubject(responses);
             mockSubscriber.type = type;

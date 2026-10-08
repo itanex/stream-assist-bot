@@ -32,15 +32,17 @@ export class HugCommand implements ICommandHandler {
     }
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
+        const targetUsername = args[0]?.toLocaleLowerCase().trim();
+
         let variant = 'self';
         let targetuser = userstate.displayName;
 
-        if (args[0]) {
-            const user = await this.apiClient.users.getUserByName(args[0]);
+        if (targetUsername) {
+            const user = await this.apiClient.users.getUserByName(targetUsername);
 
             if (!user) {
                 variant = 'notfound';
-                [targetuser] = args;
+                targetuser = args[0].trim();
             } else if (userstate.displayName !== user.displayName) {
                 variant = '';
                 targetuser = user.displayName;

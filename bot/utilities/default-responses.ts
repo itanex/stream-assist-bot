@@ -6,6 +6,13 @@ export const defaultResponses = {
     cuddle: { '': [`%speakinguser% cuddles %targetuser%`] },
     lurk: { '': [`OK, %speakinguser% see you when you get back`] },
     unlurk: { '': [`Welcome back, %speakinguser%. You were gone for %lurkduration%`] },
+    whoislurking: {
+        none: [`There are no users currenlty lurking in the channel`],
+        one: [`There is %total% user lurking: %lastuser%`],
+        two: [`There are %total% users lurking: %users% and %lastuser%`],
+        few: [`There are %total% users lurking: %users%, and %lastuser%`],
+        many: [`There are %total% users lurking.`],
+    },
     accountage: { '': [`@%targetuser% was created %accountage%`] },
     followage: { '': [`@%targetuser% has been following %broadcaster% for %followage%`] },
     lastdeathcount: { '': [`During the stream on %streamdate%, we used %deathtotal% timys in the following game(s): %streamcategory%`] },
@@ -189,6 +196,8 @@ export const transientKeywords = {
     subscriber: 'subscriber',
     gifter: 'gifter',
     giftcount: 'giftcount',
+    users: 'users',
+    lastuser: 'lastuser',
 };
 
 export type TransientKeyword = keyof typeof transientKeywords;

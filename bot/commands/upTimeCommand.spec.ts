@@ -84,10 +84,11 @@ describe('Up Time Command Tests', () => {
         jest.resetAllMocks();
     });
 
-    it.each([
-        [<HelixStreamType>'live', 'online'],
-        [<HelixStreamType>'', 'offline'],
-    ])(`when type: '%s' should say the '%s' text`, async (type: HelixStreamType, state: string) => {
+    it.each`
+        type      | state
+        ${'live'} | ${'online'}
+        ${''}     | ${'offline'}
+    `(`when type: '$type' should say the '$state' text`, async ({ type, state }: { type: HelixStreamType, state: string }) => {
         // Arrange
         const subject = createSubject(responses);
         const testStreamData = { ...streamData, type } as HelixStream;

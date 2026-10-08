@@ -114,9 +114,11 @@ export class WhoIsLurkingCommand implements ICommandHandler {
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
+    commandName: CommandName = 'whoislurking';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(LurkRespository) private lurkRepository: LurkRespository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
@@ -128,23 +130,40 @@ export class WhoIsLurkingCommand implements ICommandHandler {
         const users = records.map(x => x.displayName);
         const lastUser = users.pop();
 
+        let variant: string;
+
         switch (records.length) {
             case 0:
-                await this.chatClient.say(channel, 'There are no users currenlty lurking in the channel');
+                variant = 'none';
                 break;
             case 1:
-                await this.chatClient.say(channel, `There is ${records.length} user lurking: ${lastUser}`);
+                variant = 'one';
                 break;
             case 2:
-                await this.chatClient.say(channel, `There are ${records.length} users lurking: ${users[0]} and ${lastUser}`);
+                variant = 'two';
                 break;
             case 3:
             case 4:
             case 5:
-                await this.chatClient.say(channel, `There are ${records.length} users lurking: ${users.join(', ')}, and ${lastUser}`);
+                variant = 'few';
                 break;
             default:
-                await this.chatClient.say(channel, `There are ${records.length} users lurking.`);
+                variant = 'many';
+        }
+
+        const commandText = this.commandResponseService
+            .getCommandResponse(this.commandName, variant);
+
+        if (commandText) {
+            const context: TransientContext = {
+                total: `${records.length}`,
+                users: users.join(', '),
+                lastuser: lastUser ?? '',
+            };
+
+            await this.chatClient.say(channel, templateResolver(commandText, context, this.logger));
+        } else {
+            this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant });
         }
 
         this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${message}`);

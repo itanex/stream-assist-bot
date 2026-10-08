@@ -54,11 +54,12 @@ describe('Last Raid Command Tests', () => {
     });
 
     describe('should report in chat about the last raider', () => {
-        it.each([
-            [0, 'single: TestRaidUser'],
-            [1, 'single: TestRaidUser'],
-            [30, 'viewers: TestRaidUser'],
-        ])(`with viewer count of: '%s'`, async (viewerCount: number, prefix: string) => {
+        it.each`
+            viewerCount | prefix
+            ${0}        | ${'single: TestRaidUser'}
+            ${1}        | ${'single: TestRaidUser'}
+            ${30}       | ${'viewers: TestRaidUser'}
+        `(`with viewer count of $viewerCount says '$prefix ...'`, async ({ viewerCount, prefix }: { viewerCount: number, prefix: string }) => {
             // Arrange
             const subject = createSubject(responses);
             const mockRaider: Raiders = <unknown>{

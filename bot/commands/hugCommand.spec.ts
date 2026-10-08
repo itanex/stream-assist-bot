@@ -46,12 +46,21 @@ describe('Hug Command Tests', () => {
     });
 
     describe('should hug a user in chat', () => {
-        it.each([
-            [[''], null, 'self: TestUser > TestUser'],
-            [['TestUser'], <HelixUser>{ displayName: 'TestUser', id: 'TestUserId' }, 'self: TestUser > TestUser'],
-            [['TargetUser'], <HelixUser>{ displayName: 'TargetUser', id: 'TargetUserId' }, 'other: TestUser > TargetUser'],
-            [['TargetUser'], null, 'notfound: TestUser > TargetUser'],
-        ])(`commandargs: '%s', target user: '%s', says: '%s'`, async (args: string[], apiUser: HelixUser | null, expected: string) => {
+        const selfApiUser = <HelixUser>{ displayName: 'TestUser', id: 'TestUserId' };
+        const targetApiUser = <HelixUser>{ displayName: 'TargetUser', id: 'TargetUserId' };
+
+        it.each`
+            args                  | apiUser          | expected
+            ${['']}               | ${null}          | ${'self: TestUser > TestUser'}
+            ${['TestUser']}       | ${selfApiUser}   | ${'self: TestUser > TestUser'}
+            ${['TargetUser']}     | ${targetApiUser} | ${'other: TestUser > TargetUser'}
+            ${['TargetUser']}     | ${null}          | ${'notfound: TestUser > TargetUser'}
+            ${['  TargetUser  ']} | ${null}          | ${'notfound: TestUser > TargetUser'}
+        `(`args: '$args' says '$expected'`, async ({
+            args,
+            apiUser,
+            expected,
+        }: { args: string[], apiUser: HelixUser | null, expected: string }) => {
             // Arrange
             const subject = createSubject(responses);
 
@@ -66,7 +75,7 @@ describe('Hug Command Tests', () => {
             // Assert
             if (args[0]) {
                 expect(mockApiClient.users.getUserByName)
-                    .toHaveBeenCalledWith(args[0]);
+                    .toHaveBeenCalledWith(args[0].toLocaleLowerCase().trim());
             } else {
                 expect(mockApiClient.users.getUserByName)
                     .toHaveBeenCalledTimes(0);

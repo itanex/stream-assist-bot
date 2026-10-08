@@ -37,10 +37,16 @@ describe('Dice Command Tests', () => {
     });
 
     describe('should provide results of dice rolls', () => {
-        it.each([
-            [['d8', '', '8'], [1, 8], { rolls: [5], total: 5 }, 'd8 [ 5 ] total 5'],
-            [['2d6', '2', '6'], [2, 6], { rolls: [1, 3], total: 4 }, '2d6 [ 1, 3 ] total 4'],
-        ])(`input: '%s', '%s'`, async (args: string[], call: number[], rollDiceResult: RollResult, expected: string) => {
+        it.each`
+            args                 | call       | rollDiceResult                  | expected
+            ${['d8', '', '8']}   | ${[1, 8]}  | ${{ rolls: [5], total: 5 }}    | ${'d8 [ 5 ] total 5'}
+            ${['2d6', '2', '6']} | ${[2, 6]}  | ${{ rolls: [1, 3], total: 4 }} | ${'2d6 [ 1, 3 ] total 4'}
+        `(`input: '$args' says '$expected'`, async ({
+            args,
+            call,
+            rollDiceResult,
+            expected,
+        }: { args: string[], call: number[], rollDiceResult: RollResult, expected: string }) => {
             // Arrange
             const subject = createSubject(responses);
 

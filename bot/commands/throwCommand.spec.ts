@@ -42,10 +42,11 @@ describe('Throw Command Tests', () => {
     });
 
     describe('should throw something in chat', () => {
-        it.each([
-            [['fish', ''], 'room: TestUser fish'],
-            [['fish', 'TargetUser'], 'at: TestUser fish TargetUser'],
-        ])(`input: '%s', says: '%s'`, async (args: string[], expected: string) => {
+        it.each`
+            args                      | expected
+            ${['fish', '']}           | ${'room: TestUser fish'}
+            ${['fish', 'TargetUser']} | ${'at: TestUser fish TargetUser'}
+        `(`input: '$args' says '$expected'`, async ({ args, expected }: { args: string[], expected: string }) => {
             // Arrange
             const subject = createSubject(responses);
 

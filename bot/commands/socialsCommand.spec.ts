@@ -45,11 +45,12 @@ describe('Socials Command Tests', () => {
     });
 
     describe('cooldownKey()', () => {
-        it.each([
-            [[undefined], SocialsCommand.name],
-            [['UnknownVariant'], SocialsCommand.name],
-            [[knownVariant], `${SocialsCommand.name}:${knownVariant}`],
-        ])(`args: '%s' should use key '%s'`, async (args: any[], expected: string) => {
+        it.each`
+            args                  | expected
+            ${[undefined]}        | ${SocialsCommand.name}
+            ${['UnknownVariant']} | ${SocialsCommand.name}
+            ${[knownVariant]}     | ${`${SocialsCommand.name}:${knownVariant}`}
+        `(`args: '$args' should use key '$expected'`, async ({ args, expected }: { args: any[], expected: string }) => {
             // Arrange
             const subject = createSubject(responses);
 

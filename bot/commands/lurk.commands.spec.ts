@@ -35,6 +35,10 @@ describe('Lurk Commands Tests', () => {
         setAllUsersToUnlurk: jest.fn(),
     } as jest.Mocked<LurkRespository>;
 
+    /** Build `count` lurking users, newest first (userN ... user1) */
+    const lurkers = (count: number) => Array
+        .from({ length: count }, (_, i) => <LurkingUsers>{ displayName: `user${count - i}` });
+
     /** Serve getCommandResponse from the given entries (commandName -> variant -> texts) */
     const createService = (entries: Record<string, Record<string, string[]>>) => {
         mockCommandResponseService
@@ -201,46 +205,38 @@ describe('Lurk Commands Tests', () => {
     });
 
     describe('WhoIsLurking Command', () => {
-        let subject: WhoIsLurkingCommand;
+        const whoIsLurkingResponses = {
+            whoislurking: {
+                none: ['none: nobody lurking'],
+                one: [`one: %${transientKeywords.total}% %${transientKeywords.lastuser}%`],
+                two: [`two: %${transientKeywords.total}% %${transientKeywords.users}% %${transientKeywords.lastuser}%`],
+                few: [`few: %${transientKeywords.total}% %${transientKeywords.users}% %${transientKeywords.lastuser}%`],
+                many: [`many: %${transientKeywords.total}% users lurking`],
+            },
+        };
 
-        beforeEach(() => {
-            jest.resetAllMocks();
+        const createSubject = (entries: Record<string, Record<string, string[]>>) => new WhoIsLurkingCommand(
+            mockChatClient,
+            createService(entries),
+            mockLurkRepository,
+            mockLogger,
+        );
 
-            subject = new WhoIsLurkingCommand(
-                mockChatClient,
-                mockLurkRepository,
-                mockLogger,
-            );
-        });
-
-        it.each([
-            [
-                [],
-                ['no users'],
-            ], [
-                [<LurkingUsers>{ displayName: 'user1' }],
-                ['1', 'user1']],
-            [
-                [<LurkingUsers>{ displayName: 'user2' }, <LurkingUsers>{ displayName: 'user1' }],
-                ['2', 'user1', 'user2'],
-            ], [
-                [<LurkingUsers>{ displayName: 'user3' }, <LurkingUsers>{ displayName: 'user2' }, <LurkingUsers>{ displayName: 'user1' }],
-                ['3', 'user1', 'user2', 'user3'],
-            ], [
-                [<LurkingUsers>{ displayName: 'user4' }, <LurkingUsers>{ displayName: 'user3' }, <LurkingUsers>{ displayName: 'user2' }, <LurkingUsers>{ displayName: 'user1' }],
-                ['4', 'user1', 'user2', 'user3', 'user4'],
-            ], [
-                [<LurkingUsers>{ displayName: 'user5' }, <LurkingUsers>{ displayName: 'user4' }, <LurkingUsers>{ displayName: 'user3' }, <LurkingUsers>{ displayName: 'user2' }, <LurkingUsers>{ displayName: 'user1' }],
-                ['5', 'user1', 'user2', 'user3', 'user4', 'user5'],
-            ], [
-                [<LurkingUsers>{ displayName: 'user6' }, <LurkingUsers>{ displayName: 'user5' }, <LurkingUsers>{ displayName: 'user4' }, <LurkingUsers>{ displayName: 'user3' }, <LurkingUsers>{ displayName: 'user2' }, <LurkingUsers>{ displayName: 'user1' }],
-                ['6'],
-            ],
-        ])(`should say something in chat based records '%s' '%s'`, async (records: LurkingUsers[], includedWords: string[]) => {
+        it.each`
+            count | expected
+            ${0}  | ${'none: nobody lurking'}
+            ${1}  | ${'one: 1 user1'}
+            ${2}  | ${'two: 2 user2 user1'}
+            ${3}  | ${'few: 3 user3, user2 user1'}
+            ${5}  | ${'few: 5 user5, user4, user3, user2 user1'}
+            ${6}  | ${'many: 6 users lurking'}
+        `(`with $count lurking users should say '$expected'`, async ({ count, expected }: { count: number, expected: string }) => {
             // Arrange
+            const subject = createSubject(whoIsLurkingResponses);
+
             mockLurkRepository
                 .getAllLurkingUsers
-                .mockResolvedValue(records);
+                .mockResolvedValue(lurkers(count));
 
             // Act
             await subject.handle(channel, command, user, message, []);
@@ -248,16 +244,27 @@ describe('Lurk Commands Tests', () => {
             // Assert
             expect(mockLurkRepository.getAllLurkingUsers)
                 .toHaveBeenCalledTimes(1);
-
             expect(mockChatClient.say)
-                .toHaveBeenCalledTimes(1);
-            includedWords.forEach(x => {
-                expect(mockChatClient.say)
-                    .toHaveBeenCalledWith(channel, expect.stringContaining(x));
-            });
-
+                .toHaveBeenCalledWith(channel, expected);
             expect(mockLogger.info)
                 .toHaveBeenCalledWith(expect.any(String));
+        });
+
+        it(`should say nothing and log warning when no text is configured`, async () => {
+            // Arrange
+            const subject = createSubject(unrelatedResponses);
+
+            mockLurkRepository
+                .getAllLurkingUsers
+                .mockResolvedValue(lurkers(2));
+
+            // Act
+            await subject.handle(channel, command, user, message, []);
+
+            // Assert
+            expect(mockChatClient.say).not.toHaveBeenCalled();
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(String), { variant: 'two' });
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
         });
     });
 
@@ -266,17 +273,14 @@ describe('Lurk Commands Tests', () => {
             jest.resetAllMocks();
         });
 
-        it.each([
-            [
-                [],
-            ], [
-                [<LurkingUsers>{ displayName: 'user1' }],
-            ], [
-                [<LurkingUsers>{ displayName: 'user2' }, <LurkingUsers>{ displayName: 'user1' }],
-            ],
-        ])(`should clear users in db '%s'`, async (users: LurkingUsers[]) => {
+        it.each`
+            count
+            ${0}
+            ${1}
+            ${2}
+        `(`should clear $count lurking users in db`, async ({ count }: { count: number }) => {
             // Arrange
-            const count: number = users.length;
+            const users = lurkers(count);
 
             mockLurkRepository
                 .setAllUsersToUnlurk
