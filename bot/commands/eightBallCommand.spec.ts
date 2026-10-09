@@ -2,18 +2,31 @@ import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { ChatUser } from '@twurple/chat';
 import fs from 'fs';
-import axios from 'axios';
 import {
     mockChatClient,
     mockCommandResponseService,
     mockLogger,
 } from '../../tests/common.mocks.js';
-import { EightBallCommand } from './eightBallCommand.js';
+
+type AxiosModule = typeof import('axios');
+type WsModule = typeof import('ws');
+type EightBallCommandModule = typeof import('./eightBallCommand.js');
 
 jest.unstable_mockModule('ws', () => ({
-    WebSocket: jest.fn().mockImplementation(() => ({
-        send: jest.fn(),
-    })),
+    WebSocket: jest.fn(),
+    WebSocketServer: jest.fn(),
+}));
+
+jest.unstable_mockModule('../../configurations/environment.js', () => ({
+    __esModule: true,
+    default: {
+        twitchBot: {
+            websocket: {
+                host: 'localhost',
+                port: 8080,
+            },
+        },
+    },
 }));
 
 describe('Eight Ball Command Tests', () => {
@@ -26,7 +39,10 @@ describe('Eight Ball Command Tests', () => {
     const responses = { eightball: { '': [response] } };
     const unrelatedResponses = { unrelated: { '': ['unrelated response text'] } };
 
-    let subject: EightBallCommand;
+    let axios: AxiosModule['default'];
+    let mockWebSocket: jest.MockedClass<WsModule['WebSocket']>;
+    let EightBallCommand: EightBallCommandModule['EightBallCommand'];
+    let subject: InstanceType<EightBallCommandModule['EightBallCommand']>;
 
     /** Serve getCommandResponse from the given entries (commandName -> variant -> texts) */
     const createService = (entries: Record<string, Record<string, string[]>>) => {
@@ -43,12 +59,18 @@ describe('Eight Ball Command Tests', () => {
         mockLogger,
     );
 
-    beforeEach(() => {
-        jest.resetAllMocks();
-    });
-
-    beforeEach(() => {
+    beforeEach(async () => {
         jest.resetModules();
+        jest.resetAllMocks();
+
+        // ESM: import after resetModules so spies target the subject's axios instance
+        axios = (await import('axios')).default;
+
+        // ESM: import after unstable_mockModule so the subject receives the mocked ws
+        mockWebSocket = (await import('ws'))
+            .WebSocket as jest.MockedClass<WsModule['WebSocket']>;
+
+        ({ EightBallCommand } = await import('./eightBallCommand.js'));
     });
 
     afterEach(() => {
@@ -61,8 +83,8 @@ describe('Eight Ball Command Tests', () => {
 
             subject = createSubject(responses);
             // File is already cached - TTS should not be called
-            subject['fileExists'] = jest.fn<EightBallCommand['fileExists']>().mockReturnValue(true);
-            subject['broadcastAudio'] = jest.fn<EightBallCommand['broadcastAudio']>().mockReturnValue(undefined);
+            subject['fileExists'] = jest.fn<InstanceType<EightBallCommandModule['EightBallCommand']>['fileExists']>().mockReturnValue(true);
+            subject['broadcastAudio'] = jest.fn<InstanceType<EightBallCommandModule['EightBallCommand']>['broadcastAudio']>().mockReturnValue(undefined);
 
             await subject.handle(channel, command, user, message, []);
 
@@ -80,9 +102,9 @@ describe('Eight Ball Command Tests', () => {
             const langCode = 'en';
 
             subject = createSubject(responses);
-            subject['fileExists'] = jest.fn<EightBallCommand['fileExists']>().mockReturnValue(false);
+            subject['fileExists'] = jest.fn<InstanceType<EightBallCommandModule['EightBallCommand']>['fileExists']>().mockReturnValue(false);
             subject['broadcastAudio'] = jest.fn().mockReturnValue(undefined);
-            subject['getAudioFromGoogleTTS'] = jest.fn<EightBallCommand['getAudioFromGoogleTTS']>().mockResolvedValue('MTIzNDU2Nzg=');
+            subject['getAudioFromGoogleTTS'] = jest.fn<InstanceType<EightBallCommandModule['EightBallCommand']>['getAudioFromGoogleTTS']>().mockResolvedValue('MTIzNDU2Nzg=');
             subject['generateFile'] = jest.fn().mockReturnValue(undefined);
 
             await subject.handle(channel, command, user, message, []);
@@ -120,7 +142,7 @@ describe('Eight Ball Command Tests', () => {
 
         it(`should say nothing and log warning when no text is configured`, async () => {
             subject = createSubject(unrelatedResponses);
-            subject['broadcastAudio'] = jest.fn<EightBallCommand['broadcastAudio']>().mockReturnValue(undefined);
+            subject['broadcastAudio'] = jest.fn<InstanceType<EightBallCommandModule['EightBallCommand']>['broadcastAudio']>().mockReturnValue(undefined);
 
             await subject.handle(channel, command, user, message, []);
 
@@ -235,24 +257,43 @@ describe('Eight Ball Command Tests', () => {
     });
 
     describe(`Utilities - broadcastAudio`, () => {
+        type FakeSocket = {
+            send: jest.Mock<(data: string) => void>,
+            close: jest.Mock<() => void>,
+            onopen?: () => void,
+        };
+
+        let socket: FakeSocket;
+
         beforeEach(() => {
             subject = createSubject(responses);
+
+            // set after resetAllMocks, which clears mock implementations
+            socket = { send: jest.fn(), close: jest.fn() };
+            mockWebSocket.mockImplementation((() => socket) as any);
         });
 
-        // let mockWebSocket: jest.MockedClass<WsModule['WebSocket']>;
+        it(`should connect to the websocket and send a play message on open`, () => {
+            subject['broadcastAudio'](command, 'abc123', 'en');
+            socket.onopen!();
 
-        // beforeEach(async () => {
-        //     WebSocket = (await import('ws'))
-        //         .WebSocket as jest.MockedClass<WsModule['WebSocket']>;
-        // });
+            expect(mockWebSocket)
+                .toHaveBeenCalledWith('ws://localhost:8080/');
+            expect(JSON.parse(socket.send.mock.calls[0][0]))
+                .toEqual({
+                    sender: command,
+                    body: '!play abc123 en',
+                    sentAt: expect.any(Number),
+                });
+            expect(socket.close)
+                .toHaveBeenCalledTimes(1);
+        });
 
-        // it(`should connect to websocket and send a play message`, async () => {
+        it(`should not send until the websocket opens`, () => {
+            subject['broadcastAudio'](command, 'abc123', 'en');
 
-        //     subject['broadcastAudio']('TestCommand', 'abc123', 'en');
-
-        //     expect(mockWebSocket.onopen).toHaveBeenCalledWith(
-        //         expect.stringContaining('!play abc123 en'),
-        //     );
-        // });
+            expect(socket.send).not.toHaveBeenCalled();
+            expect(socket.close).not.toHaveBeenCalled();
+        });
     });
 });
