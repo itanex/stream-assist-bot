@@ -32,22 +32,28 @@ export class DeathCommand implements ICommandHandler {
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
+    commandName: CommandName = 'death';
 
     private commandTimeout: CommandTimeout = { name: 'DeathCommand', timeout: 0 };
-
-    private initialResponse = `We're gonna need another Timy!`;
-    private responses = [
-        `Timy is finding the quickest way to spawn new Timys`,
-        `Timy tried taking on gravity and lost`,
-        `Gonna need an abacus for this many deaths`,
-    ];
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(ApiClient) private apiClient: ApiClient,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(DeathCountRepository) private deathCountRepository: DeathCountRepository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
+    }
+
+    private async sayResponse(channel: string, variant: string): Promise<void> {
+        const commandText = this.commandResponseService
+            .getCommandResponse(this.commandName, variant);
+
+        if (commandText) {
+            await this.chatClient.say(channel, commandText);
+        } else {
+            this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant });
+        }
     }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
@@ -64,11 +70,11 @@ export class DeathCommand implements ICommandHandler {
                     this.commandTimeout = { name: 'DeathCommand', timeout: new Date().getTime() };
 
                     if (record.deathCount === 1) {
-                        await this.chatClient.say(channel, this.initialResponse);
+                        await this.sayResponse(channel, 'first');
                     }
-                } else if (this.responses.length && record.deathCount % 10 === 0) {
+                } else if (record.deathCount % 10 === 0) {
                     this.commandTimeout = { name: 'DeathCommand', timeout: new Date().getTime() };
-                    await this.chatClient.say(channel, this.responses[Math.floor(Math.random() * this.responses.length)]);
+                    await this.sayResponse(channel, '');
                 }
 
                 this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${record.deathCount}`);
@@ -90,10 +96,12 @@ export class DeathCountCommand implements ICommandHandler {
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
+    commandName: CommandName = 'deathcount';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(ApiClient) private apiClient: ApiClient,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(DeathCountRepository) private deathCountRepository: DeathCountRepository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
@@ -107,10 +115,18 @@ export class DeathCountCommand implements ICommandHandler {
                 .getCurrentStreamDeathCount(stream);
 
             if (record) {
-                if (record.deathCount === 1) {
-                    await this.chatClient.say(channel, `We have used ${record.deathCount} Timy today`);
+                const variant = record.deathCount === 1 ? 'single' : '';
+                const commandText = this.commandResponseService
+                    .getCommandResponse(this.commandName, variant);
+
+                if (commandText) {
+                    const context: TransientContext = {
+                        deathtotal: `${record.deathCount}`,
+                    };
+
+                    await this.chatClient.say(channel, templateResolver(commandText, context, this.logger));
                 } else {
-                    await this.chatClient.say(channel, `We have used ${record.deathCount} Timys today`);
+                    this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant });
                 }
 
                 this.logger.info(`* Executed ${commandName} in ${channel} || ${userstate.displayName} > ${record.deathCount}`);
@@ -152,9 +168,10 @@ export class LastDeathCountCommmand implements ICommandHandler {
             const records = await this.deathCountRepository
                 .getLastStreamDeathCount(stream.id);
 
-            const result = this.commandResponseService.getCommandText(this.commandName);
+            const commandText = this.commandResponseService
+                .getCommandResponse(this.commandName, '');
 
-            if (result) {
+            if (commandText) {
                 const games = records
                     .map(record => `${record.game} (${record.deathCount})`)
                     .join(', ');
@@ -175,9 +192,9 @@ export class LastDeathCountCommmand implements ICommandHandler {
                 };
 
                 // Report command result to stream
-                await this.chatClient.say(channel, templateResolver(result, context, this.logger));
+                await this.chatClient.say(channel, templateResolver(commandText, context, this.logger));
             } else {
-                this.logger.warn(`Unable to retrieve ${this.commandName} response text`);
+                this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant: '' });
             }
         }
 

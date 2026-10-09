@@ -1,10 +1,18 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { ChatUser } from '@twurple/chat';
-import { mockChatClient, mockLogger } from '../../tests/common.mocks.js';
-import { LastSubCommand } from './lastSubCommand.js';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime.js';
+import {
+    mockChatClient,
+    mockCommandResponseService,
+    mockLogger,
+} from '../../tests/common.mocks.js';
 import { Subscribers, SubscriptionType } from '../../database/index.js';
 import SubscriberRepository from '../repositories/subscriber.repository.js';
+import { LastSubCommand } from './lastSubCommand.js';
+
+dayjs.extend(relativeTime);
 
 const mockSubscriberRepository = <unknown>{
     getLastSubscriber: jest.fn<() => Promise<Subscribers | null>>(),
@@ -16,10 +24,20 @@ describe('Last Sub Command Tests', () => {
     const message = 'TestMessage';
     const user = <ChatUser>{ displayName: 'TestUser' };
 
-    let subject: LastSubCommand;
+    const createdAt = new Date(2020, 0, 1);
+    const responses = {
+        lastsub: {
+            newsub: ['newsub: %subscriber% %when%'],
+            primesub: ['primesub: %subscriber% %when%'],
+            resub: ['resub: %subscriber% %when%'],
+            giftsub: ['giftsub: %gifter% %subscriber% %when%'],
+            communitysub: ['communitysub: %gifter% %giftcount% %when%'],
+        },
+    };
+    const unrelatedResponses = { unrelated: { '': ['unrelated response text'] } };
 
     const mockSubscriber = <unknown>{
-        createdAt: new Date(2020, 0, 1),
+        createdAt,
         type: null,
         subscriber: 'TestSubscriber',
         gift: {
@@ -28,37 +46,37 @@ describe('Last Sub Command Tests', () => {
         },
     } as Subscribers;
 
+    /** Serve getCommandResponse from the given entries (commandName -> variant -> texts) */
+    const createService = (entries: Record<string, Record<string, string[]>>) => {
+        mockCommandResponseService
+            .getCommandResponse
+            .mockImplementation((commandName, variant = '') => entries[commandName]?.[variant]?.[0]);
+
+        return mockCommandResponseService;
+    };
+
+    const createSubject = (entries: Record<string, Record<string, string[]>>) => new LastSubCommand(
+        mockChatClient,
+        mockSubscriberRepository,
+        createService(entries),
+        mockLogger,
+    );
+
     beforeEach(() => {
         jest.resetAllMocks();
-
-        subject = new LastSubCommand(
-            mockChatClient,
-            mockSubscriberRepository,
-            mockLogger,
-        );
     });
 
     describe('should report to chat who the last subscriber was', () => {
-        it.each([
-            [SubscriptionType.NewSub, [
-                mockSubscriber.subscriber,
-            ]],
-            [SubscriptionType.PrimeSub, [
-                mockSubscriber.subscriber,
-            ]],
-            [SubscriptionType.ReSub, [
-                mockSubscriber.subscriber,
-            ]],
-            [SubscriptionType.GiftSub, [
-                mockSubscriber.gift.gifter,
-                mockSubscriber.subscriber,
-            ]],
-            [SubscriptionType.CommunitySub, [
-                mockSubscriber.gift.gifter,
-                `${mockSubscriber.gift.giftCount}`,
-            ]],
-        ])(`as a '%s' should report '%s' in chat`, async (type: SubscriptionType, includedWords: string[]) => {
+        it.each`
+            type                             | prefix
+            ${SubscriptionType.NewSub}       | ${'newsub: TestSubscriber'}
+            ${SubscriptionType.PrimeSub}     | ${'primesub: TestSubscriber'}
+            ${SubscriptionType.ReSub}        | ${'resub: TestSubscriber'}
+            ${SubscriptionType.GiftSub}      | ${'giftsub: TestSubscriptionGifter TestSubscriber'}
+            ${SubscriptionType.CommunitySub} | ${'communitysub: TestSubscriptionGifter 30'}
+        `(`as a '$type' should say '$prefix ...'`, async ({ type, prefix }: { type: SubscriptionType, prefix: string }) => {
             // Arrange
+            const subject = createSubject(responses);
             mockSubscriber.type = type;
 
             mockSubscriberRepository
@@ -70,16 +88,27 @@ describe('Last Sub Command Tests', () => {
 
             // Assert
             expect(mockChatClient.say)
-                .toHaveBeenCalledTimes(1);
-
-            includedWords.forEach(x => {
-                expect(mockChatClient.say)
-                    .toHaveBeenCalledWith(channel, expect.stringContaining(x));
-            });
-
+                .toHaveBeenCalledWith(channel, `${prefix} ${dayjs(createdAt).fromNow()}`);
             expect(mockLogger.info)
-                .toHaveBeenCalledWith(expect
-                    .stringMatching(`(?=.*\\b${command}\\b)(?=.*\\b${channel}\\b)(?=.*\\b${user.displayName}\\b)`));
+                .toHaveBeenCalledWith(expect.any(String));
         });
+    });
+
+    it('should say nothing and log warning when no text is configured', async () => {
+        // Arrange
+        const subject = createSubject(unrelatedResponses);
+        mockSubscriber.type = SubscriptionType.NewSub;
+
+        mockSubscriberRepository
+            .getLastSubscriber
+            .mockResolvedValue(mockSubscriber);
+
+        // Act
+        await subject.handle(channel, command, user, message, []);
+
+        // Assert
+        expect(mockChatClient.say).not.toHaveBeenCalled();
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(String), { variant: 'newsub' });
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
     });
 });

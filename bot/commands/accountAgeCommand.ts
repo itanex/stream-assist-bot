@@ -40,17 +40,18 @@ export class AccountAgeCommand implements ICommandHandler {
         const user = await this.apiClient.users.getUserByName(username);
 
         if (user) {
-            const result = this.commandResponseService.getCommandText(this.commandName);
+            const commandText = this.commandResponseService
+                .getCommandResponse(this.commandName, '');
 
-            if (result) {
+            if (commandText) {
                 const context: TransientContext = {
                     targetuser: user.displayName,
                     accountage: `${getAgeReport(Timespan.fromNow(user.creationDate))}`,
                 };
 
-                await this.chatClient.say(channel, templateResolver(result, context, this.logger));
+                await this.chatClient.say(channel, templateResolver(commandText, context, this.logger));
             } else {
-                this.logger.warn(`Unable to retrieve ${this.commandName} response text`);
+                this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant: '' });
             }
         }
 

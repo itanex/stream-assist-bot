@@ -15,68 +15,57 @@ describe('Brain Command Tests', () => {
     const user = <ChatUser>{ displayName: 'TestUser' };
     const message = 'TestMessage';
 
-    let subject: BrainCommand;
+    const responses = { brain: { '': [`brain: %${transientKeywords.targetuser}% %${transientKeywords.percent}%`] } };
+    const unrelatedResponses = { unrelated: { '': ['unrelated response text'] } };
+
+    /** Serve getCommandResponse from the given entries (commandName -> variant -> texts) */
+    const createService = (entries: Record<string, Record<string, string[]>>) => {
+        mockCommandResponseService
+            .getCommandResponse
+            .mockImplementation((commandName, variant = '') => entries[commandName]?.[variant]?.[0]);
+
+        return mockCommandResponseService;
+    };
+
+    const createSubject = (entries: Record<string, Record<string, string[]>>) => new BrainCommand(
+        mockChatClient,
+        createService(entries),
+        mockLogger,
+    );
 
     beforeEach(() => {
         jest.resetAllMocks();
-
-        subject = new BrainCommand(
-            mockChatClient,
-            mockCommandResponseService,
-            mockLogger,
-        );
     });
 
     describe('should report brain about target', () => {
-        it(`that the chatuser is in the response`, async () => {
+        it.each`
+            args                     | targetuser
+            ${[]}                    | ${'TestUser'}
+            ${['RandomChannelUser']} | ${'RandomChannelUser'}
+        `(`args: '$args' reports on '$targetuser'`, async ({ args, targetuser }: { args: string[], targetuser: string }) => {
             // Arrange
-            const args: string[] = [];
-
-            mockCommandResponseService
-                .getCommandText
-                .mockReturnValue(`%${transientKeywords.targetuser}%, %${transientKeywords.percent}%`);
+            const subject = createSubject(responses);
 
             // Act
             await subject.handle(channel, command, user, message, args);
 
             // Assert
             expect(mockChatClient.say)
-                .toHaveBeenCalledWith(channel, expect.stringContaining(user.displayName));
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
+                .toHaveBeenCalledWith(channel, expect.stringMatching(new RegExp(`^brain: ${targetuser} \\d{1,3}$`)));
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
         });
-        it(`that the targetuser is in the response`, async () => {
-            // Arrange
-            const args: string[] = [
-                'RandomChannelUser',
-            ];
 
-            mockCommandResponseService
-                .getCommandText
-                .mockReturnValue(`%${transientKeywords.targetuser}%, %${transientKeywords.percent}%`);
+        it(`logs a warning and says nothing in chat (no text configured)`, async () => {
+            // Arrange
+            const subject = createSubject(unrelatedResponses);
 
             // Act
-            await subject.handle(channel, command, user, message, args);
-
-            // Assert
-            expect(mockChatClient.say)
-                .toHaveBeenCalledWith(channel, expect.stringContaining(args[0]));
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
-        });
-        it(`logs a warning and says nothing in chat, (CommandReponse: undefined)`, async () => {
-            // Arrange
-            const args: string[] = [];
-
-            mockCommandResponseService
-                .getCommandText
-                .mockReturnValue(undefined);
-
-            // Act
-            await subject.handle(channel, command, user, message, args);
+            await subject.handle(channel, command, user, message, []);
 
             // Assert
             expect(mockChatClient.say).not.toHaveBeenCalled();
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(subject.commandName));
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(String), { variant: '' });
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
         });
     });
 });

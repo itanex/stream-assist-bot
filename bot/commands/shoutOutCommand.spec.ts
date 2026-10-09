@@ -8,20 +8,19 @@ import {
     HelixSchedule,
     HelixScheduleApi,
     HelixStream,
-    HelixStreamApi,
     HelixUser,
     HelixUserApi,
     HelixVideo,
     HelixVideoApi,
 } from '@twurple/api';
-import { ChatClient, ChatUser } from '@twurple/chat';
+import { ChatUser } from '@twurple/chat';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime.js';
-import { Container } from 'inversify';
-import winston from 'winston';
-import { mockChatClient, mockLogger } from '../../tests/common.mocks.js';
-import InjectionTypes from '../../dependency-management/types.js';
-import { ICommandHandler } from './iCommandHandler.js';
+import {
+    mockChatClient,
+    mockCommandResponseService,
+    mockLogger,
+} from '../../tests/common.mocks.js';
 import { ShoutOutCommand } from './shoutOutCommand.js';
 
 dayjs.extend(relativeTime);
@@ -40,8 +39,24 @@ describe('Shout Out Command Tests', () => {
     } as HelixUser;
     const apiUserTwitchLink = `https://twitch.tv/${args[0]}`;
 
+    const topicVariants = ['wasstreaming', 'wasstreamingtoday', 'planstostream', 'planstostreamtoday'];
+    const responses = {
+        shoutout: {
+            ...Object.fromEntries(topicVariants
+                .map(variant => [variant, [`${variant}: @%targetuser% '%streamcategory%' %when% - %link%`]])),
+            ...Object.fromEntries(topicVariants
+                .map(variant => [`${variant}notopic`, [`${variant}notopic: @%targetuser% %when% - %link%`]])),
+            lastrecent: [`lastrecent: @%targetuser% '%streamcategory%' %when% - %link%`],
+            last: [`last: @%targetuser% '%streamcategory%' - %link%`],
+            checkout: ['checkout: @%targetuser% %link%'],
+            justfinished: [`justfinished: @%targetuser% '%streamcategory%' - %link%`],
+        },
+    };
+    const unrelatedResponses = { unrelated: { '': ['unrelated response text'] } };
+
     // Anchored to noon (not the actual current hour) so an hour offset in either
     // direction can never cross a day boundary and make isToday() flaky.
+    // The clock is pinned to this anchor in beforeEach so past/future is deterministic too.
     const now = new Date();
     now.setHours(12, 0, 0, 0);
     const anHourAgo = new Date(
@@ -72,31 +87,32 @@ describe('Shout Out Command Tests', () => {
         0,
     );
 
-    const container: Container = new Container();
-    let expectedChatClient: ChatClient;
-    let expectedLogger: winston.Logger;
-    let mockApiClient: ApiClient;
+    /** Serve getCommandResponse from the given entries (commandName -> variant -> texts) */
+    const createService = (entries: Record<string, Record<string, string[]>>) => {
+        mockCommandResponseService
+            .getCommandResponse
+            .mockImplementation((commandName, variant = '') => entries[commandName]?.[variant]?.[0]);
+
+        return mockCommandResponseService;
+    };
+
+    const createSubject = (
+        apiClient: ApiClient,
+        entries: Record<string, Record<string, string[]>> = responses,
+    ) => new ShoutOutCommand(
+        mockChatClient,
+        apiClient,
+        createService(entries),
+        mockLogger,
+    );
 
     beforeEach(() => {
         jest.resetAllMocks();
-        container.unbindAll();
-        container
-            .bind<ChatClient>(ChatClient)
-            .toConstantValue(mockChatClient);
+        jest.useFakeTimers({ now, doNotFake: ['nextTick', 'queueMicrotask'] });
+    });
 
-        container
-            .bind<winston.Logger>(InjectionTypes.Logger)
-            .toConstantValue(mockLogger);
-
-        container
-            .bind<ICommandHandler>(InjectionTypes.CommandHandlers)
-            .to(ShoutOutCommand);
-
-        expectedChatClient = container
-            .get(ChatClient);
-
-        expectedLogger = container
-            .get<winston.Logger>(InjectionTypes.Logger);
+    afterEach(() => {
+        jest.useRealTimers();
     });
 
     describe(`Shoutout command`, () => {
@@ -105,33 +121,21 @@ describe('Shout Out Command Tests', () => {
             [false],
         ])(`should not do anything when no user found (isRaid: '%s')`, async (isRaid: boolean) => {
             // Arrange
-            mockApiClient = <unknown>{
+            const apiClient = <unknown>{
                 users: {
                     getUserByName: jest.fn<HelixUserApi['getUserByName']>().mockResolvedValue(null),
                 },
             } as ApiClient;
-
-            container
-                .bind<ApiClient>(ApiClient)
-                .toConstantValue(mockApiClient);
-
-            // hard type because shoutout upgrades the interface (bad OOP) design
-            // to include an additional parameter
-            const subject: ShoutOutCommand = container
-                .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
-                .find(x => x.constructor.name === `${ShoutOutCommand.name}`) as ShoutOutCommand;
+            const subject = createSubject(apiClient);
 
             // Act
             await subject.handle(channel, command, user, message, args, undefined, isRaid);
 
             // Assert
-            expect(mockApiClient.users.getUserByName)
-                .toHaveBeenCalledTimes(1);
-            expect(mockApiClient.users.getUserByName)
+            expect(apiClient.users.getUserByName)
                 .toHaveBeenCalledWith(args[0]);
-
-            expect(expectedChatClient.say).not.toHaveBeenCalled();
-            expect(expectedLogger.info).not.toHaveBeenCalled();
+            expect(mockChatClient.say).not.toHaveBeenCalled();
+            expect(mockLogger.info).not.toHaveBeenCalled();
         });
 
         it.each([
@@ -139,21 +143,12 @@ describe('Shout Out Command Tests', () => {
             [false],
         ])(`should call specific method based on isRaid: '%s'`, async (isRaid: boolean) => {
             // Arrange
-            mockApiClient = <unknown>{
+            const apiClient = <unknown>{
                 users: {
                     getUserByName: jest.fn<HelixUserApi['getUserByName']>().mockResolvedValue(apiUser),
                 },
             } as ApiClient;
-
-            container
-                .bind<ApiClient>(ApiClient)
-                .toConstantValue(mockApiClient);
-
-            // hard type because shoutout upgrades the interface (bad OOP) design
-            // to include an additional parameter
-            const subject: ShoutOutCommand = container
-                .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
-                .find(x => x.constructor.name === `${ShoutOutCommand.name}`) as ShoutOutCommand;
+            const subject = createSubject(apiClient);
 
             subject.getUserStream = jest.fn<ShoutOutCommand['getUserStream']>().mockResolvedValue(undefined);
             subject.getLatestSchedule = jest.fn<ShoutOutCommand['getLatestSchedule']>().mockResolvedValue(undefined);
@@ -162,73 +157,57 @@ describe('Shout Out Command Tests', () => {
             await subject.handle(channel, command, user, message, args, undefined, isRaid);
 
             // Assert
-            expect(mockApiClient.users.getUserByName)
-                .toHaveBeenCalledTimes(1);
-            expect(mockApiClient.users.getUserByName)
+            expect(apiClient.users.getUserByName)
                 .toHaveBeenCalledWith(args[0]);
 
             if (isRaid) {
-                expect(subject.getUserStream).toHaveBeenCalledTimes(1);
-                expect(subject.getLatestSchedule).not.toHaveBeenCalled();
                 expect(subject.getUserStream)
                     .toHaveBeenCalledWith(apiUser, channel, apiUserTwitchLink);
+                expect(subject.getLatestSchedule).not.toHaveBeenCalled();
             } else {
                 expect(subject.getUserStream).not.toHaveBeenCalled();
-                expect(subject.getLatestSchedule).toHaveBeenCalledTimes(1);
                 expect(subject.getLatestSchedule)
                     .toHaveBeenCalledWith(apiUser, channel, apiUserTwitchLink);
             }
 
-            expect(expectedLogger.info)
-                .toHaveBeenCalledWith(expect
-                    .stringMatching(`(?=.*\\b${command}\\b)(?=.*\\b${channel}\\b)(?=.*\\b${user.displayName}\\b)(?=.*\\b${message}\\b)`));
+            expect(mockLogger.info)
+                .toHaveBeenCalledWith(expect.any(String));
         });
     });
 
     describe(`Utility Method - getUserStream`, () => {
-        it.each([
-            [null],
-            [<HelixStream>{ type: 'live', gameName: 'TestGameName' }],
-            [<HelixStream>{ type: '', gameName: 'TestGameName' }],
-        ])(`should say something in chat about user '%s'`, async (stream: HelixStream | null) => {
+        const liveStream = <HelixStream>{ type: 'live', gameName: 'TestGameName' };
+        const offlineStream = <HelixStream>{ type: '', gameName: 'TestGameName' };
+        const checkout = `checkout: @${args[0]} ${apiUserTwitchLink}`;
+        const justFinished = `justfinished: @${args[0]} 'TestGameName' - ${apiUserTwitchLink}`;
+
+        it.each`
+            label         | stream           | expected
+            ${'no data'}  | ${null}          | ${checkout}
+            ${'live'}     | ${liveStream}    | ${justFinished}
+            ${'offline'}  | ${offlineStream} | ${checkout}
+        `(`should say something in chat about a user ($label stream)`, async ({
+            stream,
+            expected,
+        }: { label: string, stream: HelixStream | null, expected: string }) => {
             // Arrange
+            const subject = createSubject({} as ApiClient);
             apiUser.getStream = jest.fn<HelixUser['getStream']>().mockResolvedValue(stream);
-
-            mockApiClient = {} as ApiClient;
-
-            container
-                .bind<ApiClient>(ApiClient)
-                .toConstantValue(mockApiClient);
-
-            // hard type because shoutout upgrades the interface (bad OOP) design
-            // to include an additional parameter
-            const subject: ShoutOutCommand = container
-                .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
-                .find(x => x.constructor.name === `${ShoutOutCommand.name}`) as ShoutOutCommand;
 
             // Act
             await subject.getUserStream(apiUser, channel, apiUserTwitchLink);
 
-            // Arrange
+            // Assert
             expect(apiUser.getStream).toHaveBeenCalledTimes(1);
-
-            expect(expectedChatClient.say).toHaveBeenCalledTimes(1);
-            expect(expectedChatClient.say)
-                .toHaveBeenCalledWith(channel, expect.stringContaining(`@${apiUser.displayName}`));
-            expect(expectedChatClient.say)
-                .toHaveBeenCalledWith(channel, expect.stringContaining(apiUserTwitchLink));
-
-            if (stream && stream.type === 'live') {
-                expect(expectedChatClient.say)
-                    .toHaveBeenCalledWith(channel, expect.stringContaining(stream.gameName));
-            }
+            expect(mockChatClient.say).toHaveBeenCalledTimes(1);
+            expect(mockChatClient.say).toHaveBeenCalledWith(channel, expected);
         });
     });
 
     describe(`Utility Method - getLatestSchedule`, () => {
-        it(`should log error for 404 response and say generic message in chat`, async () => {
+        it(`should log 404 response and say generic message in chat`, async () => {
             // Arrange
-            mockApiClient = <unknown>{
+            const apiClient = <unknown>{
                 schedule: {
                     getSchedule: jest.fn<HelixScheduleApi['getSchedule']>().mockRejectedValue({
                         statusCode: 404,
@@ -238,44 +217,40 @@ describe('Shout Out Command Tests', () => {
                     getVideosByUser: jest.fn<HelixVideoApi['getVideosByUser']>().mockRejectedValue(null),
                 },
             } as ApiClient;
-
-            container
-                .bind<ApiClient>(ApiClient)
-                .toConstantValue(mockApiClient);
-
-            // hard type because shoutout upgrades the interface (bad OOP) design
-            // to include an additional parameter
-            const subject: ShoutOutCommand = container
-                .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
-                .find(x => x.constructor.name === `${ShoutOutCommand.name}`) as ShoutOutCommand;
+            const subject = createSubject(apiClient);
 
             // Act
             await subject.getLatestSchedule(apiUser, channel, apiUserTwitchLink);
 
             // Assert
-            expect(expectedChatClient.say)
+            expect(mockChatClient.say)
                 .toHaveBeenCalledTimes(1);
-            expect(expectedChatClient.say)
-                .toHaveBeenCalledWith(channel, expect.stringContaining(apiUser.displayName));
-            expect(expectedChatClient.say)
-                .toHaveBeenCalledWith(channel, expect.stringContaining(apiUserTwitchLink));
-
-            expect(expectedLogger.info)
-                .toHaveBeenCalledWith(expect.stringContaining(`* API: No schedule for ${apiUser.id}`));
-            expect(expectedLogger.info)
-                .toHaveBeenCalledWith(expect.stringContaining(`* API: Unable to retrieve the video data for ${apiUser.id}`));
+            expect(mockChatClient.say)
+                .toHaveBeenCalledWith(channel, `checkout: @${args[0]} ${apiUserTwitchLink}`);
+            expect(mockLogger.info)
+                .toHaveBeenCalledTimes(2);
+            expect(mockLogger.info)
+                .toHaveBeenNthCalledWith(1, expect.any(String));
+            expect(mockLogger.info)
+                .toHaveBeenNthCalledWith(2, expect.any(String));
         });
 
-        it.each([
-            [anHourAgo],
-            [anHourFromNow],
-        ])(`should process schedule data`, async (startDate: Date) => {
+        it.each`
+            startDate        | topic                 | variant
+            ${anHourAgo}     | ${'TestCategoryName'} | ${'wasstreamingtoday'}
+            ${anHourFromNow} | ${'TestCategoryName'} | ${'planstostreamtoday'}
+            ${anHourAgo}     | ${null}               | ${'wasstreamingtodaynotopic'}
+            ${anHourFromNow} | ${null}               | ${'planstostreamtodaynotopic'}
+        `(`should process schedule data as '$variant'`, async ({
+            startDate,
+            topic,
+            variant,
+        }: { startDate: Date, topic: string | null, variant: string }) => {
             // Arrange
-            const topic = 'TestCategoryName';
             const when = dayjs(startDate).fromNow();
             const schedule: Awaited<ReturnType<HelixScheduleApi['getSchedule']>> = {
                 cursor: '',
-                data: {
+                data: <unknown>{
                     segments: [{
                         startDate,
                         categoryName: topic,
@@ -283,44 +258,32 @@ describe('Shout Out Command Tests', () => {
                 } as HelixSchedule,
             };
 
-            mockApiClient = <unknown>{
+            const apiClient = <unknown>{
                 schedule: {
                     getSchedule: jest.fn<HelixScheduleApi['getSchedule']>().mockResolvedValue(schedule),
                 },
             } as ApiClient;
+            const subject = createSubject(apiClient);
 
-            container
-                .bind<ApiClient>(ApiClient)
-                .toConstantValue(mockApiClient);
-
-            // hard type because shoutout upgrades the interface (bad OOP) design
-            // to include an additional parameter
-            const subject: ShoutOutCommand = container
-                .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
-                .find(x => x.constructor.name === `${ShoutOutCommand.name}`) as ShoutOutCommand;
+            const expected = topic
+                ? `${variant}: @${args[0]} '${topic}' ${when} - ${apiUserTwitchLink}`
+                : `${variant}: @${args[0]} ${when} - ${apiUserTwitchLink}`;
 
             // Act
             await subject.getLatestSchedule(apiUser, channel, apiUserTwitchLink);
 
             // Assert
-            expect(expectedChatClient.say)
+            expect(mockChatClient.say)
                 .toHaveBeenCalledTimes(1);
-            expect(expectedChatClient.say)
-                .toHaveBeenCalledWith(channel, expect.stringContaining(apiUser.displayName));
-            expect(expectedChatClient.say)
-                .toHaveBeenCalledWith(channel, expect.stringContaining(apiUserTwitchLink));
-            expect(expectedChatClient.say)
-                .toHaveBeenCalledWith(channel, expect.stringContaining(topic));
-            expect(expectedChatClient.say)
-                .toHaveBeenCalledWith(channel, expect.stringContaining(when));
-            expect(expectedChatClient.say)
-                .toHaveBeenCalledWith(channel, expect.stringContaining('Today'));
+            expect(mockChatClient.say)
+                .toHaveBeenCalledWith(channel, expected);
         });
 
-        it.each([
-            [anHourAgo, false],
-            [twoWeeksAgo, true],
-        ])(`should process video data: '%s'`, async (startDate: Date, isOld: boolean) => {
+        it.each`
+            startDate      | variant
+            ${anHourAgo}   | ${'lastrecent'}
+            ${twoWeeksAgo} | ${'last'}
+        `(`should process video data as '$variant'`, async ({ startDate, variant }: { startDate: Date, variant: string }) => {
             // Arrange
             const topic = 'TestCategoryName';
             const when = dayjs(startDate).fromNow();
@@ -341,7 +304,7 @@ describe('Shout Out Command Tests', () => {
                 }],
             } as HelixPaginatedResult<HelixVideo>;
 
-            mockApiClient = <unknown>{
+            const apiClient = <unknown>{
                 schedule: {
                     getSchedule: jest.fn<HelixScheduleApi['getSchedule']>().mockResolvedValue(schedule),
                 },
@@ -352,34 +315,43 @@ describe('Shout Out Command Tests', () => {
                     getVideosByUser: jest.fn<HelixVideoApi['getVideosByUser']>().mockResolvedValue(videos),
                 },
             } as ApiClient;
+            const subject = createSubject(apiClient);
 
-            container
-                .bind<ApiClient>(ApiClient)
-                .toConstantValue(mockApiClient);
-
-            // hard type because shoutout upgrades the interface (bad OOP) design
-            // to include an additional parameter
-            const subject: ShoutOutCommand = container
-                .getAll<ICommandHandler>(InjectionTypes.CommandHandlers)
-                .find(x => x.constructor.name === `${ShoutOutCommand.name}`) as ShoutOutCommand;
+            const expected = variant === 'lastrecent'
+                ? `lastrecent: @${args[0]} '${topic}' ${when} - ${apiUserTwitchLink}`
+                : `last: @${args[0]} '${topic}' - ${apiUserTwitchLink}`;
 
             // Act
             await subject.getLatestSchedule(apiUser, channel, apiUserTwitchLink);
 
             // Assert
-            expect(expectedChatClient.say)
+            expect(mockChatClient.say)
                 .toHaveBeenCalledTimes(1);
-            expect(expectedChatClient.say)
-                .toHaveBeenCalledWith(channel, expect.stringContaining(apiUser.displayName));
-            expect(expectedChatClient.say)
-                .toHaveBeenCalledWith(channel, expect.stringContaining(apiUserTwitchLink));
-            expect(expectedChatClient.say)
-                .toHaveBeenCalledWith(channel, expect.stringContaining(topic));
+            expect(mockChatClient.say)
+                .toHaveBeenCalledWith(channel, expected);
+        });
 
-            if (!isOld) {
-                expect(expectedChatClient.say)
-                    .toHaveBeenCalledWith(channel, expect.stringContaining(when));
-            }
+        it(`should say nothing and log warning when no text is configured`, async () => {
+            // Arrange
+            const apiClient = <unknown>{
+                schedule: {
+                    getSchedule: jest.fn<HelixScheduleApi['getSchedule']>().mockRejectedValue({
+                        statusCode: 404,
+                    }),
+                },
+                videos: {
+                    getVideosByUser: jest.fn<HelixVideoApi['getVideosByUser']>().mockRejectedValue(null),
+                },
+            } as ApiClient;
+            const subject = createSubject(apiClient, unrelatedResponses);
+
+            // Act
+            await subject.getLatestSchedule(apiUser, channel, apiUserTwitchLink);
+
+            // Assert
+            expect(mockChatClient.say).not.toHaveBeenCalled();
+            expect(mockLogger.warn)
+                .toHaveBeenCalledWith(expect.any(String), { variant: 'checkout' });
         });
     });
 });

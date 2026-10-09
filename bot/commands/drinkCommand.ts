@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
-import { CommandName, defaultResponses } from '../utilities/default-responses.js';
+import { CommandName } from '../utilities/default-responses.js';
 import { CommandResponseService } from '../services/index.js';
 
 @injectable()
@@ -29,13 +29,15 @@ export class DrinkCommand implements ICommandHandler {
     }
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        const commandText = this.commandResponseService.getCommandText(this.commandName);
+        const commandText = this.commandResponseService
+            .getCommandResponse(this.commandName, '');
 
-        if (!commandText) {
-            this.logger.warn(`* Command Text not found for ${command} in ${channel} || ${userstate.displayName} > ${message}`);
+        if (commandText) {
+            await this.chatClient.say(channel, commandText);
+        } else {
+            this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant: '' });
         }
 
-        await this.chatClient.say(channel, commandText ?? defaultResponses.drink['']);
         this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}`);
     }
 }

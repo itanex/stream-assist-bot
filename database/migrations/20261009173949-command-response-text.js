@@ -1,4 +1,18 @@
-export const defaultResponses = {
+'use strict';
+
+/**
+ * Moves CommandResponse text into CommandResponseText (#121) and inserts the
+ * command/variant pairs missing from an already-seeded database.
+ *
+ * No-op on a fresh database: sync() and seed() build and fill the new schema.
+ * One-way: down throws.
+ */
+
+/**
+ * Frozen snapshot of `defaultResponses` (bot/utilities/default-responses.ts)
+ * at the time of this migration. Do not update it to track later changes.
+ */
+const SEED = {
     about: { '': [`I'm middleware between you and boredom - assembled from leftover npm packages and one caffeinated decision at 2am. I have strong opinions, weaker error handling, and a Postgres database that remembers absolutely everything.`] },
     dividebyzero: { '': [`Sorry I am too smart for your silly games!`] },
     drink: { '': [`Cheering 500 bits and Timy will do a shot. Max 8 per stream.`] },
@@ -64,44 +78,6 @@ export const defaultResponses = {
             `My sources say no.`,
             `Outlook not so good.`,
             `Very doubtful.`,
-            // `sure`,
-            // `are you kidding?!`,
-            // `yeah`,
-            // `no`,
-            // `i think so`,
-            // `don't bet on it`,
-            // `ja`,
-            // `doubtful`,
-            // `for sure`,
-            // `forget about it`,
-            // `nein`,
-            // `maybe`,
-            // `Kappa Keepo PogChamp`,
-            // `sure`,
-            // `i don't think so`,
-            // `it is so`,
-            // `leaning towards no`,
-            // `look deep in your heart and you will see the answer`,
-            // `most definitely`,
-            // `most likely`,
-            // `my sources say yes`,
-            // `never`,
-            // `nah m8`,
-            // `might actually be yes`,
-            // `no.`,
-            // `outlook good`,
-            // `outlook not so good`,
-            // `perhaps`,
-            // `mayhaps`,
-            // `that's a tough one`,
-            // `idk kev`,
-            // `don't ask that`,
-            // `the answer to that isn't pretty`,
-            // `the heavens point to yes`,
-            // `who knows?`,
-            // `without a doubt`,
-            // `yesterday it would've been a yes, but today it's a yep`,
-            // `you will have to wait`,
         ],
     },
     wishlist: {
@@ -162,43 +138,110 @@ export const defaultResponses = {
         checkout: [`Check out @%targetuser% at %link%`],
         justfinished: [`@%targetuser% just finished streaming '%streamcategory%' - %link%`],
     },
-} as Record<string, Record<string, string[]>>;
-
-export const CommandFamilies = {
-    socials: 'socials',
-} as const;
-
-export type CommandName =
-    keyof typeof defaultResponses |
-    keyof typeof CommandFamilies;
-
-export const transientKeywords = {
-    broadcaster: 'broadcaster',
-    targetuser: 'targetuser',
-    speakinguser: 'speakinguser',
-    percent: 'percent',
-    lurkduration: 'lurkduration',
-    accountage: 'accountage',
-    channel: 'channel',
-    followage: 'followage',
-    streamdate: 'streamdate',
-    deathtotal: 'deathtotal',
-    streamcategory: 'streamcategory',
-    when: 'when',
-    duration: 'duration',
-    link: 'link',
-    item: 'item',
-    dice: 'dice',
-    rolls: 'rolls',
-    total: 'total',
-    raider: 'raider',
-    viewercount: 'viewercount',
-    subscriber: 'subscriber',
-    gifter: 'gifter',
-    giftcount: 'giftcount',
-    users: 'users',
-    lastuser: 'lastuser',
 };
 
-export type TransientKeyword = keyof typeof transientKeywords;
-export type TransientContext = Partial<Record<TransientKeyword, string>>;
+/** @type {import('sequelize-cli').Migration} */
+module.exports = {
+    async up(queryInterface, Sequelize) {
+        const { sequelize } = queryInterface;
+        const { QueryTypes } = Sequelize;
+
+        await sequelize.transaction(async transaction => {
+            const select = (sql, bind = []) => sequelize
+                .query(sql, { bind, transaction, type: QueryTypes.SELECT });
+            const run = (sql, bind = []) => sequelize
+                .query(sql, { bind, transaction });
+
+            // 1. Fresh database: sync() creates the new schema and seed() fills it
+            const [{ exists }] = await select(`SELECT to_regclass('public."CommandResponse"') IS NOT NULL AS "exists"`);
+
+            if (!exists) {
+                return;
+            }
+
+            // 2. Removal batch id on CommandResponse
+            await run(`ALTER TABLE "CommandResponse" ADD COLUMN IF NOT EXISTS "deletionId" UUID NULL`);
+
+            // 3. CommandResponseText, matching database/models/command-response-text.dbo.ts
+            await run(`
+                CREATE TABLE IF NOT EXISTS "CommandResponseText" (
+                    "id" SERIAL PRIMARY KEY,
+                    "commandResponseId" INTEGER NOT NULL
+                        REFERENCES "CommandResponse" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+                    "text" TEXT NOT NULL,
+                    "weight" DECIMAL NOT NULL DEFAULT 1,
+                    "deletionId" UUID NULL,
+                    "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL,
+                    "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL,
+                    "deletedAt" TIMESTAMP WITH TIME ZONE NULL
+                )`);
+            await run(`
+                CREATE UNIQUE INDEX IF NOT EXISTS "commandResponseId-text"
+                ON "CommandResponseText" ("commandResponseId", lower("text"))`);
+
+            // 4-5. Move CommandResponse.text into CommandResponseText, then drop it
+            const [{ hasText }] = await select(`
+                SELECT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_schema = 'public'
+                      AND table_name = 'CommandResponse'
+                      AND column_name = 'text'
+                ) AS "hasText"`);
+
+            if (hasText) {
+                // restore requires a deletionId; one batch per previously removed row
+                await run(`
+                    UPDATE "CommandResponse"
+                    SET "deletionId" = gen_random_uuid()
+                    WHERE "deletedAt" IS NOT NULL
+                      AND "deletionId" IS NULL`);
+
+                await run(`
+                    INSERT INTO "CommandResponseText"
+                        ("commandResponseId", "text", "weight", "deletionId", "createdAt", "updatedAt", "deletedAt")
+                    SELECT "id", "text", 1, "deletionId", "createdAt", "updatedAt", "deletedAt"
+                    FROM "CommandResponse"
+                    ON CONFLICT ("commandResponseId", lower("text")) DO NOTHING`);
+
+                await run(`ALTER TABLE "CommandResponse" DROP COLUMN "text"`);
+            }
+
+            // 6. Insert snapshot pairs absent from CommandResponse, counting removed rows
+            const pairs = Object
+                .entries(SEED)
+                .flatMap(([commandName, variants]) => Object
+                    .entries(variants)
+                    .map(([variant, texts]) => ({ commandName, variant, texts })));
+
+            for (const { commandName, variant, texts } of pairs) {
+                const existing = await select(
+                    `SELECT 1 FROM "CommandResponse" WHERE "commandName" = $1 AND "variant" = $2`,
+                    [commandName, variant],
+                );
+
+                if (existing.length > 0) {
+                    continue;
+                }
+
+                const [{ id }] = await select(
+                    `INSERT INTO "CommandResponse" ("commandName", "variant", "createdAt", "updatedAt")
+                     VALUES ($1, $2, NOW(), NOW())
+                     RETURNING "id"`,
+                    [commandName, variant],
+                );
+
+                for (const text of texts) {
+                    await run(
+                        `INSERT INTO "CommandResponseText" ("commandResponseId", "text", "weight", "createdAt", "updatedAt")
+                         VALUES ($1, $2, 1, NOW(), NOW())`,
+                        [id, text],
+                    );
+                }
+            }
+        });
+    },
+
+    async down() {
+        throw new Error('20261009173949-command-response-text is irreversible; restore from backup');
+    },
+};

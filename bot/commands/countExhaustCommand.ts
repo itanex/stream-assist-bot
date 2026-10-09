@@ -4,12 +4,14 @@ import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import { templateResolver } from '../utilities/template-resolver.js';
-import { TransientContext, transientKeywords } from '../utilities/default-responses.js';
+import { type CommandName, TransientContext } from '../utilities/default-responses.js';
 import Broadcaster from '../utilities/broadcaster.js';
+import CommandResponseService from '../services/command-response.service.js';
 
 @injectable()
 export class CountExhaustCommand implements ICommandHandler {
     exp: RegExp = /^!(nomoretoes|cantcount|numbershurt)$/i;
+    commandName: CommandName = 'countExhaust';
     timeout: number = 10;
     mod: boolean = true;
     vip: boolean = true;
@@ -21,28 +23,28 @@ export class CountExhaustCommand implements ICommandHandler {
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
 
-    responses = [
-        `I am about to run out of toes to count on %${transientKeywords.broadcaster}%`,
-        `I think I need to go back to school to learn more math to count that high`,
-    ];
-
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(Broadcaster) private broadcaster: Broadcaster,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        if (this.responses.length) {
-            const result = this.responses[Math.floor(Math.random() * this.responses.length)];
+        const commandText = this.commandResponseService
+            .getCommandResponse(this.commandName, '');
+
+        if (commandText) {
             const broadcaster = await this.broadcaster.getBroadcaster();
 
             const context: TransientContext = {
                 broadcaster: broadcaster.displayName,
             };
 
-            await this.chatClient.say(channel, templateResolver(result, context, this.logger));
+            await this.chatClient.say(channel, templateResolver(commandText, context, this.logger));
+        } else {
+            this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant: '' });
         }
 
         this.logger.info(`* Executed ${command} in ${channel} :: ${userstate.displayName} > ${message}`);

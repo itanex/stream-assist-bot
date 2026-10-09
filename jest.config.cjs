@@ -5,13 +5,14 @@ module.exports = {
     verbose: true,
     extensionsToTreatAsEsm: ['.ts'],
     setupFilesAfterEnv: ['<rootDir>/tests/jest.setup.ts'],
+    coverageProvider: 'v8',
     moduleNameMapper: {
         '^(\\.{1,2}/.*)\\.js$': '$1',
     },
     transform: {
         '^.+\\.tsx?$': [
             'ts-jest', {
-                isolatedModules: true,
+                // isolatedModules: true,
                 useESM: true,
             },
         ],

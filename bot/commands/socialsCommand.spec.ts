@@ -3,8 +3,8 @@ import { jest } from '@jest/globals';
 import { ChatUser } from '@twurple/chat';
 import {
     mockChatClient,
-    mockLogger,
     mockCommandResponseService,
+    mockLogger,
 } from '../../tests/common.mocks.js';
 import { SocialsCommand } from './socialsCommand.js';
 
@@ -21,98 +21,75 @@ describe('Socials Command Tests', () => {
         displayName: 'TestUser',
     };
 
-    let subject: SocialsCommand;
+    const knownVariant = 'discord';
+    const response = 'Test Response Message';
+    const responses = { socials: { [knownVariant]: [response] } };
+
+    /** Serve getCommandResponse from the given entries (commandName -> variant -> texts) */
+    const createService = (entries: Record<string, Record<string, string[]>>) => {
+        mockCommandResponseService
+            .getCommandResponse
+            .mockImplementation((commandName, variant = '') => entries[commandName]?.[variant]?.[0]);
+
+        return mockCommandResponseService;
+    };
+
+    const createSubject = (entries: Record<string, Record<string, string[]>>) => new SocialsCommand(
+        mockChatClient,
+        createService(entries),
+        mockLogger,
+    );
 
     beforeEach(() => {
         jest.resetAllMocks();
-
-        subject = new SocialsCommand(
-            mockChatClient,
-            mockCommandResponseService,
-            mockLogger,
-        );
     });
 
     describe('cooldownKey()', () => {
-        it(`should present 'commandName' as the key (standard interpretation)`, () => {
+        it.each`
+            args                  | expected
+            ${[undefined]}        | ${SocialsCommand.name}
+            ${['UnknownVariant']} | ${SocialsCommand.name}
+            ${[knownVariant]}     | ${`${SocialsCommand.name}:${knownVariant}`}
+        `(`args: '$args' should use key '$expected'`, async ({ args, expected }: { args: any[], expected: string }) => {
             // Arrange
-            const args: any[] = [undefined];
+            const subject = createSubject(responses);
 
             // Act
             const result = subject.cooldownKey(args);
 
             // Assert
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName, args[0]);
-            expect(result).toBe(SocialsCommand.name);
-        });
-        it(`should present 'commandName' as the key (Unknown Variant)`, () => {
-            // Arrange
-            const args: any[] = ['UnknownVariant'];
-
-            // Act
-            const result = subject.cooldownKey(args);
-
-            // Assert
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName, args[0]);
-            expect(result).toBe(SocialsCommand.name);
-        });
-        it('should present `commandName.variant` as the key (Known Variant)', () => {
-            // Arrange
-            const args = ['variant'];
-            mockCommandResponseService.getCommandText
-                .mockReturnValue('valid text...');
-
-            // Act
-            const result = subject.cooldownKey(args);
-
-            // Assert
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName, args[0]);
-            expect(result).toBe(`${SocialsCommand.name}:${args[0]}`);
+            expect(result).toBe(expected);
         });
     });
+
     describe('handle()', () => {
         it('should say the variant text', async () => {
             // Arrange
-            const subcommand = `Variant`;
-            const message = messageFn(subject.commandName, subcommand);
-            const response = `Test Response Message`;
-            const args: any[] = [
-                subcommand,
-            ];
-
-            mockCommandResponseService.getCommandText
-                .mockReturnValue(response);
+            const subject = createSubject(responses);
+            const message = messageFn(subject.commandName!, knownVariant);
 
             // Act
-            await subject.handle(channel, command, user, message, args);
+            await subject.handle(channel, command, user, message, [knownVariant]);
 
             // Assert
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName, args[0]);
             expect(mockChatClient.say).toHaveBeenCalledWith(channel, response);
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
         });
 
-        it('should say nothing and log a warning', async () => {
+        it('should say nothing and log a warning (unknown variant)', async () => {
             // Arrange
-            const warnMessage = 'Unknown Variant';
-            const subcommand = `Variant`;
-            const message = messageFn(subject.commandName, subcommand);
-            const response = ``;
-            const args: any[] = [
-                subcommand,
-            ];
-
-            mockCommandResponseService.getCommandText
-                .mockReturnValue(response);
+            const subject = createSubject(responses);
+            const subcommand = 'UnknownVariant';
+            const message = messageFn(subject.commandName!, subcommand);
+            const args = [subcommand];
 
             // Act
             await subject.handle(channel, command, user, message, args);
 
             // Assert
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName, args[0]);
             expect(mockChatClient.say).not.toHaveBeenCalled();
-            expect(mockLogger.warn).toHaveBeenCalledWith(warnMessage, expect.anything());
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(String), { variant: subcommand, args, message });
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
         });
     });
 });

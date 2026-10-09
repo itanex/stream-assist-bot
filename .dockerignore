@@ -2,13 +2,17 @@
 .claude/
 .git/
 .vscode/
+backups/
 coverage/
+deployment/
 logs/
 local-cache/
 node_modules/
 
 # Files
 .dockerignore
+.env
+.env.*
 .gitignore
 compose.yaml
 Dockerfile

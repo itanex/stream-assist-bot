@@ -35,7 +35,7 @@ export const mockLogger = <unknown>{
 export const mockCommandResponseService = <unknown>{
     initialize: jest.fn<CommandResponseService['initialize']>(),
     addCommandText: jest.fn<CommandResponseService['addCommandText']>(),
-    getCommandText: jest.fn<CommandResponseService['getCommandText']>(),
+    getCommandResponse: jest.fn<CommandResponseService['getCommandResponse']>(),
     updateCommandText: jest.fn<CommandResponseService['updateCommandText']>(),
     removeCommandText: jest.fn<CommandResponseService['removeCommandText']>(),
     restoreCommandText: jest.fn<CommandResponseService['restoreCommandText']>(),

@@ -9,17 +9,17 @@ import {
     type CommandTextRestoreResult,
 } from './command-response.service.js';
 import { mockLogger } from '../../tests/common.mocks.js';
-import { CommandResponse } from '../../database/index.js';
 import { CommandResponseRepository } from '../repositories/index.js';
+import { type CommandResponse, type CommandResponseTextChanges } from '../repositories/command-response.repository.js';
 
 type CommandResponseServiceModule = typeof import('./command-response.service.js');
-type MockDefaultResponses = { testResponse: string };
+type MockDefaultResponses = { testResponse: Record<string, string[]> };
 type MockCommandFamilies = { testCommand: string };
 
 jest.unstable_mockModule('../utilities/default-responses', () => ({
     __esModule: true,
     CommandFamilies: { 'test-command-name': 'test-command-name' },
-    defaultResponses: { testResponse: 'Test about response' },
+    defaultResponses: { testResponse: { '': ['Test about response'] } },
 }));
 
 const mockCommandResponseRepository = <unknown>{
@@ -41,16 +41,24 @@ describe('CommandResponse.Service (postgres)', () => {
     const testVariant = 'test-command-variant';
     const testCommandText = 'test-command-text';
     const testCommandVariantText = 'test-command-variant-text';
-    const testCommandResponse = <unknown>{
+    const testCommandResponse: CommandResponse = {
         commandName: testCommandName,
         variant: '',
-        text: testCommandText,
-    } as CommandResponse;
-    const testCommandResponseVariant = <unknown>{
+        texts: [{
+            id: 0,
+            text: testCommandText,
+            weight: 1,
+        }],
+    };
+    const testCommandResponseVariant: CommandResponse = {
         commandName: testCommandName,
         variant: testVariant,
-        text: testCommandVariantText,
-    } as CommandResponse;
+        texts: [{
+            id: 0,
+            text: testCommandVariantText,
+            weight: 1,
+        }],
+    };
 
     let CommandResponseService: CommandResponseServiceModule['default'];
     let cacheKey: CommandResponseServiceModule['cacheKey'];
@@ -102,7 +110,7 @@ describe('CommandResponse.Service (postgres)', () => {
             expect(subject['responseCache'].get(cacheKey(testCommandName)))
                 .toEqual(expect.objectContaining({
                     variant: defaultVariant,
-                    text: testCommandText,
+                    responses: testCommandResponse.texts,
                 }));
         });
 
@@ -126,7 +134,7 @@ describe('CommandResponse.Service (postgres)', () => {
             expect(subject['responseCache'].get(cacheKey(testCommandName)))
                 .toEqual(expect.objectContaining({
                     variant: defaultVariant,
-                    text: testCommandText,
+                    responses: testCommandResponse.texts,
                 }));
         });
     });
@@ -199,11 +207,11 @@ describe('CommandResponse.Service (postgres)', () => {
             });
         });
 
-        describe('getCommandText()', () => {
+        describe('getCommandResponse()', () => {
             it('should return the command (cache, no-variant)', () => {
                 // Arrange - beforeEach()
                 // Act
-                const result = subject.getCommandText(testCommandName);
+                const result = subject.getCommandResponse(testCommandName, defaultVariant);
 
                 // Assert
                 expect(result).toBe(testCommandText);
@@ -212,7 +220,7 @@ describe('CommandResponse.Service (postgres)', () => {
             it('should return the command (cache, variant)', () => {
                 // Arrange - beforeEach()
                 // Act
-                const result = subject.getCommandText(testCommandName, testVariant);
+                const result = subject.getCommandResponse(testCommandName, testVariant);
 
                 // Assert
                 expect(result).toBe(testCommandVariantText);
@@ -223,7 +231,7 @@ describe('CommandResponse.Service (postgres)', () => {
                 const variant = 'unknownVariant';
 
                 // Act
-                const result = subject.getCommandText(testCommandName, variant);
+                const result = subject.getCommandResponse(testCommandName, variant);
 
                 // Assert
                 expect(result).toBe(undefined);
@@ -232,7 +240,7 @@ describe('CommandResponse.Service (postgres)', () => {
             it('should return undefined for invalid commandName', () => {
                 // Arrange - beforeEach()
                 // Act
-                const result = subject.getCommandText('');
+                const result = subject.getCommandResponse('', defaultVariant);
 
                 // Assert
                 expect(result).toBe(undefined);
@@ -243,7 +251,7 @@ describe('CommandResponse.Service (postgres)', () => {
                 const commandName = 'unknownCommandName';
 
                 // Act
-                const result = subject.getCommandText(commandName);
+                const result = subject.getCommandResponse(commandName, defaultVariant);
 
                 // Assert
                 expect(result).toBe(undefined);
@@ -251,130 +259,333 @@ describe('CommandResponse.Service (postgres)', () => {
         });
 
         describe('updateCommandText()', () => {
-            it(`should return 'invalidInput' with empty commandName`, async () => {
+            it.each`
+                scenario                       | commandName        | changes
+                ${'empty commandName'}         | ${''}              | ${{ text: validText }}
+                ${'no changes'}                | ${testCommandName} | ${{}}
+                ${'empty text with weight'}    | ${testCommandName} | ${{ text: '', weight: 5 }}
+            `(`should return 'invalidInput' with $scenario`, async ({ commandName, changes }: { commandName: string, changes: CommandResponseTextChanges }) => {
                 // Arrange - beforeEach()
                 // Act
-                const result = await subject.updateCommandText('', 'Valid text...');
+                const result = await subject.updateCommandText(commandName, defaultVariant, 0, changes);
 
                 // Assert
+                expect(mockCommandResponseRepository.updateCommandText)
+                    .not.toHaveBeenCalled();
+
                 expect(result).toBe<CommandTextValidationResult>('invalidInput');
             });
 
-            it(`should return 'invalidInput' with empty text`, async () => {
+            it.each`
+                scenario                       | commandName              | variant             | id
+                ${'no cache record'}           | ${'unknownCommandName'}  | ${defaultVariant}   | ${0}
+                ${'unknown id'}                | ${testCommandName}       | ${defaultVariant}   | ${99}
+            `(`should return 'notEditable' with $scenario`, async ({ commandName, variant, id }: { commandName: string, variant: string, id: number }) => {
                 // Arrange - beforeEach()
                 // Act
-                const result = await subject.updateCommandText(validName, '');
+                const result = await subject.updateCommandText(commandName, variant, id, { text: validText });
 
                 // Assert
-                expect(result).toBe<CommandTextValidationResult>('invalidInput');
-            });
+                expect(mockCommandResponseRepository.updateCommandText)
+                    .not.toHaveBeenCalled();
 
-            it(`should return 'notEditable' with unknown commandName`, async () => {
-                // Arrange - beforeEach()
-                const commandName = 'unknownCommandName';
-
-                // Act
-                const result = await subject.updateCommandText(commandName, validText);
-                const cacheRecord = subject.getCommandText(commandName);
-
-                // Assert
                 expect(result).toBe<CommandTextUpdateResult>('notEditable');
-                expect(cacheRecord).toBe(undefined);
             });
 
-            it(`should return 'notEditable' with commandName and unknown variant`, async () => {
-                // Arrange - beforeEach()
-                const variant = 'unknownVariant';
-
-                // Act
-                const result = await subject.updateCommandText(testCommandName, validText, variant);
-                const cacheRecord = subject.getCommandText(testCommandName, variant);
-
-                // Assert
-                expect(result).toBe<CommandTextUpdateResult>('notEditable');
-                expect(cacheRecord).toBe(undefined);
-            });
-
-            it('row updated and gets new text (variant)', async () => {
+            it.each`
+                scenario                       | changes
+                ${'text change'}               | ${{ text: validText }}
+                ${'weight-only change (0)'}    | ${{ weight: 0 }}
+            `(`row 'updated' and replaces cached text with $scenario`, async ({ changes }: { changes: CommandResponseTextChanges }) => {
                 // Arrange
+                const [seededText] = testCommandResponse.texts;
+                const updatedText = { ...seededText, ...changes };
+
+                mockCommandResponseRepository
+                    .findAll
+                    .mockResolvedValue([
+                        { ...testCommandResponse, texts: [...testCommandResponse.texts] },
+                        testCommandResponseVariant,
+                    ]);
+
+                await subject.initialize();
+
                 mockCommandResponseRepository
                     .updateCommandText
-                    .mockResolvedValue(true);
+                    .mockResolvedValue(updatedText);
 
                 // Act
-                const result = await subject.updateCommandText(testCommandName, validText, testVariant);
-                const cached = subject.getCommandText(testCommandName, testVariant);
+                const result = await subject.updateCommandText(testCommandName, defaultVariant, seededText.id, changes);
 
                 // Assert
+                expect(mockCommandResponseRepository.updateCommandText)
+                    .toHaveBeenCalledWith(testCommandName, defaultVariant, seededText.id, changes);
+
+                expect(subject['responseCache'].get(cacheKey(testCommandName, defaultVariant)))
+                    .toEqual(expect.objectContaining({
+                        variant: defaultVariant,
+                        responses: [updatedText],
+                    }));
+
                 expect(result).toBe<CommandTextUpdateResult>('updated');
-                expect(cached).toBe(validText);
-            });
-
-            it('row updated and gets new text (no-variant)', async () => {
-                // Arrange
-                mockCommandResponseRepository
-                    .updateCommandText
-                    .mockResolvedValue(true);
-
-                // Act
-                const result = await subject.updateCommandText(testCommandName, validText);
-                const cached = subject.getCommandText(testCommandName);
-
-                // Assert
-                expect(result).toBe<CommandTextUpdateResult>('updated');
-                expect(cached).toBe(validText);
             });
 
             it(`row update fails returning 'updateFailed'`, async () => {
                 // Arrange
+                const [seededText] = testCommandResponse.texts;
+                const changes = { text: validText };
+
                 mockCommandResponseRepository
                     .updateCommandText
-                    .mockResolvedValue(false);
+                    .mockResolvedValue(null);
 
                 // Act
-                const result = await subject.updateCommandText(testCommandName, validText, testVariant);
+                const result = await subject.updateCommandText(testCommandName, defaultVariant, seededText.id, changes);
 
                 // Assert
+                expect(mockCommandResponseRepository.updateCommandText)
+                    .toHaveBeenCalledWith(testCommandName, defaultVariant, seededText.id, changes);
                 expect(mockLogger.warn)
                     .toHaveBeenCalledWith(expect.any(String));
 
                 expect(result).toBe<CommandTextUpdateResult>('updateFailed');
             });
 
-            it('invalid text (too short) rejected', async () => {
+            it.each`
+                scenario                       | error                                                                    | expected
+                ${'ValidationError'}           | ${new ValidationError('test-validation-error', [])}                      | ${'invalidText'}
+                ${'UniqueConstraintError'}     | ${new UniqueConstraintError({ message: 'test-unique-constraint-error' })} | ${'alreadyExists'}
+            `(`database $scenario returns '$expected'`, async ({ error, expected }: { error: Error, expected: CommandTextUpdateResult }) => {
                 // Arrange
-                const badtext = 'BAD!';
-                const validationError = new ValidationError(
-                    'test-validation-error',
-                    [],
-                );
+                const [seededText] = testCommandResponse.texts;
+                const changes = { text: 'test-reliable-text' };
 
                 mockCommandResponseRepository
                     .updateCommandText
-                    .mockImplementation(() => { throw validationError; });
+                    .mockImplementation(() => { throw error; });
 
                 // Act
-                const result = await subject.updateCommandText(testCommandName, badtext);
+                const result = await subject.updateCommandText(testCommandName, defaultVariant, seededText.id, changes);
 
                 // Assert
                 expect(mockCommandResponseRepository.updateCommandText)
-                    .toHaveBeenCalledWith(testCommandName, badtext, '');
+                    .toHaveBeenCalledWith(testCommandName, defaultVariant, seededText.id, changes);
 
-                expect(result).toBe<CommandTextUpdateResult>('invalidText');
+                expect(result).toBe<CommandTextUpdateResult>(expected);
             });
 
             it('non-validation error propagates', async () => {
                 // Arrange
+                const [seededText] = testCommandResponse.texts;
+                const changes = { text: validText };
+
                 mockCommandResponseRepository
                     .updateCommandText
                     .mockImplementation(() => { throw new Error('connection lost'); });
 
                 // Act & Assert
-                await expect(subject.updateCommandText(testCommandName, testCommandText))
+                await expect(subject.updateCommandText(testCommandName, defaultVariant, seededText.id, changes))
                     .rejects.toThrow('connection lost');
 
                 expect(mockCommandResponseRepository.updateCommandText)
-                    .toHaveBeenCalledWith(testCommandName, testCommandText, '');
+                    .toHaveBeenCalledWith(testCommandName, defaultVariant, seededText.id, changes);
+            });
+        });
+
+        describe('removeCommandText()', () => {
+            it.each`
+                scenario                       | commandName        | id
+                ${'empty commandName'}         | ${''}              | ${0}
+                ${'undefined id'}              | ${testCommandName} | ${undefined}
+            `(`should return 'invalidInput' with $scenario`, async ({ commandName, id }: { commandName: string, id: number }) => {
+                // Arrange - beforeEach()
+                // Act
+                const result = await subject.removeCommandText(commandName, defaultVariant, id);
+
+                // Assert
+                expect(mockCommandResponseRepository.removeCommandText)
+                    .not.toHaveBeenCalled();
+
+                expect(result).toBe<CommandTextValidationResult>('invalidInput');
+            });
+
+            it.each`
+                scenario                       | commandName              | variant              | id
+                ${'no cache record'}           | ${'unknownCommandName'}  | ${defaultVariant}    | ${0}
+                ${'unknown variant'}           | ${testCommandName}       | ${'unknownVariant'}  | ${0}
+                ${'unknown id'}                | ${testCommandName}       | ${defaultVariant}    | ${99}
+            `(`should return 'notFound' with $scenario`, async ({ commandName, variant, id }: { commandName: string, variant: string, id: number }) => {
+                // Arrange - beforeEach()
+                // Act
+                const result = await subject.removeCommandText(commandName, variant, id);
+
+                // Assert
+                expect(mockCommandResponseRepository.removeCommandText)
+                    .not.toHaveBeenCalled();
+
+                expect(result).toBe<CommandTextRemoveResult>('notFound');
+            });
+
+            it.each`
+                scenario                       | fixture
+                ${'no-variant'}                | ${testCommandResponse}
+                ${'variant'}                   | ${testCommandResponseVariant}
+            `(`row 'removed' and removes cached text with $scenario`, async ({ fixture }: { fixture: CommandResponse }) => {
+                // Arrange
+                const [seededText] = fixture.texts;
+
+                mockCommandResponseRepository
+                    .findAll
+                    .mockResolvedValue([
+                        { ...testCommandResponse, texts: [...testCommandResponse.texts] },
+                        { ...testCommandResponseVariant, texts: [...testCommandResponseVariant.texts] },
+                    ]);
+
+                await subject.initialize();
+
+                mockCommandResponseRepository
+                    .removeCommandText
+                    .mockResolvedValue(true);
+
+                // Act
+                const result = await subject.removeCommandText(testCommandName, fixture.variant, seededText.id);
+
+                // Assert
+                expect(mockCommandResponseRepository.removeCommandText)
+                    .toHaveBeenCalledWith(testCommandName, fixture.variant, seededText.id);
+
+                expect(subject['responseCache'].get(cacheKey(testCommandName, fixture.variant)))
+                    .toEqual(expect.objectContaining({
+                        variant: fixture.variant,
+                        responses: [],
+                    }));
+
+                expect(result).toBe<CommandTextRemoveResult>('removed');
+            });
+
+            it(`row remove fails returning 'removeFailed'`, async () => {
+                // Arrange
+                const [seededText] = testCommandResponse.texts;
+
+                mockCommandResponseRepository
+                    .removeCommandText
+                    .mockResolvedValue(false);
+
+                // Act
+                const result = await subject.removeCommandText(testCommandName, defaultVariant, seededText.id);
+
+                // Assert
+                expect(mockCommandResponseRepository.removeCommandText)
+                    .toHaveBeenCalledWith(testCommandName, defaultVariant, seededText.id);
+                expect(mockLogger.warn)
+                    .toHaveBeenCalledWith(expect.any(String));
+
+                expect(subject['responseCache'].get(cacheKey(testCommandName, defaultVariant)))
+                    .toEqual(expect.objectContaining({
+                        variant: defaultVariant,
+                        responses: [seededText],
+                    }));
+
+                expect(result).toBe<CommandTextRemoveResult>('removeFailed');
+            });
+        });
+
+        describe('restoreCommandText()', () => {
+            const restoredText = {
+                id: 1,
+                text: 'test-restored-text',
+                weight: 1,
+            };
+
+            it.each`
+                scenario                       | commandName        | id
+                ${'empty commandName'}         | ${''}              | ${restoredText.id}
+                ${'undefined id'}              | ${testCommandName} | ${undefined}
+            `(`should return 'invalidInput' with $scenario`, async ({ commandName, id }: { commandName: string, id: number }) => {
+                // Arrange - beforeEach()
+                // Act
+                const result = await subject.restoreCommandText(commandName, defaultVariant, id);
+
+                // Assert
+                expect(mockCommandResponseRepository.restoreCommandText)
+                    .not.toHaveBeenCalled();
+
+                expect(result).toBe<CommandTextValidationResult>('invalidInput');
+            });
+
+            it.each`
+                scenario                       | fixture
+                ${'no-variant'}                | ${testCommandResponse}
+                ${'variant'}                   | ${testCommandResponseVariant}
+            `(`should return 'alreadyActive' with active text in cache ($scenario)`, async ({ fixture }: { fixture: CommandResponse }) => {
+                // Arrange - beforeEach()
+                const [seededText] = fixture.texts;
+
+                // Act
+                const result = await subject.restoreCommandText(testCommandName, fixture.variant, seededText.id);
+
+                // Assert
+                expect(mockCommandResponseRepository.restoreCommandText)
+                    .not.toHaveBeenCalled();
+
+                expect(result).toBe<CommandTextRestoreResult>('alreadyActive');
+            });
+
+            it.each`
+                scenario                       | variant              | expected
+                ${'existing cache entry'}      | ${defaultVariant}    | ${[...testCommandResponse.texts, restoredText]}
+                ${'no cache entry'}            | ${'unseededVariant'} | ${[restoredText]}
+            `(`row 'restored' and adds cached text with $scenario`, async ({ variant, expected }: { variant: string, expected: CommandResponse['texts'] }) => {
+                // Arrange
+                mockCommandResponseRepository
+                    .findAll
+                    .mockResolvedValue([
+                        { ...testCommandResponse, texts: [...testCommandResponse.texts] },
+                        { ...testCommandResponseVariant, texts: [...testCommandResponseVariant.texts] },
+                    ]);
+
+                await subject.initialize();
+
+                mockCommandResponseRepository
+                    .restoreCommandText
+                    .mockResolvedValue(restoredText);
+
+                // Act
+                const result = await subject.restoreCommandText(testCommandName, variant, restoredText.id);
+
+                // Assert
+                expect(mockCommandResponseRepository.restoreCommandText)
+                    .toHaveBeenCalledWith(testCommandName, variant, restoredText.id);
+
+                expect(subject['responseCache'].get(cacheKey(testCommandName, variant)))
+                    .toEqual(expect.objectContaining({
+                        variant,
+                        responses: expected,
+                    }));
+
+                expect(result).toBe<CommandTextRestoreResult>('restored');
+            });
+
+            it(`row restore fails returning 'notFound'`, async () => {
+                // Arrange
+                mockCommandResponseRepository
+                    .restoreCommandText
+                    .mockResolvedValue(null);
+
+                // Act
+                const result = await subject.restoreCommandText(testCommandName, defaultVariant, restoredText.id);
+
+                // Assert
+                expect(mockCommandResponseRepository.restoreCommandText)
+                    .toHaveBeenCalledWith(testCommandName, defaultVariant, restoredText.id);
+
+                expect(subject['responseCache'].get(cacheKey(testCommandName, defaultVariant)))
+                    .toEqual(expect.objectContaining({
+                        variant: defaultVariant,
+                        responses: testCommandResponse.texts,
+                    }));
+
+                expect(result).toBe<CommandTextRestoreResult>('notFound');
             });
         });
     });
@@ -408,74 +619,94 @@ describe('CommandResponse.Service (postgres)', () => {
             expect(result).toBe<CommandTextInsertResult>('invalidCommandName');
         });
 
-        it(`should return 'alreadyExists' for an existing command and variant`, async () => {
-            // Arrange - beforeEach()
+        it(`should return 'insertFailed' when repo returns null`, async () => {
+            // Arrange
             mockCommandResponseRepository
-                .findAll
-                .mockResolvedValue([
-                    testCommandResponse,
-                    testCommandResponseVariant,
-                ]);
+                .addCommandText
+                .mockResolvedValue(null);
 
-            await subject.initialize();
             // Act
             const result = await subject.addCommandText(testCommandName, validText, testVariant);
 
             // Assert
-            expect(result).toBe<CommandTextInsertResult>('alreadyExists');
+            expect(mockCommandResponseRepository.addCommandText)
+                .toHaveBeenCalledWith(testCommandName, validText, testVariant);
+
+            expect(result).toBe('insertFailed');
         });
 
-        it(`row 'inserted' and gets new text`, async () => {
+        it(`row 'inserted' and creates cache entry for new command/variant`, async () => {
             // Arrange - beforeEach()
             mockCommandResponseRepository
-                .restoreCommandText
-                .mockResolvedValue([false, null]);
-
-            mockCommandResponseRepository
                 .addCommandText
-                .mockResolvedValue(expect.anything());
+                .mockResolvedValue({
+                    commandName: testCommandName,
+                    variant: defaultVariant,
+                    texts: [{
+                        id: 0,
+                        text: validText,
+                        weight: 1,
+                    }],
+                });
 
             // Act
             const result = await subject.addCommandText(testCommandName, validText, defaultVariant);
 
             // Assert
-            expect(mockCommandResponseRepository.restoreCommandText)
-                .toHaveBeenCalledWith(testCommandName, defaultVariant);
             expect(mockCommandResponseRepository.addCommandText)
                 .toHaveBeenCalledWith(testCommandName, validText, defaultVariant);
 
             expect(subject['responseCache'].get(cacheKey(testCommandName, defaultVariant)))
                 .toEqual(expect.objectContaining({
                     variant: defaultVariant,
-                    text: validText,
+                    responses: [{
+                        id: 0,
+                        text: validText,
+                        weight: 1,
+                    }],
                 }));
 
             expect(result).toBe<CommandTextInsertResult>('inserted');
         });
 
-        it(`row 'inserted' and gets new text (restored)`, async () => {
+        it(`row 'inserted' and appends text to existing cache entry`, async () => {
             // Arrange - beforeEach()
+            const addedText = {
+                id: 1,
+                text: validText,
+                weight: 1.5,
+            };
             mockCommandResponseRepository
-                .restoreCommandText
-                .mockResolvedValue([true, null]);
+                .addCommandText
+                .mockResolvedValue({
+                    commandName: testCommandName,
+                    variant: defaultVariant,
+                    texts: [addedText],
+                });
 
             mockCommandResponseRepository
-                .updateCommandText
-                .mockResolvedValue(expect.anything());
+                .findAll
+                .mockResolvedValue([
+                    { ...testCommandResponse, texts: [...testCommandResponse.texts] },
+                    testCommandResponseVariant,
+                ]);
+
+            await subject.initialize();
 
             // Act
             const result = await subject.addCommandText(testCommandName, validText, defaultVariant);
 
             // Assert
-            expect(mockCommandResponseRepository.restoreCommandText)
-                .toHaveBeenCalledWith(testCommandName, defaultVariant);
-            expect(mockCommandResponseRepository.updateCommandText)
+            expect(mockCommandResponseRepository.addCommandText)
                 .toHaveBeenCalledWith(testCommandName, validText, defaultVariant);
 
             expect(subject['responseCache'].get(cacheKey(testCommandName, defaultVariant)))
                 .toEqual(expect.objectContaining({
                     variant: defaultVariant,
-                    text: validText,
+                    responses: [
+                        ...testCommandResponse.texts,
+                        addedText,
+                    ],
                 }));
 
             expect(result).toBe<CommandTextInsertResult>('inserted');
@@ -488,9 +719,6 @@ describe('CommandResponse.Service (postgres)', () => {
             });
 
             mockCommandResponseRepository
-                .restoreCommandText
-                .mockResolvedValue([false, null]);
-            mockCommandResponseRepository
                 .addCommandText
                 .mockImplementation(() => { throw uniqueConstraintError; });
 
@@ -498,8 +726,6 @@ describe('CommandResponse.Service (postgres)', () => {
             const result = await subject.addCommandText(testCommandName, testCommandText, testVariant);
 
             // Assert
-            expect(mockCommandResponseRepository.restoreCommandText)
-                .toHaveBeenCalledWith(testCommandName, testVariant);
             expect(mockCommandResponseRepository.addCommandText)
                 .toHaveBeenCalledWith(testCommandName, testCommandText, testVariant);
 
@@ -515,10 +741,6 @@ describe('CommandResponse.Service (postgres)', () => {
             );
 
             mockCommandResponseRepository
-                .restoreCommandText
-                .mockResolvedValue([false, null]);
-
-            mockCommandResponseRepository
                 .addCommandText
                 .mockImplementation(() => { throw validationError; });
 
@@ -526,8 +748,6 @@ describe('CommandResponse.Service (postgres)', () => {
             const result = await subject.addCommandText(testCommandName, badtext);
 
             // Assert
-            expect(mockCommandResponseRepository.restoreCommandText)
-                .toHaveBeenCalledWith(testCommandName, '');
             expect(mockCommandResponseRepository.addCommandText)
                 .toHaveBeenCalledWith(testCommandName, badtext, '');
 
@@ -537,10 +757,6 @@ describe('CommandResponse.Service (postgres)', () => {
         it('non-validation error propagates', async () => {
             // Arrange
             mockCommandResponseRepository
-                .restoreCommandText
-                .mockResolvedValue([false, null]);
-
-            mockCommandResponseRepository
                 .addCommandText
                 .mockImplementation(() => { throw new Error('connection lost'); });
 
@@ -548,138 +764,8 @@ describe('CommandResponse.Service (postgres)', () => {
             await expect(subject.addCommandText(testCommandName, testCommandText, testVariant))
                 .rejects.toThrow('connection lost');
 
-            expect(mockCommandResponseRepository.restoreCommandText)
-                .toHaveBeenCalledWith(testCommandName, testVariant);
             expect(mockCommandResponseRepository.addCommandText)
                 .toHaveBeenCalledWith(testCommandName, testCommandText, testVariant);
-        });
-    });
-
-    describe('removeCommandText()', () => {
-        it(`should return 'invalidInput' with empty commandName`, async () => {
-            // Arrange
-            const commandName = '';
-
-            // Act
-            const result = await subject.removeCommandText(commandName, defaultVariant);
-
-            // Assert
-            expect(result).toBe<CommandTextValidationResult>('invalidInput');
-        });
-
-        it(`should return 'notFound' with unknown commandName`, async () => {
-            // Arrange
-            const commandName = 'unknownCommandName';
-
-            // Act
-            const result = await subject.removeCommandText(commandName, defaultVariant);
-
-            // Assert
-            expect(result).toBe<CommandTextRemoveResult>('notFound');
-        });
-
-        it(`should return 'notFound' with commandName and unknown variant`, async () => {
-            // Arrange
-            const variant = 'unknownVariant';
-
-            // Act
-            const result = await subject.removeCommandText(testCommandName, variant);
-
-            // Assert
-            expect(result).toBe<CommandTextRemoveResult>('notFound');
-        });
-
-        it('should remove record from database records and cache', async () => {
-            // Arrange
-            mockCommandResponseRepository
-                .removeCommandText
-                .mockResolvedValue(true);
-
-            subject['responseCache'].set(cacheKey(testCommandName, defaultVariant), { variant: defaultVariant, text: testCommandText });
-
-            // Act
-            const result = await subject.removeCommandText(testCommandName, defaultVariant);
-            const variants = subject.getCommandVariants(testCommandName);
-
-            // Assert
-            expect(mockCommandResponseRepository.removeCommandText)
-                .toHaveBeenCalledWith(testCommandName, defaultVariant);
-
-            expect(result).toBe<CommandTextRemoveResult>('removed');
-            expect(variants).not.toEqual(expect.arrayContaining([
-                testCommandText,
-            ]));
-        });
-
-        it('should remove record from database records and cache', async () => {
-            // Arrange
-            mockCommandResponseRepository
-                .removeCommandText
-                .mockResolvedValue(false);
-
-            subject['responseCache'].set(cacheKey(testCommandName, defaultVariant), { variant: defaultVariant, text: testCommandText });
-
-            // Act
-            const result = await subject.removeCommandText(testCommandName, defaultVariant);
-
-            // Assert
-            expect(mockCommandResponseRepository.removeCommandText)
-                .toHaveBeenCalledWith(testCommandName, defaultVariant);
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(String));
-
-            expect(result).toBe<CommandTextRemoveResult>('removeFailed');
-        });
-    });
-
-    describe('restoreCommandText()', () => {
-        it(`should return 'invalidInput' with empty commandName`, async () => {
-            // Arrange
-            const commandName = '';
-
-            // Act
-            const result = await subject.restoreCommandText(commandName, defaultVariant);
-
-            // Assert
-            expect(result).toBe<CommandTextValidationResult>('invalidInput');
-        });
-
-        it(`should return 'alreadyActive' when command and variant is present in cache`, async () => {
-            // Arrange
-            subject['responseCache'].set(cacheKey(testCommandName, defaultVariant), { variant: defaultVariant, text: testCommandText });
-
-            // Act
-            const result = await subject.restoreCommandText(testCommandName, defaultVariant);
-
-            // Assert
-            expect(result).toBe<CommandTextRestoreResult>('alreadyActive');
-        });
-
-        it('should restore record in database records and cache (restored)', async () => {
-            // Arrange
-            mockCommandResponseRepository
-                .restoreCommandText
-                .mockResolvedValue([true, testCommandResponseVariant]);
-
-            // Act
-            const result = await subject.restoreCommandText(testCommandName, testVariant);
-            const cachedResult = subject.getCommandText(testCommandName, testVariant);
-
-            // Assert
-            expect(result).toBe<CommandTextRestoreResult>('restored');
-            expect(cachedResult).toEqual(testCommandVariantText);
-        });
-
-        it('should return notFound when command/variant is not in the database or cache', async () => {
-            // Arrange
-            mockCommandResponseRepository
-                .restoreCommandText
-                .mockResolvedValue([false, null]);
-
-            // Act
-            const result = await subject.restoreCommandText(testCommandName, testVariant);
-
-            // Assert
-            expect(result).toBe<CommandTextRestoreResult>('notFound');
         });
     });
 });

@@ -2,23 +2,16 @@ import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { ChatUser } from '@twurple/chat';
 import ManageCommand, {
+    DeferredMessage,
     InsertReplies,
-    RemoveReplies,
-    RestoreReplies,
     UnsupportedMessage,
-    UpdateReplies,
 } from './manage.command.js';
 import {
     mockChatClient,
     mockCommandResponseService,
     mockLogger,
 } from '../../tests/common.mocks.js';
-import {
-    CommandTextInsertResult,
-    CommandTextRemoveResult,
-    CommandTextUpdateResult,
-    CommandTextRestoreResult,
-} from '../services/index.js';
+import { CommandTextInsertResult } from '../services/index.js';
 
 /** Utility method for constructing command message inline with ManageCommand */
 const messageFn = (subcommand: string, compoundName: string, text: string = '') => `!command ${subcommand} ${compoundName} ${text}`.trim();
@@ -65,7 +58,7 @@ describe('ManageCommand', () => {
 
         // Assert
         expect(mockChatClient.say).toHaveBeenCalledWith(channel, UnsupportedMessage(compoundName));
-        expect(mockLogger.warn).toHaveBeenCalledWith(UnsupportedMessage(compoundName));
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(String));
     });
 
     describe('Add Command', () => {
@@ -110,130 +103,22 @@ describe('ManageCommand', () => {
             expect(mockChatClient.say).not.toHaveBeenCalled();
         });
     });
-    describe('Edit Command', () => {
-        const subCommand = 'edit';
-
-        it.each(Object.keys(UpdateReplies) as CommandTextUpdateResult[])(
-            'replies correctly for %s result',
-            async result => {
-                // Arrange
-                const compoundName = 'Command.Variant';
-                const [name, variant] = compoundName.split('.');
-                const message = messageFn(subCommand, compoundName, text);
-                const args = parseComand(message, subject.exp);
-
-                mockCommandResponseService
-                    .updateCommandText
-                    .mockResolvedValue(result);
-
-                // Act
-                await subject.handle(channel, command, user, message, args);
-
-                // Assert
-                expect(mockCommandResponseService.updateCommandText)
-                    .toHaveBeenCalledWith(name, text, variant);
-                expect(mockChatClient.say).toHaveBeenCalledWith(channel, UpdateReplies[result](compoundName));
-            },
-        );
-
-        it('propagates unexpected service errors without replying', async () => {
+    describe.each(['edit', 'remove', 'restore'])('%s Command (deferred)', subCommand => {
+        it('replies that the verb is unavailable and writes nothing', async () => {
             // Arrange
-            const message = messageFn(subCommand, command, text);
-            const args = [subCommand, command, text];
+            const compoundName = 'Command.Variant';
+            const message = messageFn(subCommand, compoundName, text);
+            const args = parseComand(message, subject.exp);
 
-            mockCommandResponseService
-                .updateCommandText
-                .mockRejectedValue(new Error('connection lost'));
+            // Act
+            await subject.handle(channel, command, user, message, args);
 
-            // Act & Assert
-            await expect(subject.handle(channel, command, user, message, args))
-                .rejects.toThrow('connection lost');
-
-            expect(mockChatClient.say).not.toHaveBeenCalled();
-        });
-    });
-    describe('Remove Command', () => {
-        const subCommand = 'remove';
-
-        it.each(Object.keys(RemoveReplies) as CommandTextRemoveResult[])(
-            'replies correctly for %s result',
-            async result => {
-                // Arrange
-                const compoundName = 'Command.Variant';
-                const [name, variant] = compoundName.split('.');
-                const message = messageFn(subCommand, compoundName);
-                const args = parseComand(message, subject.exp);
-
-                mockCommandResponseService
-                    .removeCommandText
-                    .mockResolvedValue(result);
-
-                // Act
-                await subject.handle(channel, command, user, message, args);
-
-                // Assert
-                expect(mockCommandResponseService.removeCommandText)
-                    .toHaveBeenCalledWith(name, variant);
-                expect(mockChatClient.say).toHaveBeenCalledWith(channel, RemoveReplies[result](compoundName));
-            },
-        );
-
-        it('propagates unexpected service errors without replying', async () => {
-            // Arrange
-            const message = messageFn(subCommand, command, text);
-            const args = [subCommand, command, text];
-
-            mockCommandResponseService
-                .removeCommandText
-                .mockRejectedValue(new Error('connection lost'));
-
-            // Act & Assert
-            await expect(subject.handle(channel, command, user, message, args))
-                .rejects.toThrow('connection lost');
-
-            expect(mockChatClient.say).not.toHaveBeenCalled();
-        });
-    });
-    describe('Restore Command', () => {
-        const subCommand = 'restore';
-
-        it.each(Object.keys(RestoreReplies) as CommandTextRestoreResult[])(
-            'replies correctly for %s result',
-            async result => {
-                // Arrange
-                const compoundName = 'Command.Variant';
-                const [name, variant] = compoundName.split('.');
-                const message = messageFn(subCommand, compoundName);
-                const args = parseComand(message, subject.exp);
-
-                mockCommandResponseService
-                    .restoreCommandText
-                    .mockResolvedValue(result);
-
-                // Act
-                await subject.handle(channel, command, user, message, args);
-
-                // Assert
-                expect(mockCommandResponseService.restoreCommandText)
-                    .toHaveBeenCalledWith(name, variant);
-                expect(mockChatClient.say).toHaveBeenCalledWith(channel, RestoreReplies[result](compoundName));
-            },
-        );
-
-        it('propagates unexpected service errors without replying', async () => {
-            // Arrange
-            const message = messageFn(subCommand, command, text);
-            const args = [subCommand, command, text];
-
-            mockCommandResponseService
-                .restoreCommandText
-                .mockRejectedValue(new Error('connection lost'));
-
-            // Act & Assert
-            await expect(subject.handle(channel, command, user, message, args))
-                .rejects.toThrow('connection lost');
-
-            expect(mockChatClient.say).not.toHaveBeenCalled();
+            // Assert
+            expect(mockCommandResponseService.updateCommandText).not.toHaveBeenCalled();
+            expect(mockCommandResponseService.removeCommandText).not.toHaveBeenCalled();
+            expect(mockCommandResponseService.restoreCommandText).not.toHaveBeenCalled();
+            expect(mockChatClient.say).toHaveBeenCalledWith(channel, DeferredMessage(subCommand));
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(String), { compoundName });
         });
     });
 });

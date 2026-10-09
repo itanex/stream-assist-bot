@@ -17,17 +17,27 @@ describe('Account Age Command Tests', () => {
     const command = 'TestCommand';
     const message = 'TestMessage';
 
-    let subject: AccountAgeCommand;
+    const responses = { accountage: { '': [`%${transientKeywords.targetuser}% | %${transientKeywords.accountage}%`] } };
+    const unrelatedResponses = { unrelated: { '': ['unrelated response text'] } };
+
+    /** Serve getCommandResponse from the given entries (commandName -> variant -> texts) */
+    const createService = (entries: Record<string, Record<string, string[]>>) => {
+        mockCommandResponseService
+            .getCommandResponse
+            .mockImplementation((commandName, variant = '') => entries[commandName]?.[variant]?.[0]);
+
+        return mockCommandResponseService;
+    };
+
+    const createSubject = (entries: Record<string, Record<string, string[]>>) => new AccountAgeCommand(
+        mockChatClient,
+        mockApiClient,
+        createService(entries),
+        mockLogger,
+    );
 
     beforeEach(() => {
         jest.resetAllMocks();
-
-        subject = new AccountAgeCommand(
-            mockChatClient,
-            mockApiClient,
-            mockCommandResponseService,
-            mockLogger,
-        );
     });
 
     describe('should report account age of target account', () => {
@@ -38,6 +48,7 @@ describe('Account Age Command Tests', () => {
 
         it('should display age of speaker account', async () => {
             // Arrange
+            const subject = createSubject(responses);
             const targetUser = <HelixUser>{
                 displayName: chatUser.displayName,
                 creationDate: new Date(2000, 0, 1),
@@ -49,28 +60,21 @@ describe('Account Age Command Tests', () => {
                 .getUserByName
                 .mockResolvedValue(targetUser);
 
-            mockCommandResponseService
-                .getCommandText
-                .mockReturnValue(`%${transientKeywords.targetuser}%, %${transientKeywords.accountage}%`);
-
             const age = getAgeReport(Timespan.fromNow(targetUser.creationDate));
 
             // Act
             await subject.handle(channel, command, chatUser, message, args);
 
             // Assert
-            expect(mockApiClient.users.getUserByName).toHaveBeenCalledWith(targetUser.displayName);
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName);
-
+            expect(mockApiClient.users.getUserByName).toHaveBeenCalledWith(chatUser.userName);
             expect(mockChatClient.say)
-                .toHaveBeenCalledWith(channel, expect.stringContaining(targetUser.displayName));
-            expect(mockChatClient.say)
-                .toHaveBeenCalledWith(channel, expect.stringContaining(age));
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
+                .toHaveBeenCalledWith(channel, `${targetUser.displayName} | ${age}`);
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
         });
 
         it('should display age of targeted account', async () => {
             // Arrange
+            const subject = createSubject(responses);
             const targetUser = <HelixUser>{
                 displayName: 'ProperCasedName',
                 creationDate: new Date(2000, 0, 1),
@@ -85,10 +89,6 @@ describe('Account Age Command Tests', () => {
                 .getUserByName
                 .mockResolvedValue(targetUser);
 
-            mockCommandResponseService
-                .getCommandText
-                .mockReturnValue(`%${transientKeywords.targetuser}%, %${transientKeywords.accountage}%`);
-
             const age = getAgeReport(Timespan.fromNow(targetUser.creationDate));
 
             // Act
@@ -96,17 +96,15 @@ describe('Account Age Command Tests', () => {
 
             // Assert
             expect(mockApiClient.users.getUserByName).toHaveBeenCalledWith(expectedApiClientParameter);
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName);
-
             expect(mockChatClient.say)
-                .toHaveBeenCalledWith(channel, expect.stringContaining(targetUser.displayName));
-            expect(mockChatClient.say)
-                .toHaveBeenCalledWith(channel, expect.stringContaining(age));
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
+                .toHaveBeenCalledWith(channel, `${targetUser.displayName} | ${age}`);
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
         });
 
         it('should say nothing (no user found)', async () => {
             // Arrange
+            const subject = createSubject(responses);
+
             mockApiClient
                 .users
                 .getUserByName
@@ -117,13 +115,16 @@ describe('Account Age Command Tests', () => {
 
             // Assert
             expect(mockApiClient.users.getUserByName).toHaveBeenCalled();
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
+            expect(mockChatClient.say).not.toHaveBeenCalled();
+            expect(mockLogger.warn).not.toHaveBeenCalled();
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
         });
 
-        it('should say nothing and log warning', async () => {
+        it('should say nothing and log warning (no text configured)', async () => {
             // Arrange
+            const subject = createSubject(unrelatedResponses);
             const targetUser = <HelixUser>{
-                displayName: '',
+                displayName: 'TargetUser',
                 creationDate: new Date(2000, 0, 1),
             };
             const args = ['irrelevant'];
@@ -133,18 +134,14 @@ describe('Account Age Command Tests', () => {
                 .getUserByName
                 .mockResolvedValue(targetUser);
 
-            mockCommandResponseService
-                .getCommandText
-                .mockReturnValue(undefined);
-
             // Act
             await subject.handle(channel, command, chatUser, message, args);
 
             // Assert
             expect(mockApiClient.users.getUserByName).toHaveBeenCalled();
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName);
-            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining(subject.commandName));
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
+            expect(mockChatClient.say).not.toHaveBeenCalled();
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(String), { variant: '' });
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
         });
     });
 });

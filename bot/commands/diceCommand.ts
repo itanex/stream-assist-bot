@@ -3,6 +3,9 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
+import { CommandName, TransientContext } from '../utilities/default-responses.js';
+import { templateResolver } from '../utilities/template-resolver.js';
+import { CommandResponseService } from '../services/index.js';
 
 export type RollResult = {
     rolls: number[];
@@ -22,9 +25,11 @@ export class DiceCommand implements ICommandHandler {
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
+    commandName: CommandName = 'dice';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
+        @inject(CommandResponseService) private commandResponseService: CommandResponseService,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
@@ -36,7 +41,20 @@ export class DiceCommand implements ICommandHandler {
 
         const results = this.rollDice(amount, parseInt(args[2]));
 
-        await this.chatClient.say(channel, `You rolled a ${args[1]}d${args[2]} that resulted in [ ${results.rolls.join(', ')} ] in total ${results.total}`);
+        const commandText = this.commandResponseService
+            .getCommandResponse(this.commandName, '');
+
+        if (commandText) {
+            const context: TransientContext = {
+                dice: `${args[1]}d${args[2]}`,
+                rolls: results.rolls.join(', '),
+                total: `${results.total}`,
+            };
+
+            await this.chatClient.say(channel, templateResolver(commandText, context, this.logger));
+        } else {
+            this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant: '' });
+        }
 
         this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName} > ${message}> ${JSON.stringify(results)}`);
     }

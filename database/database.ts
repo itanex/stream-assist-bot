@@ -1,13 +1,14 @@
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
+import { Dialect } from 'sequelize';
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
-import { DialectName } from '@sequelize/core';
 import InjectionTypes from '../dependency-management/types.js';
 import {
     BanEvent,
     ChannelPointRedeem,
     CheerEvent,
-    CommandResponse,
+    CommandResponseDbo,
+    CommandResponseTextDbo,
     DeathCounts,
     FollowEvent,
     GreetUser,
@@ -24,7 +25,7 @@ import sqlLogger from '../logger/sql-logger.js';
 /**
  * which sequelize dialect to use
  */
-const dbDialect: DialectName = 'postgres';
+const dbDialect: Dialect = 'postgres';
 
 export interface IDatabaseConfiguration {
     database: string;
@@ -57,7 +58,8 @@ function buildPostgresqlConfig(config: IDatabaseConfiguration): SequelizeOptions
             BanEvent,
             ChannelPointRedeem,
             CheerEvent,
-            CommandResponse,
+            CommandResponseDbo,
+            CommandResponseTextDbo,
             DeathCounts,
             FollowEvent,
             GreetUser,
@@ -78,6 +80,10 @@ export default class Database {
 
     get db(): Sequelize {
         return this.sequelize;
+    }
+
+    get transaction() {
+        return this.sequelize.transaction.bind(this.sequelize);
     }
 
     constructor(

@@ -28,7 +28,12 @@ describe('Follow Age Command Tests', () => {
         isBroadcaster: false,
     };
 
-    let subject: FollowAgeCommand;
+    const responses = {
+        followage: {
+            '': [`%${transientKeywords.targetuser}% | %${transientKeywords.broadcaster}% | %${transientKeywords.followage}%`],
+        },
+    };
+    const unrelatedResponses = { unrelated: { '': ['unrelated response text'] } };
 
     const mockEnvironment = <unknown>{
         twitchBot: {
@@ -45,18 +50,29 @@ describe('Follow Age Command Tests', () => {
         displayName: 'TestBroadcaster',
     } as HelixPrivilegedUser;
 
+    /** Serve getCommandResponse from the given entries (commandName -> variant -> texts) */
+    const createService = (entries: Record<string, Record<string, string[]>>) => {
+        mockCommandResponseService
+            .getCommandResponse
+            .mockImplementation((commandName, variant = '') => entries[commandName]?.[variant]?.[0]);
+
+        return mockCommandResponseService;
+    };
+
+    const createSubject = (entries: Record<string, Record<string, string[]>>) => new FollowAgeCommand(
+        mockChatClient,
+        mockApiClient,
+        mockBroadcaster,
+        createService(entries),
+        mockEnvironment,
+        mockLogger,
+    );
+
     beforeEach(() => {
         jest.resetAllMocks();
+    });
 
-        subject = new FollowAgeCommand(
-            mockChatClient,
-            mockApiClient,
-            mockBroadcaster,
-            mockCommandResponseService,
-            mockEnvironment,
-            mockLogger,
-        );
-
+    beforeEach(() => {
         mockBroadcaster
             .getBroadcaster
             .mockResolvedValue(broadcaster);
@@ -65,6 +81,7 @@ describe('Follow Age Command Tests', () => {
     describe('should say the follow age of the user', () => {
         it(`say age of speaker's follow age`, async () => {
             // Arrange
+            const subject = createSubject(responses);
             const followUser = <HelixChannelFollower>{
                 userDisplayName: chatUser.displayName,
                 followDate: new Date(2000, 1, 1),
@@ -79,10 +96,6 @@ describe('Follow Age Command Tests', () => {
                     total: 1,
                 });
 
-            mockCommandResponseService
-                .getCommandText
-                .mockReturnValue(`%${transientKeywords.targetuser}%, %${transientKeywords.followage}%`);
-
             // Act
             await subject.handle(channel, command, chatUser, message, []);
 
@@ -94,19 +107,15 @@ describe('Follow Age Command Tests', () => {
                     mockEnvironment.twitchBot.broadcaster.id,
                     chatUser.userId,
                 );
-            expect(mockCommandResponseService.getCommandText)
-                .toHaveBeenCalledWith(subject.commandName);
             expect(mockBroadcaster.getBroadcaster).toHaveBeenCalled();
             expect(mockChatClient.say)
-                .toHaveBeenCalledWith(channel, expect
-                    .stringContaining(chatUser.displayName));
-            expect(mockChatClient.say)
-                .toHaveBeenCalledWith(channel, expect
-                    .stringContaining(age));
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
+                .toHaveBeenCalledWith(channel, `${chatUser.displayName} | ${broadcaster.displayName} | ${age}`);
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
         });
+
         it(`say age of targeted user's follow age`, async () => {
             // Arrange
+            const subject = createSubject(responses);
             const args: string[] = ['TargetUser'];
             const expectedApiUsername = 'targetuser';
             const followUser = <HelixChannelFollower>{
@@ -132,10 +141,6 @@ describe('Follow Age Command Tests', () => {
                     total: 1,
                 });
 
-            mockCommandResponseService
-                .getCommandText
-                .mockReturnValue(`%${transientKeywords.targetuser}%, %${transientKeywords.followage}%`);
-
             // Act
             await subject.handle(channel, command, chatUser, message, args);
 
@@ -149,17 +154,15 @@ describe('Follow Age Command Tests', () => {
                     mockEnvironment.twitchBot.broadcaster.id,
                     chatUser.userId,
                 );
-            expect(mockCommandResponseService.getCommandText)
-                .toHaveBeenCalledWith(subject.commandName);
             expect(mockBroadcaster.getBroadcaster).toHaveBeenCalled();
             expect(mockChatClient.say)
-                .toHaveBeenCalledWith(channel, expect.stringContaining(followUser.userDisplayName));
-            expect(mockChatClient.say)
-                .toHaveBeenCalledWith(channel, expect.stringContaining(age));
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
+                .toHaveBeenCalledWith(channel, `${followUser.userDisplayName} | ${broadcaster.displayName} | ${age}`);
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
         });
+
         it(`say nothing, when target user is not following`, async () => {
             // Arrange
+            const subject = createSubject(responses);
             const args: string[] = ['TargetUser'];
             const expectedApiUsername = 'targetuser';
             const apiUser = <HelixUser>{
@@ -192,16 +195,15 @@ describe('Follow Age Command Tests', () => {
                     mockEnvironment.twitchBot.broadcaster.id,
                     chatUser.userId,
                 );
-            expect(mockCommandResponseService.getCommandText)
-                .not.toHaveBeenCalled();
-            expect(mockBroadcaster.getBroadcaster)
-                .not.toHaveBeenCalled();
-            expect(mockChatClient.say)
-                .not.toHaveBeenCalled();
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
+            expect(mockBroadcaster.getBroadcaster).not.toHaveBeenCalled();
+            expect(mockChatClient.say).not.toHaveBeenCalled();
+            expect(mockLogger.warn).not.toHaveBeenCalled();
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
         });
+
         it(`say nothing, when target user is not found`, async () => {
             // Arrange
+            const subject = createSubject(responses);
             const args: string[] = ['TargetUser'];
             const expectedApiUsername = 'targetuser';
 
@@ -216,18 +218,16 @@ describe('Follow Age Command Tests', () => {
             // Assert
             expect(mockApiClient.users.getUserByName)
                 .toHaveBeenCalledWith(expectedApiUsername);
-            expect(mockApiClient.channels.getChannelFollowers)
-                .not.toHaveBeenCalled();
-            expect(mockCommandResponseService.getCommandText)
-                .not.toHaveBeenCalled();
-            expect(mockBroadcaster.getBroadcaster)
-                .not.toHaveBeenCalled();
-            expect(mockChatClient.say)
-                .not.toHaveBeenCalled();
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
+            expect(mockApiClient.channels.getChannelFollowers).not.toHaveBeenCalled();
+            expect(mockBroadcaster.getBroadcaster).not.toHaveBeenCalled();
+            expect(mockChatClient.say).not.toHaveBeenCalled();
+            expect(mockLogger.warn).not.toHaveBeenCalled();
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
         });
-        it(`not say anything, log warning (no CommandText)`, async () => {
+
+        it(`not say anything, log warning (no text configured)`, async () => {
             // Arrange
+            const subject = createSubject(unrelatedResponses);
             const followUser = <HelixChannelFollower>{
                 userDisplayName: chatUser.displayName,
                 followDate: new Date(2000, 1, 1),
@@ -242,28 +242,25 @@ describe('Follow Age Command Tests', () => {
                     total: 1,
                 });
 
-            mockCommandResponseService
-                .getCommandText
-                .mockReturnValue(undefined);
-
             // Act
             await subject.handle(channel, command, chatUser, message, []);
 
             // Assert
-            expect(mockApiClient.users.getUserByName)
-                .not.toHaveBeenCalled();
+            expect(mockApiClient.users.getUserByName).not.toHaveBeenCalled();
             expect(mockApiClient.channels.getChannelFollowers)
                 .toHaveBeenCalledWith(
                     mockEnvironment.twitchBot.broadcaster.id,
                     chatUser.userId,
                 );
-            expect(mockCommandResponseService.getCommandText).toHaveBeenCalledWith(subject.commandName);
             expect(mockBroadcaster.getBroadcaster).not.toHaveBeenCalled();
             expect(mockChatClient.say).not.toHaveBeenCalled();
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(String), { variant: '' });
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
         });
+
         it(`say nothing, broadcaster cannot follow self`, async () => {
             // Arrange
+            const subject = createSubject(responses);
             const broadcastUser = <ChatUser>{
                 displayName: 'TestBroadcastUser',
                 userId: 'TestBroadcastId',
@@ -274,17 +271,11 @@ describe('Follow Age Command Tests', () => {
             await subject.handle(channel, command, broadcastUser, message, []);
 
             // Assert
-            expect(mockApiClient.users.getUserByName)
-                .not.toHaveBeenCalled();
-            expect(mockApiClient.channels.getChannelFollowers)
-                .not.toHaveBeenCalled();
-            expect(mockCommandResponseService.getCommandText)
-                .not.toHaveBeenCalled();
-            expect(mockBroadcaster.getBroadcaster)
-                .not.toHaveBeenCalled();
-            expect(mockChatClient.say)
-                .not.toHaveBeenCalled();
-            expect(mockLogger.info).toHaveBeenCalledWith(expect.anything());
+            expect(mockApiClient.users.getUserByName).not.toHaveBeenCalled();
+            expect(mockApiClient.channels.getChannelFollowers).not.toHaveBeenCalled();
+            expect(mockBroadcaster.getBroadcaster).not.toHaveBeenCalled();
+            expect(mockChatClient.say).not.toHaveBeenCalled();
+            expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
         });
     });
 });

@@ -1,0 +1,18 @@
+# Stage stack, run as compose project "stream-assist-bot-stage" via stage.sh.
+# Disposable: no named volumes; `stage.sh down` removes everything.
+name: stream-assist-bot-stage
+services:
+  postgres:
+    image: ${STAGE_PG_IMAGE:?set STAGE_PG_IMAGE to production's postgres major, e.g. postgres:17}
+    container_name: sab-stage
+    user: postgres
+    environment:
+      POSTGRES_PASSWORD: stage
+    ports:
+      - 6433:5432 # Stage port; production publishes 6432
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s

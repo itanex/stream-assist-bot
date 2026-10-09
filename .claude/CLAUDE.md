@@ -4,13 +4,13 @@ A TypeScript Twitch chat bot with EventSub integration, PostgreSQL persistence, 
 
 ## Tech Stack
 
-- **Runtime**: Node.js + TypeScript (ts-node, no build step)
-- **Twitch**: @twurple/chat, @twurple/api, @twurple/auth, @twurple/eventsub-ws, @twurple/eventsub-http (v7.0.10)
-- **DI**: Inversify 6 with reflect-metadata
-- **ORM**: Sequelize 6 + sequelize-typescript + PostgreSQL (pg)
-- **Logging**: Winston + daily-rotate-file
-- **Testing**: Jest + ts-jest
-- **Linting**: ESLint + airbnb-base
+* **Runtime**: Node.js + TypeScript (ts-node, no build step)
+* **Twitch**: @twurple/chat, @twurple/api, @twurple/auth, @twurple/eventsub-ws, @twurple/eventsub-http (v7.0.10)
+* **DI**: Inversify 6 with reflect-metadata
+* **ORM**: Sequelize 6 + sequelize-typescript + PostgreSQL (pg)
+* **Logging**: Winston + daily-rotate-file
+* **Testing**: Jest + ts-jest
+* **Linting**: ESLint + airbnb-base
 
 ## Common Commands
 
@@ -57,12 +57,18 @@ logger/
 
 ## Architecture
 
+[docs/architecture.md](../docs/architecture.md) is the authoritative design reference for this repository. This section summarizes it; where they differ, `docs/architecture.md` wins.
+
+### Layering
+
+Entry points (commands, handlers, event-sub handlers, servers, scheduler) -> services -> repositories -> models. Commands access data through services, never repositories; response text only through `CommandResponseService`. Existing exceptions are listed in `docs/command-system.md` (tracked in #158) - do not add new ones.
+
 ### Dependency Injection (Inversify)
 
-All services use constructor injection. Bindings are in [dependency-management/inversify.config.ts](dependency-management/inversify.config.ts):
-- **Singletons**: `Database`, `ChatBot`, `Scheduler`, socket/overlay/auth servers
-- **Multi-binding**: All command handlers bound to `InjectionTypes.CommandHandlers`
-- **Constants**: `ChatClient`, `ApiClient`, `EventSubWsListener`, `Logger`
+All services use constructor injection. Bindings are in [dependency-management/inversify.config.ts](../dependency-management/inversify.config.ts):
+* **Singletons**: `Database`, `ChatBot`, `Scheduler`, socket/overlay/auth servers
+* **Multi-binding**: All command handlers bound to `InjectionTypes.CommandHandlers`
+* **Constants**: `ChatClient`, `ApiClient`, `EventSubWsListener`, `Logger`
 
 ### Adding a New Command
 
@@ -97,8 +103,8 @@ The `MessageHandler` enforces this before routing to any command.
 
 1. Copy `.env` and fill in real credentials
 2. (Optional) Create auth token file: `./local-cache/auth-tokens.{TWITCH_BROADCASTER_ID}.json`
-   - Must contain a valid Twitch `RefreshingAuthProvider` AccessToken JSON
-   - If absent, the app will guide through OAuth on first run via the auth server
+   * Must contain a valid Twitch `RefreshingAuthProvider` AccessToken JSON
+   * If absent, the app will guide through OAuth on first run via the auth server
 3. PostgreSQL must be running (local port 6432, or via `docker compose up`)
 
 ## Key .env Variables
@@ -118,7 +124,10 @@ WEATHER_API_KEY / WAYPOINT_DEV_KEY_1 / WAYPOINT_DEV_KEY_2
 
 ## Testing Conventions
 
-- Test files live alongside source or in a `__tests__/` folder
-- Use `ts-jest` for TypeScript support - no separate compile step
-- Integration tests should use a real database, not mocks (mocked tests have caused prod divergence issues before)
-- Run `npm test` before committing to catch open handles
+* Test files live alongside source or in a `__tests__/` folder
+* Use `ts-jest` for TypeScript support - no separate compile step
+* Unit tests first: construct subjects directly with mocks from `tests/common.mocks.ts`; never build an Inversify container in a spec
+* Only database-backed code (repositories, `Database`) is tested against PostgreSQL, via a per-spec `@testcontainers/postgresql` container
+* Log assertions check `expect.any(String)` plus logged data, never message text
+* Full rules: [docs/architecture.md#testing](../docs/architecture.md#testing)
+* Run `npm test` before committing to catch open handles

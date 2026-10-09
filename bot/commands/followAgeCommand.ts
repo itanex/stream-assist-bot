@@ -60,18 +60,19 @@ export class FollowAgeCommand implements ICommandHandler {
                 .getChannelFollowers(this.environment.twitchBot.broadcaster.id, followingUser.id);
 
             if (follower.data[0]) {
-                const result = this.commandResponseService.getCommandText(this.commandName);
+                const commandText = this.commandResponseService
+                    .getCommandResponse(this.commandName, '');
 
-                if (result) {
+                if (commandText) {
                     const context: TransientContext = {
                         targetuser: follower.data[0].userDisplayName,
                         broadcaster: (await this.broadcaster.getBroadcaster()).displayName,
                         followage: `${getAgeReport(Timespan.fromNow(follower.data[0].followDate))}`,
                     };
 
-                    await this.chatClient.say(channel, templateResolver(result, context, this.logger));
+                    await this.chatClient.say(channel, templateResolver(commandText, context, this.logger));
                 } else {
-                    this.logger.warn(`Unable to retrieve ${this.commandName} response text`);
+                    this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant: '' });
                 }
             }
         }
