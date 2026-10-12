@@ -81,6 +81,13 @@ export default class CommandResponseRepository {
                     return;
                 }
 
+                // bulkCreate does not validate included models
+                await Promise.all(records
+                    .flatMap(x => x.texts)
+                    .map(x => CommandResponseTextDbo
+                        .build(x)
+                        .validate({ skip: ['commandResponseId'] })));
+
                 await CommandResponseDbo
                     .bulkCreate(
                         records,

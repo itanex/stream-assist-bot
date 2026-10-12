@@ -36,7 +36,7 @@ describe('CommandResponse.Repository (postgres)', () => {
 
     const defaultVariant = '';
     const validText = 'test-extra-text-value';
-    const invalidText = 'short';
+    const invalidText = 'a';
     const newCommandName = 'new-command-name';
     const newVariantName = 'new-variant-name';
 
@@ -166,6 +166,24 @@ describe('CommandResponse.Repository (postgres)', () => {
                     .toHaveBeenCalledWith(expect.any(String), expect.any(Error));
 
                 spy.mockRestore();
+            });
+
+            it('should log error and seed nothing when a text is invalid', async () => {
+                // Arrange
+                const invalidEntries: Record<string, Record<string, string[]>> = {
+                    ...seedEntries,
+                    'test-key-4': { '': [invalidText] },
+                };
+
+                // Act
+                await subject.seed(invalidEntries);
+
+                const actual = await subject.findAll();
+
+                // Assert
+                expect(mockLogger.error)
+                    .toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ name: 'SequelizeValidationError' }));
+                expect(actual).toHaveLength(0);
             });
         });
 

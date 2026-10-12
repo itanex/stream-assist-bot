@@ -30,8 +30,8 @@ export default class CommandResponseTextDbo extends Model {
         validate: {
             notEmpty: true,
             len: {
-                args: [10, 400],
-                msg: 'command text must be 10-400 characters',
+                args: [2, 400],
+                msg: 'command text must be 2-400 characters',
             },
         },
         set(value: string) {
