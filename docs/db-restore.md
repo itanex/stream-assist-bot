@@ -1,58 +1,92 @@
 # Database Restore Guide
 
-This guide provides instructions on how to restore the database for the Stream Assist Bot project.
+Restores the Stream Assist Bot database in the `compose.yaml` stack (`postgres` service, database `stream-assist-bot`, user `postgres`) from a backup.
 
 ## Prerequisites
 
-- Ensure you have access to the database backup file.
-- Ensure you have the necessary permissions to restore the database.
-- Install the required database management tools (e.g., MySQL, PostgreSQL).
+* Docker running and the `compose.yaml` stack up
+* A backup in pg_dump custom format (`-Fc`)
+* Run all commands from the repository root in bash
 
-## Steps to Restore the Database
+## Full Sequence
 
-1. **Stop the Application**
-    - Ensure that the Stream Assist Bot application is stopped to prevent any data inconsistencies.
+Each step is detailed in the sections below.
 
-2. **Backup the Current Database**
-    - Before restoring, create a backup of the current database in case you need to revert the changes.
+```bash
+# 1. Stop the bot
+docker compose stop app
 
-    ```sh
-    mysqldump -u [username] -p [database_name] > [backup_file].sql
-    ```
+# 2. Back up the current database
+docker compose exec -T postgres pg_dump -U postgres -Fc stream-assist-bot > local-cache/pre-restore.dump
 
-3. **Drop the Existing Database**
-    - Drop the existing database to prepare for the restore process.
+# 3. Drop and recreate the database
+docker compose exec -T postgres dropdb -U postgres stream-assist-bot
+docker compose exec -T postgres createdb -U postgres stream-assist-bot
 
-    ```sql
-    DROP DATABASE [database_name];
-    CREATE DATABASE [database_name];
-    ```
+# 4. Restore from the backup
+docker compose exec -T postgres pg_restore -U postgres -d stream-assist-bot --no-owner < <backup>.dump
 
-4. **Restore the Database from Backup**
-    - Use the backup file to restore the database.
+# 5. Verify the tables
+docker compose exec postgres psql -U postgres -d stream-assist-bot -c '\dt'
 
-    ```sh
-    mysql -u [username] -p [database_name] < [backup_file].sql
-    ```
+# 6. Start the bot
+docker compose start app
+```
 
-5. **Verify the Restore**
-    - Check the database to ensure that the data has been restored correctly.
+## 1. Stop the Application
 
-    ```sql
-    USE [database_name];
-    SHOW TABLES;
-    ```
+```bash
+docker compose stop app
+```
 
-6. **Restart the Application**
-    - Start the Stream Assist Bot application and verify that it is functioning correctly.
+Prevents writes during the restore and releases the bot's connections so the database can be dropped.
+
+## 2. Back Up the Current Database
+
+```bash
+docker compose exec -T postgres pg_dump -U postgres -Fc stream-assist-bot > local-cache/pre-restore.dump
+```
+
+* `-Fc` (custom format) is what `pg_restore` reads
+* `-T` disables the pseudo-TTY, which would corrupt the binary output
+* `local-cache/` is gitignored
+
+## 3. Drop and Recreate the Database
+
+```bash
+docker compose exec -T postgres dropdb -U postgres stream-assist-bot
+docker compose exec -T postgres createdb -U postgres stream-assist-bot
+```
+
+## 4. Restore from the Backup
+
+```bash
+docker compose exec -T postgres pg_restore -U postgres -d stream-assist-bot --no-owner < <backup>.dump
+```
+
+`--no-owner` skips ownership commands, matching `deployment/stage/stage.sh`.
+
+## 5. Verify the Restore
+
+```bash
+docker compose exec postgres psql -U postgres -d stream-assist-bot -c '\dt'
+```
+
+Lists the restored tables, including `SequelizeMeta` (applied migrations).
+
+## 6. Restart the Application
+
+```bash
+docker compose start app
+```
+
+Check the bot log for `DB Connection has been established successfully.` and `DB Sync completed successfully`.
 
 ## Troubleshooting
 
-- **Permission Issues**: Ensure that you have the correct permissions to perform the restore.
-- **Backup File Issues**: Verify that the backup file is not corrupted and is in the correct format.
-- **Database Connection Issues**: Ensure that the database server is running and accessible.
+* **`dropdb` fails with active connections**: the bot is still connected; confirm step 1 with `docker compose ps`
+* **`pg_restore` rejects the file**: the backup is not custom format; recreate it with `pg_dump -Fc`
 
-## Additional Resources
+## Related
 
-- [MySQL Documentation](https://dev.mysql.com/doc/)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+* [Stage Environment](stage-environment.md): rehearse against a restored copy before touching the live database
