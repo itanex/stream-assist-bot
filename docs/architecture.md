@@ -89,6 +89,13 @@ Utilities (`bot/utilities`) and infrastructure (`Logger`, `ChatClient`, `ApiClie
 
 * PostgreSQL through Sequelize 6 + sequelize-typescript.
 * `Database.initialize()` connects and runs `sequelize.sync()`, which creates the schema from `database/models` at startup.
+* Schema is delivered by sequelize-cli migrations in `database/migrations/`. `20261013120000-baseline.js` builds every model's table from an empty database.
+
+### Migrations
+
+* One migration per schema change.
+* Every migration has a working `down`, or a `down` that throws and states the migration is irreversible.
+* The baseline is create-if-not-exists only, never alters an existing object, and is irreversible.
 * Command response text is seeded from `defaultResponses` into an empty `CommandResponse` table on startup; see [Command System - Database-Backed Responses](command-system.md#database-backed-responses).
 
 ---
