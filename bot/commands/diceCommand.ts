@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
-import { CommandName, TransientContext } from '../utilities/default-responses.js';
+import { TransientContext } from '../utilities/default-responses.js';
 import { templateResolver } from '../utilities/template-resolver.js';
 import { CommandResponseService } from '../services/index.js';
 
@@ -25,7 +25,7 @@ export class DiceCommand implements ICommandHandler {
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
-    commandName: CommandName = 'dice';
+    commandName: string = 'dice';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,

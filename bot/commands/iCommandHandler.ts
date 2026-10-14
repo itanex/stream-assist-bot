@@ -1,7 +1,6 @@
 /* eslint-disable no-extra-semi */
 /* eslint-disable semi */
 import { ChatUser } from '@twurple/chat';
-import { CommandName } from '../utilities/default-responses.js';
 
 /** Represents the restriction state */
 export type OnlineState = 'always' | 'online' | 'offline';
@@ -10,7 +9,7 @@ export interface ICommandHandler {
     /** Regular Expression to identify command */
     exp: RegExp;
     /** Used to identify command in database */
-    commandName?: CommandName;
+    commandName?: string;
     /** The timeout in seconds for this command */
     timeout: number;
     leadMod?: boolean;

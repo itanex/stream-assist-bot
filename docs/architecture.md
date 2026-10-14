@@ -38,7 +38,7 @@ The bot is a single Node.js process (TypeScript, run via ts-node, no build step)
 | `bot/event-sub-handlers/` | Twitch EventSub event handlers |
 | `bot/services/` | Application services - business rules and in-memory state over repositories |
 | `bot/repositories/` | Data access - the only code that queries Sequelize models |
-| `bot/utilities/` | Shared helpers (`Broadcaster`, `templateResolver`, `defaultResponses`, time spans) |
+| `bot/utilities/` | Shared helpers (`Broadcaster`, `templateResolver`, `CommandFamilies`, time spans) |
 | `bot/overlay/`, `bot/auth/` | HTTP/WebSocket servers for OBS overlays and the OAuth callback |
 | `logger/` | Winston logger configuration |
 | `tests/` | Shared test mocks and Jest setup |
@@ -96,7 +96,7 @@ Utilities (`bot/utilities`) and infrastructure (`Logger`, `ChatClient`, `ApiClie
 * One migration per schema change.
 * Every migration has a working `down`, or a `down` that throws and states the migration is irreversible.
 * The baseline is create-if-not-exists only, never alters an existing object, and is irreversible.
-* Command response text is seeded from `defaultResponses` into an empty `CommandResponse` table on startup; see [Command System - Database-Backed Responses](command-system.md#database-backed-responses).
+* Baseline command response text is delivered by `20261014115000-baseline-seed-data.js`, a data migration that only inserts missing command/variant pairs and is irreversible; see [Command System - Database-Backed Responses](command-system.md#database-backed-responses).
 
 ---
 

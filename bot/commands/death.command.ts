@@ -8,7 +8,7 @@ import { ApiClient } from '@twurple/api';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import InjectionTypes from '../../dependency-management/types.js';
 import { CommandTimeout } from '../types/CommandTimeout.js';
-import { CommandName, TransientContext } from '../utilities/default-responses.js';
+import { TransientContext } from '../utilities/default-responses.js';
 import { templateResolver } from '../utilities/template-resolver.js';
 import { CommandResponseService } from '../services/index.js';
 import DeathCountRepository from '../repositories/death-count.repository.js';
@@ -32,7 +32,7 @@ export class DeathCommand implements ICommandHandler {
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
-    commandName: CommandName = 'death';
+    commandName: string = 'death';
 
     private commandTimeout: CommandTimeout = { name: 'DeathCommand', timeout: 0 };
 
@@ -96,7 +96,7 @@ export class DeathCountCommand implements ICommandHandler {
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
-    commandName: CommandName = 'deathcount';
+    commandName: string = 'deathcount';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
@@ -150,7 +150,7 @@ export class LastDeathCountCommmand implements ICommandHandler {
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
-    commandName: CommandName = 'lastdeathcount';
+    commandName: string = 'lastdeathcount';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,

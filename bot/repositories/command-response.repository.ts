@@ -57,55 +57,6 @@ export default class CommandResponseRepository {
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) { }
 
-    async seed(entries: Record<string, Record<string, string[]>>): Promise<void> {
-        const records = Object
-            .entries(entries)
-            .flatMap(([commandName, variants]) => Object
-                .entries(variants)
-                .map(([variant, text]) => ({
-                    commandName,
-                    variant,
-                    texts: text.map(x => ({ text: x })),
-                })));
-
-        try {
-            await this.database.transaction(async transaction => {
-                const hasCommands = (await CommandResponseDbo
-                    .count({
-                        paranoid: false,
-                        transaction,
-                    })) > 0;
-
-                if (hasCommands) {
-                    this.logger.info('Database::CommandReponse/Text Attempted to seed after database seeded');
-                    return;
-                }
-
-                // bulkCreate does not validate included models
-                await Promise.all(records
-                    .flatMap(x => x.texts)
-                    .map(x => CommandResponseTextDbo
-                        .build(x)
-                        .validate({ skip: ['commandResponseId'] })));
-
-                await CommandResponseDbo
-                    .bulkCreate(
-                        records,
-                        {
-                            include: {
-                                model: CommandResponseTextDbo,
-                                as: 'texts',
-                            },
-                            validate: true,
-                            transaction,
-                        },
-                    );
-            });
-        } catch (error) {
-            this.logger.error(`Failed to Seed Data for CommandResponse/Text`, error);
-        }
-    }
-
     async findAll(): Promise<CommandResponse[]> {
         return (await CommandResponseDbo
             .findAll({ include: CommandResponseTextDbo }))

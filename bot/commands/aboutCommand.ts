@@ -3,13 +3,12 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
-import { CommandName } from '../utilities/default-responses.js';
 import { CommandResponseService } from '../services/index.js';
 
 @injectable()
 export class AboutCommand implements ICommandHandler {
     exp: RegExp = /!(about)/i;
-    commandName: CommandName = 'about';
+    commandName: string = 'about';
     timeout: number = 5;
     mod: boolean = true;
     vip: boolean = true;

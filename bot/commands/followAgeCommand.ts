@@ -6,7 +6,7 @@ import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import InjectionTypes from '../../dependency-management/types.js';
 import { type Environment } from '../../configurations/environment.js';
 import Timespan, { getAgeReport } from '../utilities/timeSpan.js';
-import { CommandName, TransientContext } from '../utilities/default-responses.js';
+import { TransientContext } from '../utilities/default-responses.js';
 import { templateResolver } from '../utilities/template-resolver.js';
 import Broadcaster from '../utilities/broadcaster.js';
 import { CommandResponseService } from '../services/index.js';
@@ -24,7 +24,7 @@ export class FollowAgeCommand implements ICommandHandler {
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
-    commandName: CommandName = 'followage';
+    commandName: string = 'followage';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,

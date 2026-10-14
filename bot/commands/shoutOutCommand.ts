@@ -13,10 +13,9 @@ import relativeTime from 'dayjs/plugin/relativeTime.js';
 import calendar from 'dayjs/plugin/calendar.js';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-// import { HelixPaginatedScheduleResult } from '@twurple/api/lib/interfaces/endpoints/schedule.input';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import InjectionTypes from '../../dependency-management/types.js';
-import { CommandName, TransientContext } from '../utilities/default-responses.js';
+import { TransientContext } from '../utilities/default-responses.js';
 import { templateResolver } from '../utilities/template-resolver.js';
 import { CommandResponseService } from '../services/index.js';
 
@@ -37,7 +36,7 @@ export class ShoutOutCommand implements ICommandHandler {
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
-    commandName: CommandName = 'shoutout';
+    commandName: string = 'shoutout';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,

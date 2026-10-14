@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { UniqueConstraintError, ValidationError } from 'sequelize';
 import winston from 'winston';
-import { defaultResponses, CommandFamilies } from '../utilities/default-responses.js';
+import { CommandFamilies } from '../utilities/default-responses.js';
 import InjectionTypes from '../../dependency-management/types.js';
 import { CommandResponseRepository } from '../repositories/index.js';
 import { CommandResponseTextChanges, type CommandResponseText } from '../repositories/command-response.repository.js';
@@ -49,9 +49,6 @@ export default class CommandResponseService {
     ) { }
 
     async initialize(): Promise<void> {
-        await this.commandResponseRepository
-            .seed(defaultResponses);
-
         const rows = await this.commandResponseRepository.findAll();
         this.responseCache = new Map(rows
             .map((row): [string, ResponseEntry] => [
