@@ -1,11 +1,12 @@
 # Stage Environment
 
-`deployment/stage/` is a disposable Postgres stack for rehearsing database work before it reaches production. This guide covers verifying `sync()` + `seed()` against a fresh database. The full command list is in the header of `deployment/stage/stage.sh`.
+`deployment/stage/` is a disposable Postgres stack for rehearsing database work before it reaches production. This guide covers running the migrations against a fresh database and a restored copy, then verifying the baseline seed data. The full command list is in the header of `deployment/stage/stage.sh`.
 
 ## Prerequisites
 
 * Docker running
 * The `compose.yaml` stack up (the dump is taken from its `postgres` service)
+* `deployment/stage/.env.stage` present (copy `.env.stage.example`)
 * Run all commands from the repository root in bash
 
 ## Full Sequence
@@ -19,14 +20,18 @@ docker compose exec -T postgres pg_dump -U postgres -Fc stream-assist-bot > loca
 # 2. Start stage: restores the dump, creates an empty fresh database
 STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh up local-cache/stream-assist-bot.dump
 
-# 3. Run sync() + seed() against the fresh database; check the "seed result" line
-STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh seed-fresh
+# 3. Run the migrations against the fresh database and the restored copy
+STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh migrate stream-assist-bot-stage-fresh
+STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh migrate
 
-# 4. Tear down stage
+# 4. Verify the baseline seed data in both databases
+STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh check-responses stream-assist-bot-stage-fresh
+STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh check-responses
+
+# 5. Tear down stage, remove the dump, confirm no stage container remains
 STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh down
-
-# 5. Remove the dump
 rm local-cache/stream-assist-bot.dump
+docker ps -a --filter name=sab-stage
 ```
 
 ## 1. Create a Dump
@@ -54,25 +59,40 @@ STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh up local-cache/strea
 stage: up on localhost:6433 (stream-assist-bot-stage restored, stream-assist-bot-stage-fresh empty)
 ```
 
-## 3. Seed the Fresh Database
+## 3. Run the Migrations
 
 ```bash
-STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh seed-fresh
+STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh migrate stream-assist-bot-stage-fresh
+STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh migrate
 ```
 
-Runs the app's `sync()` and `seed()` against `stream-assist-bot-stage-fresh` without starting the bot. Check the result line:
+* Fresh database: every migration runs, building the schema and inserting the baseline seed data
+* Restored copy (the default): only migrations newer than production's `SequelizeMeta` run, as they would on deploy
+
+## 4. Verify the Seed Data
+
+```bash
+STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh check-responses stream-assist-bot-stage-fresh
+STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh check-responses
+```
+
+Checks every command/variant pair in the baseline seed migration against the database, without loading bot code. The last line is the verdict, and the exit code matches it (0 on `PASS`, 1 on `FAIL`):
 
 ```
-info: == seed result: <n> CommandResponse, <n> CommandResponseText (0 means seed() failed; see error above)
+== PASS <database>: <n>/<n> seed pairs present with text, <n> missing texts
+== FAIL <database>: <n>/<n> seed pairs present with text, <n> missing texts
 ```
 
-* Non-zero counts and no `Failed to Seed Data` error: seeding succeeded
-* Zero counts: `seed()` failed; the error is logged above the result line
+* `missing pair`: the pair has no row, or no active text; the check fails
+* `missing text`: a baseline text is absent; reported only, since a restored copy may have texts edited or removed in chat
+* `FAIL check-responses could not complete`: the check did not run (e.g. stage not up); the error follows
 
-## 4. Tear Down
+## 5. Tear Down
 
 ```bash
 STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh down
+rm local-cache/stream-assist-bot.dump
+docker ps -a --filter name=sab-stage
 ```
 
-Removes the stage container, network, and anonymous volumes.
+Removes the stage container, network, and anonymous volumes, and the dump. The pass is complete only when `docker ps -a` lists no `sab-stage` container.

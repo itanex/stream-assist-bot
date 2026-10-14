@@ -3,7 +3,7 @@ import { ChatClient, ChatUser } from '@twurple/chat';
 import winston from 'winston';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import InjectionTypes from '../../dependency-management/types.js';
-import { CommandName, TransientContext } from '../utilities/default-responses.js';
+import { TransientContext } from '../utilities/default-responses.js';
 import { templateResolver } from '../utilities/template-resolver.js';
 import { CommandResponseService } from '../services/index.js';
 
@@ -20,7 +20,7 @@ export default class BrainCommand implements ICommandHandler {
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
-    commandName: CommandName = 'brain';
+    commandName: string = 'brain';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,

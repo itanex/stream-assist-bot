@@ -3,7 +3,6 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
-import { CommandName } from '../utilities/default-responses.js';
 import { CommandResponseService } from '../services/index.js';
 
 @injectable()
@@ -19,7 +18,7 @@ export class HelpCommand implements ICommandHandler {
     viewer: boolean = true;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'always';
-    commandName: CommandName = 'help';
+    commandName: string = 'help';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,

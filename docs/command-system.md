@@ -17,7 +17,7 @@ Commands are discrete units of chat functionality. Each command is a class imple
 ```typescript
 export interface ICommandHandler {
     exp: RegExp;
-    commandName?: CommandName;
+    commandName?: string;
     timeout: number;
     leadMod?: boolean;
     mod: boolean;
@@ -39,7 +39,7 @@ export interface ICommandHandler {
 | Property | Type | Description |
 |---|---|---|
 | `exp` | `RegExp` | Pattern matched against the raw chat message. The first capture group is the command name; subsequent groups become `args`. |
-| `commandName` | `CommandName?` | Key into the database-backed response text - a `defaultResponses` key (seeded texts) or a `CommandFamilies` key (a family with no seeded texts). Every command that says text in chat declares one. |
+| `commandName` | `string?` | Key into the database-backed response text: the `commandName` of the command's `CommandResponse` rows. Linked manually; nothing checks the name at compile time. Every command that says text in chat declares one. |
 | `timeout` | `number` | Cooldown period in seconds. Privileged users (mod, VIP, subscriber, etc.) receive half this duration. |
 | `leadMod` | `boolean` | (optional) Allow channel lead moderators. |
 | `mod` | `boolean` | Allow channel moderators. |
@@ -115,8 +115,8 @@ The cooldown chat message always names the command (its class name), regardless 
 
 All command response text lives in the database (`CommandResponse` table), making it editable at runtime without a redeploy. Commands hold no response text of their own - no inline strings, no response arrays, no fallback.
 
-* `defaultResponses` (`bot/utilities/default-responses.ts`) is the seed source only. It is shaped `commandName -> variant -> texts[]`; commands never read it directly.
-* On startup, `CommandResponseService.initialize()` seeds `defaultResponses` into an empty `CommandResponse` table, then loads every row into an in-memory cache. Seeding is skipped entirely once the table holds any rows, so new `defaultResponses` entries do not reach an already-seeded database.
+* Baseline texts are delivered by the `20261014115000-baseline-seed-data` migration. It inserts each command/variant pair missing from `CommandResponse`, with its texts; removed rows count as present. `db:migrate` on an empty database produces every baseline text, and an already-seeded database is left unchanged.
+* On startup, `CommandResponseService.initialize()` loads every row into an in-memory cache. It does not seed.
 * Reads never hit the database per-message. Writes through the service keep the cache in sync; rows edited directly in the database are not visible until restart.
 * A command reads its text via `CommandResponseService.getCommandResponse(this.commandName, variant)`. When a variant holds several texts, one is picked at random.
 
@@ -126,8 +126,8 @@ If `getCommandResponse` returns nothing, the command logs a warning that carries
 
 ### Making a command's response editable
 
-1. Add the texts to `defaultResponses` under the command's name and variant(s), written with `%token%` placeholders for any dynamic content
-2. Declare `commandName` on the command class referencing that key
+1. Add a data migration that inserts the command's `CommandResponse` rows and texts for its variant(s), written with `%token%` placeholders for any dynamic content
+2. Declare `commandName` on the command class matching the rows' `commandName`
 3. Inject `CommandResponseService` and read the text in `handle` with the variant the code path needs
 4. Build a `TransientContext` supplying a value for every token the template uses, and pass both to `templateResolver` (see [Template Rendering](#template-rendering))
 5. On a miss, log the warning with the variant and say nothing
@@ -142,7 +142,7 @@ Every response row belongs to a `commandName` and a variant (`''` is the default
 
 ### Command Families
 
-`CommandFamilies` (`bot/utilities/default-responses.ts`) registers command names that have **no** `defaultResponses` entry (e.g. `socials`, whose variants are created at runtime). A name belongs in exactly one of the two registries; `CommandName` is the union of both.
+`CommandFamilies` (`bot/utilities/default-responses.ts`) registers command names whose variants are created at runtime rather than delivered by a migration (e.g. `socials`).
 
 * `isValidCommandName` checks `CommandFamilies` only, so the `add` verb accepts family names only (see [Editing Reponses from Chat](#editing-reponses-from-chat)).
 * Family rows exist only once created via `add`.

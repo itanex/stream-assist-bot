@@ -3,13 +3,12 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
-import { CommandName } from '../utilities/default-responses.js';
 import { CommandResponseService } from '../services/index.js';
 
 @injectable()
 export class DivideByZeroCommand implements ICommandHandler {
     exp: RegExp = /^!(DivideByZero)$/i;
-    commandName: CommandName = 'dividebyzero';
+    commandName: string = 'dividebyzero';
     timeout: number = 20;
     mod: boolean = true;
     vip: boolean = true;

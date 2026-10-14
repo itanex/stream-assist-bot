@@ -13,17 +13,14 @@ import { CommandResponseRepository } from '../repositories/index.js';
 import { type CommandResponse, type CommandResponseTextChanges } from '../repositories/command-response.repository.js';
 
 type CommandResponseServiceModule = typeof import('./command-response.service.js');
-type MockDefaultResponses = { testResponse: Record<string, string[]> };
 type MockCommandFamilies = { testCommand: string };
 
 jest.unstable_mockModule('../utilities/default-responses', () => ({
     __esModule: true,
     CommandFamilies: { 'test-command-name': 'test-command-name' },
-    defaultResponses: { testResponse: { '': ['Test about response'] } },
 }));
 
 const mockCommandResponseRepository = <unknown>{
-    seed: jest.fn<CommandResponseRepository['seed']>(),
     findAll: jest.fn<CommandResponseRepository['findAll']>(),
     getCommandText: jest.fn<CommandResponseRepository['getCommandText']>(),
     getCommandVariants: jest.fn<CommandResponseRepository['getCommandVariants']>(),
@@ -63,7 +60,6 @@ describe('CommandResponse.Service (postgres)', () => {
     let CommandResponseService: CommandResponseServiceModule['default'];
     let cacheKey: CommandResponseServiceModule['cacheKey'];
     let CommandFamilies: jest.MockedObject<MockCommandFamilies>;
-    let defaultResponses: jest.MockedObject<MockDefaultResponses>;
 
     let subject: InstanceType<CommandResponseServiceModule['default']>;
 
@@ -71,10 +67,8 @@ describe('CommandResponse.Service (postgres)', () => {
         ({ default: CommandResponseService, cacheKey } = await import('./command-response.service.js'));
 
         ({
-            defaultResponses,
             CommandFamilies,
         } = await import('../utilities/default-responses.js') as unknown as {
-            defaultResponses: MockDefaultResponses;
             CommandFamilies: MockCommandFamilies;
         });
     });
@@ -89,7 +83,7 @@ describe('CommandResponse.Service (postgres)', () => {
     });
 
     describe('initialize()', () => {
-        it('seeds row, gets installed default', async () => {
+        it('should load all rows into the cache', async () => {
             // Arrange
             mockCommandResponseRepository
                 .findAll
@@ -101,8 +95,6 @@ describe('CommandResponse.Service (postgres)', () => {
             await subject.initialize();
 
             // Assert
-            expect(mockCommandResponseRepository.seed)
-                .toHaveBeenCalledWith(defaultResponses);
             expect(mockCommandResponseRepository.findAll)
                 .toHaveBeenCalled();
 
@@ -114,7 +106,7 @@ describe('CommandResponse.Service (postgres)', () => {
                 }));
         });
 
-        it('should not seed twice', async () => {
+        it('should rebuild the cache when initialized again', async () => {
             // Arrange
             mockCommandResponseRepository
                 .findAll
@@ -125,8 +117,6 @@ describe('CommandResponse.Service (postgres)', () => {
             await subject.initialize();
 
             // Assert
-            expect(mockCommandResponseRepository.seed)
-                .toHaveBeenCalledWith(defaultResponses);
             expect(mockCommandResponseRepository.findAll)
                 .toHaveBeenCalled();
 

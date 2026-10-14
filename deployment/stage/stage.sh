@@ -9,8 +9,7 @@
 #   migrate [db]    run sequelize-cli db:migrate against stage (default: live copy)
 #   psql [db]       open psql in the container (default: live copy)
 #   sql <file> [db] run a SQL file in the container (default: live copy)
-#   seed-fresh      run the app's sync() + seed() against the empty database
-#   check-responses load CommandResponseService against the migrated copy; report missing text
+#   check-responses [db]  verify the baseline seed data is present (default: live copy)
 #   down            remove the stack and its anonymous volumes
 set -euo pipefail
 
@@ -157,9 +156,8 @@ cmd_sql() {
 run_stage_script() {
     require_container
 
-    # sql-logger writes ./logs relative to the working directory
     cd "$REPO_ROOT"
-    npx tsx "deployment/stage/$1"
+    npx tsx "deployment/stage/$1" "${@:2}"
 }
 
 cmd_down() {
@@ -185,8 +183,7 @@ case "$command" in
     migrate) cmd_migrate "$@" ;;
     psql) cmd_psql "$@" ;;
     sql) cmd_sql "$@" ;;
-    seed-fresh) run_stage_script seed-fresh.ts ;;
-    check-responses) run_stage_script check-responses.ts ;;
+    check-responses) run_stage_script check-responses.ts "$@" ;;
     down) cmd_down ;;
-    *) fail "usage: stage.sh {up <dump>|reset <dump>|migrate [db]|psql [db]|sql <file> [db]|seed-fresh|check-responses|down}" ;;
+    *) fail "usage: stage.sh {up <dump>|reset <dump>|migrate [db]|psql [db]|sql <file> [db]|check-responses [db]|down}" ;;
 esac

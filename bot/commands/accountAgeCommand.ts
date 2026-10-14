@@ -5,7 +5,7 @@ import winston from 'winston';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import InjectionTypes from '../../dependency-management/types.js';
 import Timespan, { getAgeReport } from '../utilities/timeSpan.js';
-import { CommandName, TransientContext } from '../utilities/default-responses.js';
+import { TransientContext } from '../utilities/default-responses.js';
 import { templateResolver } from '../utilities/template-resolver.js';
 import { CommandResponseService } from '../services/index.js';
 
@@ -22,7 +22,7 @@ export class AccountAgeCommand implements ICommandHandler {
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
-    commandName: CommandName = 'accountage';
+    commandName: string = 'accountage';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,

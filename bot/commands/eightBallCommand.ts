@@ -8,7 +8,6 @@ import { WebSocket } from 'ws';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import InjectionTypes from '../../dependency-management/types.js';
 import environment from '../../configurations/environment.js';
-import { CommandName } from '../utilities/default-responses.js';
 import { CommandResponseService } from '../services/index.js';
 
 @injectable()
@@ -24,7 +23,7 @@ export class EightBallCommand implements ICommandHandler {
     viewer: boolean = true;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
-    commandName: CommandName = 'eightball';
+    commandName: string = 'eightball';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,

@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
-import { CommandName, TransientContext } from '../utilities/default-responses.js';
+import { TransientContext } from '../utilities/default-responses.js';
 import { templateResolver } from '../utilities/template-resolver.js';
 import { CommandResponseService } from '../services/index.js';
 import LurkRespository from '../repositories/lurk.respository.js';
@@ -21,7 +21,7 @@ export class LurkCommand implements ICommandHandler {
     viewer: boolean = true;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
-    commandName: CommandName = 'lurk';
+    commandName: string = 'lurk';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
@@ -67,7 +67,7 @@ export class UnLurkCommand implements ICommandHandler {
     viewer: boolean = true;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
-    commandName: CommandName = 'unlurk';
+    commandName: string = 'unlurk';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
@@ -114,7 +114,7 @@ export class WhoIsLurkingCommand implements ICommandHandler {
     viewer: boolean = false;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
-    commandName: CommandName = 'whoislurking';
+    commandName: string = 'whoislurking';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,

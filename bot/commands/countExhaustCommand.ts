@@ -4,14 +4,14 @@ import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import { templateResolver } from '../utilities/template-resolver.js';
-import { type CommandName, TransientContext } from '../utilities/default-responses.js';
+import { TransientContext } from '../utilities/default-responses.js';
 import Broadcaster from '../utilities/broadcaster.js';
 import CommandResponseService from '../services/command-response.service.js';
 
 @injectable()
 export class CountExhaustCommand implements ICommandHandler {
     exp: RegExp = /^!(nomoretoes|cantcount|numbershurt)$/i;
-    commandName: CommandName = 'countExhaust';
+    commandName: string = 'countExhaust';
     timeout: number = 10;
     mod: boolean = true;
     vip: boolean = true;

@@ -1,74 +1,118 @@
 /**
- * Loads CommandResponseService against the migrated stage copy, in the app's
- * startup order, and confirms every command/variant resolves to text. The bot
- * is never started.
+ * Verifies a stage database holds the baseline command response seed data:
+ * every command/variant pair in the seed migration, with its texts. Queries the
+ * database directly; no bot code is loaded.
  *
- * Usage: bash deployment/stage/stage.sh check-responses
+ * Usage: bash deployment/stage/stage.sh check-responses [db]
+ *   db: stream-assist-bot-stage (default, restored copy) or stream-assist-bot-stage-fresh
+ *
+ * Missing pairs, or pairs with no active text, fail the check. Missing texts are
+ * reported only: on a restored copy, texts may have been edited or removed in chat.
  *
  * Connection values are hard-coded to stage (must match stage.sh and
  * compose.stage.yaml) so no environment variable or .env file can redirect it.
  */
-import 'reflect-metadata';
+import { createRequire } from 'node:module';
+import { QueryTypes, Sequelize } from 'sequelize';
 import winston from 'winston';
-import Database, { IDatabaseConfiguration } from '../../database/database.js';
-import CommandResponseRepository from '../../bot/repositories/command-response.repository.js';
-import CommandResponseService from '../../bot/services/command-response.service.js';
-import { CommandFamilies, defaultResponses } from '../../bot/utilities/default-responses.js';
 
-const stageConfiguration: IDatabaseConfiguration = {
-    database: 'stream-assist-bot-stage',
-    username: 'postgres',
-    password: 'stage',
-    host: 'localhost',
-    port: 6433,
-};
+type SeedData = Record<string, Record<string, string[]>>;
 
+// Plain message lines, as console output; errors and warnings go to stderr
 const logger = winston.createLogger({
     level: 'info',
     format: winston.format.combine(
         winston.format.errors({ stack: true }),
-        winston.format.simple(),
+        winston.format.printf(({ message, stack }) => (stack ? `${message}\n${stack}` : `${message}`)),
     ),
-    transports: [new winston.transports.Console()],
+    transports: [new winston.transports.Console({ stderrLevels: ['error', 'warn'] })],
 });
 
+const stageDatabases = ['stream-assist-bot-stage', 'stream-assist-bot-stage-fresh'];
+
+const { SEED } = createRequire(import.meta.url)('../../database/migrations/20261014115000-baseline-seed-data.js') as { SEED: SeedData };
+
 async function main(): Promise<void> {
-    const database = new Database(stageConfiguration, logger);
+    const database = process.argv[2] ?? stageDatabases[0];
+
+    if (!stageDatabases.includes(database)) {
+        throw new Error(`'${database}' is not a stage database (${stageDatabases.join(', ')})`);
+    }
+
+    const sequelize = new Sequelize({
+        dialect: 'postgres',
+        database,
+        username: 'postgres',
+        password: 'stage',
+        host: 'localhost',
+        port: 6433,
+        logging: false,
+    });
 
     try {
-        // app startup order: Database.initialize() (sync), then the service cache
-        await database.initialize();
+        const rows = await sequelize.query<{ commandName: string, variant: string, text: string | null }>(
+            `SELECT r."commandName", r."variant", t."text"
+             FROM "CommandResponse" r
+             LEFT JOIN "CommandResponseText" t
+                 ON t."commandResponseId" = r."id" AND t."deletedAt" IS NULL
+             WHERE r."deletedAt" IS NULL`,
+            { type: QueryTypes.SELECT },
+        );
 
-        const service = new CommandResponseService(new CommandResponseRepository(database, logger), logger);
-        await service.initialize();
+        const actual = new Map<string, Set<string>>();
 
-        const pairs = [
-            ...Object
-                .entries(defaultResponses)
-                .flatMap(([commandName, variants]) => Object
-                    .keys(variants)
-                    .map(variant => ({ commandName, variant }))),
-            ...Object
-                .keys(CommandFamilies)
-                .flatMap(commandName => service
-                    .getCommandVariants(commandName)
-                    .map(variant => ({ commandName, variant }))),
-        ];
+        rows.forEach(x => {
+            const key = `${x.commandName}.${x.variant}`;
+            const texts = actual.get(key) ?? new Set<string>();
 
-        const missing = pairs.filter(x => !service.getCommandResponse(x.commandName, x.variant));
+            if (x.text !== null) {
+                texts.add(x.text);
+            }
 
-        missing.forEach(x => logger.error(`== missing text: ${x.commandName}.${x.variant || '(default)'}`));
-        logger.info(`== ${pairs.length - missing.length}/${pairs.length} command/variant pairs resolve to text`);
+            actual.set(key, texts);
+        });
 
-        if (missing.length > 0) {
+        const pairs = Object
+            .entries(SEED)
+            .flatMap(([commandName, variants]) => Object
+                .entries(variants)
+                .map(([variant, texts]) => ({ commandName, variant, texts })));
+
+        let failed = 0;
+        let missingTexts = 0;
+
+        pairs.forEach(({ commandName, variant, texts }) => {
+            const label = `${commandName}.${variant || '(default)'}`;
+            const found = actual.get(`${commandName}.${variant}`);
+
+            if (!found || found.size === 0) {
+                failed += 1;
+                logger.error(`== missing pair: ${label}`);
+                return;
+            }
+
+            texts
+                .filter(text => !found.has(text))
+                .forEach(text => {
+                    missingTexts += 1;
+                    logger.warn(`== missing text: ${label}: ${text}`);
+                });
+        });
+
+        const summary = `${database}: ${pairs.length - failed}/${pairs.length} seed pairs present with text, ${missingTexts} missing texts`;
+
+        if (failed > 0) {
+            logger.error(`== FAIL ${summary}`);
             process.exitCode = 1;
+        } else {
+            logger.info(`== PASS ${summary}`);
         }
     } finally {
-        await database.disconnect();
+        await sequelize.close();
     }
 }
 
 main().catch(error => {
-    logger.error('check-responses failed', error);
+    logger.error('== FAIL check-responses could not complete', error);
     process.exitCode = 1;
 });

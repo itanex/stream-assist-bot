@@ -50,6 +50,25 @@ describe('CommandResponse.Repository (postgres)', () => {
         paranoid: false,
     });
 
+    /** Insert command response records with their texts */
+    const insertEntries = (entries: Record<string, Record<string, string[]>>) => CommandResponseDbo.bulkCreate(
+        Object
+            .entries(entries)
+            .flatMap(([commandName, variants]) => Object
+                .entries(variants)
+                .map(([variant, texts]) => ({
+                    commandName,
+                    variant,
+                    texts: texts.map(text => ({ text })),
+                }))),
+        {
+            include: {
+                model: CommandResponseTextDbo,
+                as: 'texts',
+            },
+        },
+    );
+
     beforeAll(async () => {
         try {
             container = await new PostgreSqlContainer('postgres:latest')
@@ -114,82 +133,9 @@ describe('CommandResponse.Repository (postgres)', () => {
             await CommandResponseDbo.destroy({ where: {}, force: true });
         });
 
-        describe('seed()', () => {
-            it('seeds row, gets installed default', async () => {
-                // Arrange - beforeEach()
-                // Act
-                await subject.seed(seedEntries);
-
-                const actualByCommand = (await subject.findAll()).reduce<Record<string, Record<string, string[]>>>((acc, row) => {
-                    acc[row.commandName] ??= {};
-                    acc[row.commandName][row.variant] = row.texts.map(x => x.text);
-                    return acc;
-                }, {});
-
-                // Assert
-                expect(mockLogger.error).not.toHaveBeenCalled();
-                expect(actualByCommand).toMatchObject(seedEntries);
-            });
-
-            it('should not seed twice, overriding existing keys', async () => {
-                // Arrange - beforeEach()
-                const newEntries: Record<string, Record<string, string[]>> = {
-                    'test-key-1': { '': ['test-value-4'] },
-                };
-
-                // Act
-                await subject.seed(seedEntries);
-                await subject.seed(newEntries);
-
-                const actualByCommand = (await subject.findAll()).reduce<Record<string, Record<string, string[]>>>((acc, row) => {
-                    acc[row.commandName] ??= {};
-                    acc[row.commandName][row.variant] = row.texts.map(x => x.text);
-                    return acc;
-                }, {});
-
-                // Assert
-                expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
-                expect(mockLogger.error).not.toHaveBeenCalled();
-                expect(actualByCommand).toMatchObject(seedEntries);
-            });
-
-            it('should log error when failing database', async () => {
-                // Arrange
-                const spy = jest.spyOn(CommandResponseDbo, 'bulkCreate')
-                    .mockImplementation(() => { throw mockError; });
-
-                // Act
-                await subject.seed(seedEntries);
-
-                // Assert
-                expect(mockLogger.error)
-                    .toHaveBeenCalledWith(expect.any(String), expect.any(Error));
-
-                spy.mockRestore();
-            });
-
-            it('should log error and seed nothing when a text is invalid', async () => {
-                // Arrange
-                const invalidEntries: Record<string, Record<string, string[]>> = {
-                    ...seedEntries,
-                    'test-key-4': { '': [invalidText] },
-                };
-
-                // Act
-                await subject.seed(invalidEntries);
-
-                const actual = await subject.findAll();
-
-                // Assert
-                expect(mockLogger.error)
-                    .toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ name: 'SequelizeValidationError' }));
-                expect(actual).toHaveLength(0);
-            });
-        });
-
         describe('findAll()', () => {
             beforeEach(async () => {
-                await subject.seed(seedEntries);
+                await insertEntries(seedEntries);
             });
 
             it('should return all seeded commands', async () => {
@@ -213,7 +159,7 @@ describe('CommandResponse.Repository (postgres)', () => {
 
         describe('getCommandVariants()', () => {
             beforeEach(async () => {
-                await subject.seed(seedEntries);
+                await insertEntries(seedEntries);
             });
 
             it('should return only the command default variant (command, no variant) ', async () => {
@@ -251,7 +197,7 @@ describe('CommandResponse.Repository (postgres)', () => {
 
         describe('getCommandText()', () => {
             beforeEach(async () => {
-                await subject.seed(seedEntries);
+                await insertEntries(seedEntries);
             });
 
             it('should return the found command (command, no variant) ', async () => {
@@ -314,7 +260,7 @@ describe('CommandResponse.Repository (postgres)', () => {
 
         describe('addCommand()', () => {
             beforeEach(async () => {
-                await subject.seed(seedEntries);
+                await insertEntries(seedEntries);
             });
 
             it('should insert and return the new record', async () => {
@@ -365,7 +311,7 @@ describe('CommandResponse.Repository (postgres)', () => {
 
         describe('addCommandVariant()', () => {
             beforeEach(async () => {
-                await subject.seed(seedEntries);
+                await insertEntries(seedEntries);
             });
 
             it('should insert and return the new record', async () => {
@@ -416,7 +362,7 @@ describe('CommandResponse.Repository (postgres)', () => {
 
         describe('addCommandText()', () => {
             beforeEach(async () => {
-                await subject.seed(seedEntries);
+                await insertEntries(seedEntries);
             });
 
             it('should insert and return the new record', async () => {
@@ -598,7 +544,7 @@ describe('CommandResponse.Repository (postgres)', () => {
             const seededText = seedEntries[testCommandDefaultVariant][defaultVariant][0];
 
             beforeEach(async () => {
-                await subject.seed(seedEntries);
+                await insertEntries(seedEntries);
             });
 
             it('should update the text of the record', async () => {
@@ -705,7 +651,7 @@ describe('CommandResponse.Repository (postgres)', () => {
 
         describe('updateCommand', () => {
             beforeEach(async () => {
-                await subject.seed(seedEntries);
+                await insertEntries(seedEntries);
             });
 
             it('should update the command name of the record', async () => {
@@ -740,7 +686,7 @@ describe('CommandResponse.Repository (postgres)', () => {
 
         describe('updateCommandVariant', () => {
             beforeEach(async () => {
-                await subject.seed(seedEntries);
+                await insertEntries(seedEntries);
             });
 
             it('should update the command variant name of the record', async () => {
@@ -775,7 +721,7 @@ describe('CommandResponse.Repository (postgres)', () => {
 
         describe('removeCommand()', () => {
             beforeEach(async () => {
-                await subject.seed(seedEntries);
+                await insertEntries(seedEntries);
             });
 
             it('should remove the known command record', async () => {
@@ -908,7 +854,7 @@ describe('CommandResponse.Repository (postgres)', () => {
 
         describe('removeCommandVariant()', () => {
             beforeEach(async () => {
-                await subject.seed(seedEntries);
+                await insertEntries(seedEntries);
             });
 
             it('should remove the known command variant record', async () => {
@@ -1049,7 +995,7 @@ describe('CommandResponse.Repository (postgres)', () => {
             const seededText = seedEntries[testCommandDefaultVariant][defaultVariant][0];
 
             beforeEach(async () => {
-                await subject.seed(seedEntries);
+                await insertEntries(seedEntries);
             });
 
             it('should remove only the specified text', async () => {
@@ -1128,7 +1074,7 @@ describe('CommandResponse.Repository (postgres)', () => {
 
         describe('restoreCommand()', () => {
             beforeEach(async () => {
-                await subject.seed(seedEntries);
+                await insertEntries(seedEntries);
             });
 
             it('should restore command with variants and text responses', async () => {
@@ -1253,7 +1199,7 @@ describe('CommandResponse.Repository (postgres)', () => {
 
         describe('restoreCommandVariant()', () => {
             beforeEach(async () => {
-                await subject.seed(seedEntries);
+                await insertEntries(seedEntries);
             });
 
             it('should restore command variant and text responses', async () => {
@@ -1397,7 +1343,7 @@ describe('CommandResponse.Repository (postgres)', () => {
             const seededVariantText = seedEntries[testCommandAllVariants][testVariants[1]][0];
 
             beforeEach(async () => {
-                await subject.seed(seedEntries);
+                await insertEntries(seedEntries);
             });
 
             it('should restore the removed text', async () => {

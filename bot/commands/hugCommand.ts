@@ -4,7 +4,7 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
-import { CommandName, TransientContext } from '../utilities/default-responses.js';
+import { TransientContext } from '../utilities/default-responses.js';
 import { templateResolver } from '../utilities/template-resolver.js';
 import { CommandResponseService } from '../services/index.js';
 
@@ -21,7 +21,7 @@ export class HugCommand implements ICommandHandler {
     viewer: boolean = true;
     isGlobalCommand: boolean = true;
     restriction: OnlineState = 'online';
-    commandName: CommandName = 'hug';
+    commandName: string = 'hug';
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
