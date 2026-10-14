@@ -79,6 +79,7 @@ async function main(): Promise<void> {
                 .map(([variant, texts]) => ({ commandName, variant, texts })));
 
         let failed = 0;
+        let missingTexts = 0;
 
         pairs.forEach(({ commandName, variant, texts }) => {
             const label = `${commandName}.${variant || '(default)'}`;
@@ -92,13 +93,19 @@ async function main(): Promise<void> {
 
             texts
                 .filter(text => !found.has(text))
-                .forEach(text => logger.warn(`== missing text: ${label}: ${text}`));
+                .forEach(text => {
+                    missingTexts += 1;
+                    logger.warn(`== missing text: ${label}: ${text}`);
+                });
         });
 
-        logger.info(`== ${database}: ${pairs.length - failed}/${pairs.length} seed pairs present with text`);
+        const summary = `${database}: ${pairs.length - failed}/${pairs.length} seed pairs present with text, ${missingTexts} missing texts`;
 
         if (failed > 0) {
+            logger.error(`== FAIL ${summary}`);
             process.exitCode = 1;
+        } else {
+            logger.info(`== PASS ${summary}`);
         }
     } finally {
         await sequelize.close();
@@ -106,6 +113,6 @@ async function main(): Promise<void> {
 }
 
 main().catch(error => {
-    logger.error('check-responses failed', error);
+    logger.error('== FAIL check-responses could not complete', error);
     process.exitCode = 1;
 });

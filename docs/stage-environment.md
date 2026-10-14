@@ -76,14 +76,16 @@ STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh check-responses stre
 STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh check-responses
 ```
 
-Checks every command/variant pair in the baseline seed migration against the database, without loading bot code. Check the result line:
+Checks every command/variant pair in the baseline seed migration against the database, without loading bot code. The last line is the verdict, and the exit code matches it (0 on `PASS`, 1 on `FAIL`):
 
 ```
-== <database>: <n>/<n> seed pairs present with text
+== PASS <database>: <n>/<n> seed pairs present with text, <n> missing texts
+== FAIL <database>: <n>/<n> seed pairs present with text, <n> missing texts
 ```
 
 * `missing pair`: the pair has no row, or no active text; the check fails
 * `missing text`: a baseline text is absent; reported only, since a restored copy may have texts edited or removed in chat
+* `FAIL check-responses could not complete`: the check did not run (e.g. stage not up); the error follows
 
 ## 5. Tear Down
 
