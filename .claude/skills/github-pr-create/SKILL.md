@@ -22,6 +22,8 @@ Creates a pull request via `gh pr create` for the current branch.
 
 * Every computed value (type, scope match, labels) comes from data actually read this session - never guessed
 * Any ask uses AskUserQuestion - never a plain conversational question
+* Reuse a recent proposal: when a PR title or body for this branch was proposed recently and the conversation shows no branch changes since (no new commits, no rebase), use it as-is and skip the steps that produced it. Only resolve values the proposal did not cover (milestone, project, labels, assignee). Run the full workflow when changes landed after the proposal, the proposal is missing the title or body, or it is not recent
+  * Recent: within roughly the last five user messages, with no work on another task or a date change in between. A soft guide, not a hard cutoff - when in doubt, re-derive
 
 ## Title
 
@@ -115,6 +117,10 @@ Closes #<N>
 
 `## Commits` lists the branch's commit subjects verbatim (GitHub's own default multi-commit format) - the full per-commit body detail already survives in the squash commit on `main`, so it isn't duplicated here.
 
-`## Verification Steps` calls out `npm run lint` and `npm test` specifically when the branch includes a code change (any commit type other than `docs`, `chore`, or `style`), plus additional verification steps specific to the work actually done on the branch.
+`## Verification Steps` lists steps specific to the work actually done on the branch. Lint and test lines are driven by the changed files (`git diff --name-only <default-branch>..HEAD`), not commit type:
+
+* `npm run lint` only when a changed file is covered by the `lint` script's patterns in `package.json`
+* `npm test` only when a changed file is source or spec code that Jest runs
+* A step already performed and confirmed in this session is listed as done (`- [x]`)
 
 No footer line - nothing is appended to attribute PR authorship to a tool.

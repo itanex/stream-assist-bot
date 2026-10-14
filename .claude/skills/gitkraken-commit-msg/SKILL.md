@@ -34,6 +34,13 @@ description: Generate a commit message to be used in GitKraken. Will have a titl
 * References:
    * https://gist.github.com/qoomon/5dfcdf8eec66a051ecd85625518cfd13
    * https://www.conventionalcommits.org/en/v1.0.0/
+* Reuse a recent proposal: when a commit message was proposed recently and the
+  conversation shows no file changes since, present that message as-is and
+  skip the steps below. Run them when changes were made after the proposal, no
+  message was proposed, or the proposal is not recent
+   * Recent: within roughly the last five user messages, with no work on
+     another task or a date change in between. A soft guide, not a hard
+     cutoff - when in doubt, re-derive
 * Validate that we are not on the 'main' branch
 * Read git diff --staged, git diff (unstaged), and git status (untracked
   files) to build a full picture of all pending changes
