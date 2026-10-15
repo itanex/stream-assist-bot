@@ -1,6 +1,7 @@
-import { inject, injectable } from 'inversify';
+import { inject, injectable, multiInject } from 'inversify';
 import winston from 'winston';
 import ChatBot, { type IChatBot } from './bot/chat-bot.js';
+import { ICommandHandler } from './bot/commands/index.js';
 import SAContainer from './dependency-management/inversify.config.js';
 import InjectionTypes from './dependency-management/types.js';
 import Database from './database/database.js';
@@ -17,6 +18,8 @@ const { name, version } = pkg;
 
 @injectable()
 class App {
+    private readonly commandNames: string[];
+
     constructor(
         @inject(ChatBot) private chatBot: IChatBot,
         @inject(Database) private database: Database,
@@ -25,8 +28,13 @@ class App {
         @inject(OverlayServer) private overlayServer: IOverlayServer,
         @inject(AuthenticationServer) private authServer: IAuthenticationServer,
         @inject(CommandResponseService) private commandResponseService: CommandResponseService,
+        @multiInject(InjectionTypes.CommandHandlers) commandHandlers: ICommandHandler[],
         @inject(InjectionTypes.Logger) public logger: winston.Logger,
     ) {
+        this.commandNames = commandHandlers
+            .map(x => x.commandName)
+            .filter((x): x is string => !!x);
+
         this.logger.info(`** Application initialized **`);
     }
 
@@ -43,7 +51,7 @@ class App {
             this.scheduler.scheduleChatEvents(),
         ]);
 
-        await this.commandResponseService.initialize();
+        await this.commandResponseService.initialize(this.commandNames);
 
         this.authServer.listen();
         this.overlayServer.listen();

@@ -1,6 +1,6 @@
 # Stage Environment
 
-`deployment/stage/` is a disposable Postgres stack for rehearsing database work before it reaches production. This guide covers running the migrations against a fresh database and a restored copy, then verifying the baseline seed data. The full command list is in the header of `deployment/stage/stage.sh`.
+`deployment/stage/` is a disposable Postgres stack for rehearsing database work before it reaches production. This guide covers running the migrations against a fresh database and a restored copy, verifying the baseline seed data, then exercising command response startup validation. The full command list is in the header of `deployment/stage/stage.sh`.
 
 ## Prerequisites
 
@@ -28,7 +28,10 @@ STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh migrate
 STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh check-responses stream-assist-bot-stage-fresh
 STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh check-responses
 
-# 5. Tear down stage, remove the dump, confirm no stage container remains
+# 5. Exercise startup validation in production logging mode
+STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh check-validation stream-assist-bot-stage-fresh
+
+# 6. Tear down stage, remove the dump, confirm no stage container remains
 STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh down
 rm local-cache/stream-assist-bot.dump
 docker ps -a --filter name=sab-stage
@@ -87,7 +90,28 @@ Checks every command/variant pair in the baseline seed migration against the dat
 * `missing text`: a baseline text is absent; reported only, since a restored copy may have texts edited or removed in chat
 * `FAIL check-responses could not complete`: the check did not run (e.g. stage not up); the error follows
 
-## 5. Tear Down
+## 5. Exercise Startup Validation
+
+```bash
+STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh check-validation stream-assist-bot-stage-fresh
+```
+
+Runs `CommandResponseService.initialize()` against the database with `NODE_ENV=production`, so output passes through the production console filter. It builds `Database`, `CommandResponseRepository` and `CommandResponseService` directly; no DI container and no Twitch clients are loaded. It validates every command in the baseline seed migration plus `stage-check-missing`, a name with no entries, then logs an untagged warning and an error.
+
+The script prints what to expect, then the bot logger output follows. On a fresh database, stdout shows exactly:
+
+* one warning for `stage-check-missing`, tagged `stdout: true`
+* `check-validation probe: error, must appear on stdout`
+
+Read the result against that list:
+
+* `check-validation probe: untagged warning` on stdout: the production console filter is not applied
+* A warning for any other command: the database and the baseline disagree. On the restored copy this may be a text removed in chat
+* `FAIL check-validation could not complete`: the check did not run (e.g. stage not up); the error follows
+
+The bot logger also writes to `./logs`, so a run leaves stage entries in the local log files.
+
+## 6. Tear Down
 
 ```bash
 STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh down

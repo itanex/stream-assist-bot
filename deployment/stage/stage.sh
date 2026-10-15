@@ -10,6 +10,7 @@
 #   psql [db]       open psql in the container (default: live copy)
 #   sql <file> [db] run a SQL file in the container (default: live copy)
 #   check-responses [db]  verify the baseline seed data is present (default: live copy)
+#   check-validation [db] run command response startup validation in production logging mode (default: live copy)
 #   down            remove the stack and its anonymous volumes
 set -euo pipefail
 
@@ -184,6 +185,8 @@ case "$command" in
     psql) cmd_psql "$@" ;;
     sql) cmd_sql "$@" ;;
     check-responses) run_stage_script check-responses.ts "$@" ;;
+    # the bot logger reads NODE_ENV when its module loads
+    check-validation) export NODE_ENV=production; run_stage_script check-validation.ts "$@" ;;
     down) cmd_down ;;
-    *) fail "usage: stage.sh {up <dump>|reset <dump>|migrate [db]|psql [db]|sql <file> [db]|check-responses [db]|down}" ;;
+    *) fail "usage: stage.sh {up <dump>|reset <dump>|migrate [db]|psql [db]|sql <file> [db]|check-responses [db]|check-validation [db]|down}" ;;
 esac

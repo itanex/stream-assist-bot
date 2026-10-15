@@ -76,6 +76,8 @@ describe('CommandResponse.Service (postgres)', () => {
     beforeEach(async () => {
         jest.resetAllMocks();
 
+        mockLogger.child.mockReturnValue(mockLogger);
+
         subject = new CommandResponseService(
             mockCommandResponseRepository,
             mockLogger,
@@ -92,7 +94,7 @@ describe('CommandResponse.Service (postgres)', () => {
                 ]);
 
             // Act
-            await subject.initialize();
+            await subject.initialize([]);
 
             // Assert
             expect(mockCommandResponseRepository.findAll)
@@ -113,8 +115,8 @@ describe('CommandResponse.Service (postgres)', () => {
                 .mockResolvedValue([testCommandResponse]);
 
             // Act
-            await subject.initialize();
-            await subject.initialize();
+            await subject.initialize([]);
+            await subject.initialize([]);
 
             // Assert
             expect(mockCommandResponseRepository.findAll)
@@ -126,6 +128,72 @@ describe('CommandResponse.Service (postgres)', () => {
                     variant: defaultVariant,
                     responses: testCommandResponse.texts,
                 }));
+        });
+
+        it('should log validation warnings through a stdout child logger', () => {
+            // Assert
+            expect(mockLogger.child)
+                .toHaveBeenCalledWith({ stdout: true });
+        });
+
+        it.each`
+            scenario                       | commandNames
+            ${'every variant has text'}    | ${[testCommandName]}
+            ${'commandName is empty'}      | ${['']}
+            ${'no commandNames are given'} | ${[]}
+        `('should not warn when $scenario', async ({ commandNames }) => {
+            // Arrange
+            mockCommandResponseRepository
+                .findAll
+                .mockResolvedValue([testCommandResponse, testCommandResponseVariant]);
+
+            // Act
+            await subject.initialize(commandNames);
+
+            // Assert
+            expect(mockLogger.warn)
+                .not.toHaveBeenCalled();
+        });
+
+        it.each`
+            scenario                             | commandNames
+            ${'once'}                            | ${[validName]}
+            ${'once for duplicate commandNames'} | ${[validName, validName]}
+        `('should warn $scenario when a commandName has no entries', async ({ commandNames }) => {
+            // Arrange
+            mockCommandResponseRepository
+                .findAll
+                .mockResolvedValue([testCommandResponse]);
+
+            // Act
+            await subject.initialize(commandNames);
+
+            // Assert
+            expect(mockLogger.warn)
+                .toHaveBeenCalledTimes(1);
+            expect(mockLogger.warn)
+                .toHaveBeenCalledWith(expect.any(String), { commandName: validName });
+        });
+
+        it.each`
+            scenario                 | emptyVariant
+            ${'the default variant'} | ${defaultVariant}
+            ${'a named variant'}     | ${testVariant}
+        `('should warn only for $scenario when it has no active text', async ({ emptyVariant }) => {
+            // Arrange
+            mockCommandResponseRepository
+                .findAll
+                .mockResolvedValue([testCommandResponse, testCommandResponseVariant]
+                    .map(x => (x.variant === emptyVariant ? { ...x, texts: [] } : x)));
+
+            // Act
+            await subject.initialize([testCommandName]);
+
+            // Assert
+            expect(mockLogger.warn)
+                .toHaveBeenCalledTimes(1);
+            expect(mockLogger.warn)
+                .toHaveBeenCalledWith(expect.any(String), { commandName: testCommandName, variant: emptyVariant });
         });
     });
 
@@ -157,7 +225,7 @@ describe('CommandResponse.Service (postgres)', () => {
                     testCommandResponseVariant,
                 ]);
 
-            await subject.initialize();
+            await subject.initialize([]);
         });
 
         afterEach(() => {
@@ -298,7 +366,7 @@ describe('CommandResponse.Service (postgres)', () => {
                         testCommandResponseVariant,
                     ]);
 
-                await subject.initialize();
+                await subject.initialize([]);
 
                 mockCommandResponseRepository
                     .updateCommandText
@@ -431,7 +499,7 @@ describe('CommandResponse.Service (postgres)', () => {
                         { ...testCommandResponseVariant, texts: [...testCommandResponseVariant.texts] },
                     ]);
 
-                await subject.initialize();
+                await subject.initialize([]);
 
                 mockCommandResponseRepository
                     .removeCommandText
@@ -534,7 +602,7 @@ describe('CommandResponse.Service (postgres)', () => {
                         { ...testCommandResponseVariant, texts: [...testCommandResponseVariant.texts] },
                     ]);
 
-                await subject.initialize();
+                await subject.initialize([]);
 
                 mockCommandResponseRepository
                     .restoreCommandText
@@ -681,7 +749,7 @@ describe('CommandResponse.Service (postgres)', () => {
                     testCommandResponseVariant,
                 ]);
 
-            await subject.initialize();
+            await subject.initialize([]);
 
             // Act
             const result = await subject.addCommandText(testCommandName, validText, defaultVariant);

@@ -43,12 +43,20 @@ export const cacheKey = (name: string, variant: string = ''): string => (variant
 export default class CommandResponseService {
     private responseCache = new Map<string, ResponseEntry>();
 
+    private readonly stdoutLogger: winston.Logger;
+
     constructor(
         @inject(CommandResponseRepository) private commandResponseRepository: CommandResponseRepository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
-    ) { }
+    ) {
+        this.stdoutLogger = this.logger.child({ stdout: true });
+    }
 
-    async initialize(): Promise<void> {
+    /**
+     * Load all command responses into the cache, then validate the provided command names against it
+     * @param commandNames The commandName of each registered command handler
+     */
+    async initialize(commandNames: string[]): Promise<void> {
         const rows = await this.commandResponseRepository.findAll();
         this.responseCache = new Map(rows
             .map((row): [string, ResponseEntry] => [
@@ -58,6 +66,8 @@ export default class CommandResponseService {
                     responses: row.texts,
                 },
             ]));
+
+        this.validateEntries(commandNames);
     }
 
     isValidCommandName(commandName: string): boolean {
@@ -253,5 +263,30 @@ export default class CommandResponseService {
         }
 
         return 'notFound';
+    }
+
+    /**
+     * Warn for each command name with no entries, and for each of its variants with no active text
+     * @param commandNames The commandName of each registered command handler
+     */
+    private validateEntries(commandNames: string[]): void {
+        const names = new Set(commandNames.filter(x => !!x));
+
+        names.forEach(commandName => {
+            const entries = [...this.responseCache.entries()]
+                .filter(([key]) => key === commandName || key.startsWith(`${commandName}.`))
+                .map(([, entry]) => entry);
+
+            if (entries.length === 0) {
+                this.stdoutLogger.warn(`Command (${commandName}) has no response entries`, { commandName });
+                return;
+            }
+
+            entries
+                .filter(entry => entry.responses.length === 0)
+                .forEach(({ variant }) => {
+                    this.stdoutLogger.warn(`Command (${cacheKey(commandName, variant)}) has no active response text`, { commandName, variant });
+                });
+        });
     }
 }
