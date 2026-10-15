@@ -46,12 +46,17 @@ const logger = winston.createLogger({
     ],
 });
 
+// Passes errors, plus entries tagged for stdout (e.g. logger.child({ stdout: true }))
+// Must run before colorize, which rewrites info.level with color codes
+const errorOrStdout = winston.format(info => (info.level === 'error' || info.stdout ? info : false));
+
 if (process.env.NODE_ENV !== 'production') {
     logger.add(consoleTransport);
 } else {
     logger.add(new winston.transports.Console({
-        level: 'error',
+        level: 'warn',
         format: winston.format.combine(
+            errorOrStdout(),
             winston.format.colorize(),
             winston.format.simple(),
         ),

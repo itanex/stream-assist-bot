@@ -30,6 +30,7 @@ export const mockLogger = <unknown>{
     info: jest.fn<winston.Logger['info']>(),
     warn: jest.fn<winston.Logger['warn']>(),
     error: jest.fn<winston.Logger['error']>(),
+    child: jest.fn<winston.Logger['child']>(),
 } as jest.Mocked<winston.Logger>;
 
 export const mockCommandResponseService = <unknown>{

@@ -105,6 +105,7 @@ Utilities (`bot/utilities`) and infrastructure (`Logger`, `ChatClient`, `ApiClie
 * Inject the Winston logger with `@inject(InjectionTypes.Logger)`. Do not use `console` (the startup banner in `app.ts` is the only exception).
 * Log messages are for operators, not contracts: tests never assert on log message text (see [Testing](#testing)).
 * When a command cannot find its response text it logs a warning carrying the variant (`{ variant }`) and says nothing in chat.
+* In production the console shows `error` entries plus entries tagged `{ stdout: true }`; all other entries are file-only. For output an operator must see in a production run, hold a child logger as a field: `this.stdoutLogger = this.logger.child({ stdout: true })`. Default to the plain logger.
 
 ---
 

@@ -117,6 +117,7 @@ All command response text lives in the database (`CommandResponse` table), makin
 
 * Baseline texts are delivered by the `20261014115000-baseline-seed-data` migration. It inserts each command/variant pair missing from `CommandResponse`, with its texts; removed rows count as present. `db:migrate` on an empty database produces every baseline text, and an already-seeded database is left unchanged.
 * On startup, `CommandResponseService.initialize()` loads every row into an in-memory cache. It does not seed.
+* After loading, `initialize()` validates the `commandName` of every registered command handler against the cache. Each `commandName` needs at least one row, and every variant row it has (including `''`) needs at least one active text. Each gap logs one warning to stdout (see [Logging](architecture.md#logging)), and startup continues. Empty command names are skipped.
 * Reads never hit the database per-message. Writes through the service keep the cache in sync; rows edited directly in the database are not visible until restart.
 * A command reads its text via `CommandResponseService.getCommandResponse(this.commandName, variant)`. When a variant holds several texts, one is picked at random.
 
@@ -127,7 +128,7 @@ If `getCommandResponse` returns nothing, the command logs a warning that carries
 ### Making a command's response editable
 
 1. Add a data migration that inserts the command's `CommandResponse` rows and texts for its variant(s), written with `%token%` placeholders for any dynamic content
-2. Declare `commandName` on the command class matching the rows' `commandName`
+2. Declare `commandName` on the command class matching the rows' `commandName`. A declared `commandName` without rows produces a startup warning
 3. Inject `CommandResponseService` and read the text in `handle` with the variant the code path needs
 4. Build a `TransientContext` supplying a value for every token the template uses, and pass both to `templateResolver` (see [Template Rendering](#template-rendering))
 5. On a miss, log the warning with the variant and say nothing
