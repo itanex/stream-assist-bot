@@ -292,5 +292,5 @@ The following commands still inject a repository directly because no service exi
 |---|---|
 | `LurkRespository` | `LurkCommand`, `UnLurkCommand`, `WhoIsLurkingCommand`, `clearLurkingUsers` |
 | `DeathCountRepository` | `DeathCommand`, `DeathCountCommand`, `LastDeathCountCommmand` |
-| `RaidRepository` | `LastRaidCommand` |
+| `ChannelEventRepository` | `LastRaidCommand` |
 | `SubscriberRepository` | `LastSubCommand` |

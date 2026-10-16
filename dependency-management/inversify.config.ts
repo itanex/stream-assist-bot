@@ -71,7 +71,6 @@ import {
     DeathCountRepository,
     GreetedUserRepository,
     LurkRespository,
-    RaidRepository,
     StreamEventRepository,
     SubscriberRepository,
 } from '../bot/repositories/index.js';
@@ -94,7 +93,6 @@ SAContainer.bind<CommandResponseRepository>(CommandResponseRepository).toSelf().
 SAContainer.bind<DeathCountRepository>(DeathCountRepository).toSelf().inSingletonScope();
 SAContainer.bind<GreetedUserRepository>(GreetedUserRepository).toSelf().inSingletonScope();
 SAContainer.bind<LurkRespository>(LurkRespository).toSelf().inSingletonScope();
-SAContainer.bind<RaidRepository>(RaidRepository).toSelf().inSingletonScope();
 SAContainer.bind<StreamEventRepository>(StreamEventRepository).toSelf().inSingletonScope();
 SAContainer.bind<SubscriberRepository>(SubscriberRepository).toSelf().inSingletonScope();
 

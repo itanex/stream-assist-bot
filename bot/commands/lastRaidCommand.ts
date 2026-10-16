@@ -7,7 +7,8 @@ import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import { ICommandHandler, OnlineState } from './iCommandHandler.js';
 import InjectionTypes from '../../dependency-management/types.js';
-import RaidRepository from '../repositories/raid.repository.js';
+import { type Environment } from '../../configurations/environment.js';
+import ChannelEventRepository from '../repositories/channel-event.repository.js';
 import { TransientContext } from '../utilities/default-responses.js';
 import { templateResolver } from '../utilities/template-resolver.js';
 import { CommandResponseService } from '../services/index.js';
@@ -33,27 +34,28 @@ export class LastRaidCommand implements ICommandHandler {
 
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
-        @inject(RaidRepository) private raidRepository: RaidRepository,
+        @inject(ChannelEventRepository) private channelEventRepository: ChannelEventRepository,
         @inject(CommandResponseService) private commandResponseService: CommandResponseService,
+        @inject(InjectionTypes.Environment) private environment: Environment,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        await this.raidRepository
-            .getLastRaid()
+        await this.channelEventRepository
+            .getLastRaidEvent(`${this.environment.twitchBot.broadcaster.id}`)
             .then(async record => {
-                const lastDate = dayjs(record!.time).fromNow();
+                const lastDate = dayjs(record!.raidDate).fromNow();
 
-                const variant = record!.viewerCount! > 1 ? '' : 'single';
+                const variant = record!.viewers! > 1 ? '' : 'single';
                 const commandText = this.commandResponseService
                     .getCommandResponse(this.commandName, variant);
 
                 if (commandText) {
                     const context: TransientContext = {
-                        raider: record!.raider,
+                        raider: record!.raidingBroadcasterDisplayName,
                         when: lastDate,
-                        viewercount: `${record!.viewerCount}`,
+                        viewercount: `${record!.viewers}`,
                     };
 
                     await this.chatClient.say(channel, templateResolver(commandText, context, this.logger));

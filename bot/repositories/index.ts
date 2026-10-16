@@ -4,7 +4,6 @@ import CommandResponseRepository from './command-response.repository.js';
 import DeathCountRepository from './death-count.repository.js';
 import GreetedUserRepository from './greeted-user.repository.js';
 import LurkRespository from './lurk.respository.js';
-import RaidRepository from './raid.repository.js';
 import StreamEventRepository from './stream-event.repository.js';
 import SubscriberRepository from './subscriber.repository.js';
 
@@ -15,7 +14,6 @@ export {
     DeathCountRepository,
     GreetedUserRepository,
     LurkRespository,
-    RaidRepository,
     StreamEventRepository,
     SubscriberRepository,
 };

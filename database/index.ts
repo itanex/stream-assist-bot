@@ -8,7 +8,6 @@ import GreetUser from './models/greet-user.dbo.js';
 import LurkingUsers from './models/lurking-user.dbo.js';
 import ModeratorEvent from './models/moderator-event.dbo.js';
 import RaidEvent from './models/raid-event.dbo.js';
-import Raiders from './models/raiders.dbo.js';
 import StreamEventRecord from './models/stream-event-record.dbo.js';
 import Subscribers from './models/subscribers.dbo.js';
 import SubscriptionType from './models/subscription-type.js';
@@ -27,7 +26,6 @@ export {
     LurkingUsers,
     ModeratorEvent,
     RaidEvent,
-    Raiders,
     StreamEventRecord,
     SubscriptionType,
     SubscriptionGiftUsers,

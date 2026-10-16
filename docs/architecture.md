@@ -69,7 +69,7 @@ Utilities (`bot/utilities`) and infrastructure (`Logger`, `ChatClient`, `ApiClie
 ### Current exceptions
 
 * Some commands still inject a repository directly because no service exists for it yet. The list is maintained in [Command System - Direct Repository Access](command-system.md#direct-repository-access-known-exception); removal is tracked in [#158](https://github.com/itanex/stream-assist-bot/issues/158). New commands must not add to it.
-* Chat handlers and event-sub handlers currently inject repositories directly (`RaidRepository`, `SubscriberRepository`, `BanEventRepository`, `ChannelEventRepository`, `LurkRespository`, `StreamEventRepository`). No layering rule has been set for these entry points yet.
+* Chat handlers and event-sub handlers currently inject repositories directly (`SubscriberRepository`, `BanEventRepository`, `ChannelEventRepository`, `LurkRespository`, `StreamEventRepository`). No layering rule has been set for these entry points yet.
 
 ---
 
@@ -81,6 +81,7 @@ Utilities (`bot/utilities`) and infrastructure (`Logger`, `ChatClient`, `ApiClie
   * **Multi-binding** - every command is bound to `InjectionTypes.CommandHandlers`; `MessageHandler` receives them all
   * **Constants** - `ChatClient`, `ApiClient`, `EventSubWsListener`, `Logger`, environment and database configuration
 * New classes must be bound there before anything can inject them.
+* Configuration is injected as `InjectionTypes.Environment`, typed with `import { type Environment }`. Do not import the `environment` module's default export for runtime values; some older classes still do.
 * Tests never build an Inversify container - see [Testing](#testing).
 
 ---
