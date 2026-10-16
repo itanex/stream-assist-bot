@@ -16,7 +16,7 @@ import { LastRaidCommand } from './lastRaidCommand.js';
 dayjs.extend(relativeTime);
 
 const mockChannelEventRepository = <unknown>{
-    getLastRaidEvent: jest.fn<(raidedBroadcasterId: string) => Promise<RaidEvent>>(),
+    getLastRaidEvent: jest.fn<(raidedBroadcasterId: string) => Promise<RaidEvent | null>>(),
 } as jest.Mocked<ChannelEventRepository>;
 
 describe('Last Raid Command Tests', () => {
@@ -100,6 +100,26 @@ describe('Last Raid Command Tests', () => {
             expect(mockLogger.info)
                 .toHaveBeenCalledWith(expect.any(String));
         });
+    });
+
+    it('should say nothing and log warning when there is no incoming raid', async () => {
+        // Arrange
+        const subject = createSubject(responses);
+
+        mockChannelEventRepository
+            .getLastRaidEvent
+            .mockResolvedValue(null);
+
+        // Act
+        await subject.handle(channel, command, user, message, []);
+
+        // Assert
+        expect(mockChannelEventRepository.getLastRaidEvent)
+            .toHaveBeenCalledWith(mockEnvironment.twitchBot.broadcaster.id);
+        expect(mockCommandResponseService.getCommandResponse).not.toHaveBeenCalled();
+        expect(mockChatClient.say).not.toHaveBeenCalled();
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(String), { raidedBroadcasterId: mockEnvironment.twitchBot.broadcaster.id });
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
     });
 
     it('should say nothing and log warning when no text is configured', async () => {

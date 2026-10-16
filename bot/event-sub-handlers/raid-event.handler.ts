@@ -13,17 +13,19 @@ export default class RaidEventHandler {
     }
 
     /**
-     * Records the event of a user being added as a moderator to the channel
+     * Records a raid into or out of the channel
      * @param event Raid Event
      */
     async raid(event: EventSubChannelRaidEvent): Promise<void> {
         return this.channelEventRepository
             .saveRaidEvent(event)
-            .catch((reason: any) => {
-                this.logger.error(`Unable to store Raid event in DB >> ${reason}`);
-            })
-            .then(() => {
-                this.logger.info(`${event.raidingBroadcasterDisplayName} raided ${event.raidedBroadcasterDisplayName} on ${(new Date()).toDateString()}`);
-            });
+            .then(
+                () => {
+                    this.logger.info(`${event.raidingBroadcasterDisplayName} raided ${event.raidedBroadcasterDisplayName} on ${(new Date()).toDateString()}`);
+                },
+                (reason: any) => {
+                    this.logger.error('Unable to store Raid event in DB', reason);
+                },
+            );
     }
 }

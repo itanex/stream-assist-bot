@@ -42,25 +42,31 @@ export class LastRaidCommand implements ICommandHandler {
     }
 
     async handle(channel: string, command: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
+        const raidedBroadcasterId = `${this.environment.twitchBot.broadcaster.id}`;
+
         await this.channelEventRepository
-            .getLastRaidEvent(`${this.environment.twitchBot.broadcaster.id}`)
+            .getLastRaidEvent(raidedBroadcasterId)
             .then(async record => {
-                const lastDate = dayjs(record!.raidDate).fromNow();
-
-                const variant = record!.viewers! > 1 ? '' : 'single';
-                const commandText = this.commandResponseService
-                    .getCommandResponse(this.commandName, variant);
-
-                if (commandText) {
-                    const context: TransientContext = {
-                        raider: record!.raidingBroadcasterDisplayName,
-                        when: lastDate,
-                        viewercount: `${record!.viewers}`,
-                    };
-
-                    await this.chatClient.say(channel, templateResolver(commandText, context, this.logger));
+                if (!record) {
+                    this.logger.warn(`No incoming raid found for ${this.commandName}`, { raidedBroadcasterId });
                 } else {
-                    this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant });
+                    const lastDate = dayjs(record.raidDate).fromNow();
+
+                    const variant = record.viewers > 1 ? '' : 'single';
+                    const commandText = this.commandResponseService
+                        .getCommandResponse(this.commandName, variant);
+
+                    if (commandText) {
+                        const context: TransientContext = {
+                            raider: record.raidingBroadcasterDisplayName,
+                            when: lastDate,
+                            viewercount: `${record.viewers}`,
+                        };
+
+                        await this.chatClient.say(channel, templateResolver(commandText, context, this.logger));
+                    } else {
+                        this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant });
+                    }
                 }
 
                 this.logger.info(`* Executed ${command} in ${channel} || ${userstate.displayName}`);
