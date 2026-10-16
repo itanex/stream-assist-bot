@@ -13,13 +13,11 @@ export default class CheerEventHandler {
     }
 
     async onCheer(event: EventSubChannelCheerEvent): Promise<void> {
-        return this.channelEventRepository
-            .saveCheerEvent(event)
-            .catch((reason: any) => {
-                this.logger.error(`Unable to store Cheer Event in DB >> ${reason}`);
-            })
-            .then(() => {
-                this.logger.info(`Cheer Event called ${event.userDisplayName}: cheered ${event.bits} (msg: ${event.message})`);
-            });
+        try {
+            await this.channelEventRepository.saveCheerEvent(event);
+            this.logger.info(`Cheer Event called ${event.userDisplayName}: cheered ${event.bits} (msg: ${event.message})`);
+        } catch (error) {
+            this.logger.error('Unable to store Cheer Event in DB', error);
+        }
     }
 }

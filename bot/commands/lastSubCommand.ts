@@ -43,23 +43,27 @@ export class LastSubCommand implements ICommandHandler {
         await this.subscriberRepository
             .getLastSubscriber()
             .then(async record => {
-                const lastDate = dayjs(record!.createdAt).fromNow();
-
-                const variant = record!.type.toLowerCase();
-                const commandText = this.commandResponseService
-                    .getCommandResponse(this.commandName, variant);
-
-                if (commandText) {
-                    const context: TransientContext = {
-                        subscriber: record!.subscriber,
-                        when: lastDate,
-                        gifter: record!.gift?.gifter,
-                        giftcount: record!.gift ? `${record!.gift.giftCount}` : undefined,
-                    };
-
-                    await this.chatClient.say(channel, templateResolver(commandText, context, this.logger));
+                if (!record) {
+                    this.logger.warn(`No subscriber found for ${this.commandName}`);
                 } else {
-                    this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant });
+                    const lastDate = dayjs(record.createdAt).fromNow();
+
+                    const variant = record.type.toLowerCase();
+                    const commandText = this.commandResponseService
+                        .getCommandResponse(this.commandName, variant);
+
+                    if (commandText) {
+                        const context: TransientContext = {
+                            subscriber: record.subscriber,
+                            when: lastDate,
+                            gifter: record.gift?.gifter,
+                            giftcount: record.gift ? `${record.gift.giftCount}` : undefined,
+                        };
+
+                        await this.chatClient.say(channel, templateResolver(commandText, context, this.logger));
+                    } else {
+                        this.logger.warn(`Unable to retrieve ${this.commandName} response text`, { variant });
+                    }
                 }
             });
 

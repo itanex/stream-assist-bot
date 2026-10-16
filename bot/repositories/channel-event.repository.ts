@@ -154,12 +154,14 @@ export default class ChannelEventRepository {
     }
 
     /**
-     * Gets the last raid record from the database
-     * @returns the raider record of the last raid
+     * Gets the last raid into the given broadcaster's channel from the database
+     * @param raidedBroadcasterId ID of the broadcaster that was raided
+     * @returns the raid event record of the last incoming raid
      */
-    async getLastRaidEvent(): Promise<RaidEvent | null> {
+    async getLastRaidEvent(raidedBroadcasterId: string): Promise<RaidEvent | null> {
         return RaidEvent
             .findOne({
+                where: { raidedBroadcasterId },
                 order: [['raidDate', 'DESC']],
             });
     }

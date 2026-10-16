@@ -17,13 +17,11 @@ export default class FollowerEventHandler {
      * @param event Moderator Event
      */
     async follow(event: EventSubChannelFollowEvent): Promise<void> {
-        return this.channelEventRepository
-            .saveFollowEvent(event)
-            .catch((reason: any) => {
-                this.logger.error(`Unable to store Follow event in DB >> ${reason}`);
-            })
-            .then(() => {
-                this.logger.info(`User ${event.userDisplayName}: followed ${event.broadcasterDisplayName} on ${(new Date()).toDateString()}`);
-            });
+        try {
+            await this.channelEventRepository.saveFollowEvent(event);
+            this.logger.info(`User ${event.userDisplayName}: followed ${event.broadcasterDisplayName} on ${(new Date()).toDateString()}`);
+        } catch (error) {
+            this.logger.error('Unable to store Follow event in DB', error);
+        }
     }
 }

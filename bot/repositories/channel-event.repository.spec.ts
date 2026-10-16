@@ -236,6 +236,24 @@ describe('ChannelEvent.Repository (postgres)', () => {
         });
 
         describe('RaidEvent()', () => {
+            const broadcasterId = 'test-broadcaster-id';
+
+            /** Builds a raid record; incoming raids target broadcasterId, outgoing raids originate from it */
+            const buildRaid = (direction: 'incoming' | 'outgoing', raidDate: Date, name: string) => ({
+                raidDate,
+                viewers: 25,
+                raidingBroadcasterId: direction === 'outgoing' ? broadcasterId : `${name}-id`,
+                raidingBroadcasterName: direction === 'outgoing' ? 'test-broadcaster-name' : name,
+                raidingBroadcasterDisplayName: direction === 'outgoing' ? 'testBroadcaster' : name,
+                raidedBroadcasterId: direction === 'incoming' ? broadcasterId : `${name}-id`,
+                raidedBroadcasterName: direction === 'incoming' ? 'test-broadcaster-name' : name,
+                raidedBroadcasterDisplayName: direction === 'incoming' ? 'testBroadcaster' : name,
+            });
+
+            beforeEach(async () => {
+                await RaidEvent.destroy({ where: {}, force: true });
+            });
+
             it('saved raid event record is persisted in database', async () => {
                 // Arrange
                 const event = {
@@ -262,13 +280,13 @@ describe('ChannelEvent.Repository (postgres)', () => {
                 expect(row).not.toBe(undefined);
                 expect(result).toEqual(expect.objectContaining(event));
             });
-            it('returns the last raid', async () => {
+            it('returns the last raid into the broadcaster', async () => {
                 // Arrange
                 const event = {
                     raidingBroadcasterId: 'test-raiding-broadcaster-id',
                     raidingBroadcasterName: 'test-raiding-broadcaster-name',
                     raidingBroadcasterDisplayName: 'testRaidingbroadcaster',
-                    raidedBroadcasterId: 'test-raided-broadcaster-id',
+                    raidedBroadcasterId: broadcasterId,
                     raidedBroadcasterName: 'test-raided-broadcaster-name',
                     raidedBroadcasterDisplayName: 'testRaidedbroadcaster',
                     viewers: 25,
@@ -276,12 +294,37 @@ describe('ChannelEvent.Repository (postgres)', () => {
                 const record = await subject.saveRaidEvent(event);
 
                 // Act
-                const result = await subject.getLastRaidEvent();
+                const result = await subject.getLastRaidEvent(broadcasterId);
 
                 // Assert
                 expect(record).not.toBe(null);
                 expect(result?.raidDate).not.toBe(null);
                 expect(result).toEqual(expect.objectContaining(event));
+            });
+            it('returns the newest incoming raid when an outgoing raid is newer', async () => {
+                // Arrange
+                await RaidEvent.bulkCreate([
+                    buildRaid('incoming', new Date(2020, 0, 1), 'olderRaider'),
+                    buildRaid('incoming', new Date(2020, 0, 2), 'newerRaider'),
+                    buildRaid('outgoing', new Date(2020, 0, 3), 'raidedChannel'),
+                ]);
+
+                // Act
+                const result = await subject.getLastRaidEvent(broadcasterId);
+
+                // Assert
+                expect(result?.raidingBroadcasterDisplayName).toBe('newerRaider');
+                expect(result?.raidedBroadcasterId).toBe(broadcasterId);
+            });
+            it('returns null when there are no incoming raids', async () => {
+                // Arrange
+                await RaidEvent.create(buildRaid('outgoing', new Date(2020, 0, 1), 'raidedChannel'));
+
+                // Act
+                const result = await subject.getLastRaidEvent(broadcasterId);
+
+                // Assert
+                expect(result).toBeNull();
             });
         });
     });
