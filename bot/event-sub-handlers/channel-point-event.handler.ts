@@ -13,13 +13,11 @@ export default class ChannelPointEventHandler {
     }
 
     async onChannelPointRedeem(event: EventSubChannelRedemptionAddEvent): Promise<void> {
-        return this.channelEventRepository
-            .saveChannelPointRedeemEvent(event)
-            .catch((reason: any) => {
-                this.logger.error(`Unable to store Channel Point Redeem in DB >> ${reason}`);
-            })
-            .then(() => {
-                this.logger.info(`Channel Point redeam called ${event.rewardTitle}: ${event.rewardCost} (${event.rewardId})`);
-            });
+        try {
+            await this.channelEventRepository.saveChannelPointRedeemEvent(event);
+            this.logger.info(`Channel Point redeam called ${event.rewardTitle}: ${event.rewardCost} (${event.rewardId})`);
+        } catch (error) {
+            this.logger.error('Unable to store Channel Point Redeem in DB', error);
+        }
     }
 }

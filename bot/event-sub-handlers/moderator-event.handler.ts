@@ -17,14 +17,12 @@ export default class ModeratorEventHandler {
      * @param event Moderator Event
      */
     async addModerator(event: EventSubChannelModeratorEvent): Promise<void> {
-        return this.channelEventRepository
-            .addUserAsMod(event)
-            .catch((reason: any) => {
-                this.logger.error(`Unable to store Moderator Add event in DB >> ${reason}`);
-            })
-            .then(() => {
-                this.logger.info(`User ${event.userDisplayName}: added as moderator for ${event.broadcasterDisplayName} on ${(new Date()).toDateString()}`);
-            });
+        try {
+            await this.channelEventRepository.addUserAsMod(event);
+            this.logger.info(`User ${event.userDisplayName}: added as moderator for ${event.broadcasterDisplayName} on ${(new Date()).toDateString()}`);
+        } catch (error) {
+            this.logger.error('Unable to store Moderator Add event in DB', error);
+        }
     }
 
     /**
@@ -32,13 +30,11 @@ export default class ModeratorEventHandler {
      * @param event Moderator Event
      */
     async removeModerator(event: EventSubChannelModeratorEvent): Promise<void> {
-        return this.channelEventRepository
-            .removeUserAsMod(event)
-            .catch((reason: any) => {
-                this.logger.error(`Unable to store Moderator Remove event in DB >> ${reason}`);
-            })
-            .then(() => {
-                this.logger.info(`User ${event.userDisplayName}: removed as moderator for ${event.broadcasterDisplayName} on ${(new Date()).toDateString()}`);
-            });
+        try {
+            await this.channelEventRepository.removeUserAsMod(event);
+            this.logger.info(`User ${event.userDisplayName}: removed as moderator for ${event.broadcasterDisplayName} on ${(new Date()).toDateString()}`);
+        } catch (error) {
+            this.logger.error('Unable to store Moderator Remove event in DB', error);
+        }
     }
 }

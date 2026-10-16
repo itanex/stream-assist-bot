@@ -144,6 +144,7 @@ VS Code snippets in `.vscode/jest.test.code-snippets`:
 * ESLint with `airbnb-base`; `.editorconfig` for whitespace.
 * Named imports with three or more members from one module go on multiple lines, one per line with a trailing comma (general practice; a single line is acceptable where it reads better).
 * Markdown lists use `*` bullets.
+* Async code uses `async`/`await` with `try`/`catch`, not `.then()`/`.catch()` chains. Existing chains are tracked for conversion; do not add new ones.
 
 ---
 

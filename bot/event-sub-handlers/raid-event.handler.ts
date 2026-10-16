@@ -17,15 +17,11 @@ export default class RaidEventHandler {
      * @param event Raid Event
      */
     async raid(event: EventSubChannelRaidEvent): Promise<void> {
-        return this.channelEventRepository
-            .saveRaidEvent(event)
-            .then(
-                () => {
-                    this.logger.info(`${event.raidingBroadcasterDisplayName} raided ${event.raidedBroadcasterDisplayName} on ${(new Date()).toDateString()}`);
-                },
-                (reason: any) => {
-                    this.logger.error('Unable to store Raid event in DB', reason);
-                },
-            );
+        try {
+            await this.channelEventRepository.saveRaidEvent(event);
+            this.logger.info(`${event.raidingBroadcasterDisplayName} raided ${event.raidedBroadcasterDisplayName} on ${(new Date()).toDateString()}`);
+        } catch (error) {
+            this.logger.error('Unable to store Raid event in DB', error);
+        }
     }
 }

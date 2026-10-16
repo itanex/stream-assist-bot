@@ -2,7 +2,6 @@ import { EventSubChannelBanEvent, EventSubChannelUnbanEvent } from '@twurple/eve
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
-import { BanEvent } from '../../database/index.js';
 import BanEventRepository from '../repositories/ban-event.repository.js';
 
 @injectable()
@@ -13,24 +12,20 @@ export default class BanEventHandler {
     ) { }
 
     async onBanEvent(event: EventSubChannelBanEvent): Promise<void> {
-        return this.banEventRepository
-            .saveBanEvent(event)
-            .catch((reason: any) => {
-                this.logger.error(`Unable to store Ban Event in DB >> ${reason}`);
-            })
-            .then(() => {
-                this.logger.info(`Ban Event: ${event.userDisplayName} - ${event.reason} (${event.isPermanent})`);
-            });
+        try {
+            await this.banEventRepository.saveBanEvent(event);
+            this.logger.info(`Ban Event: ${event.userDisplayName} - ${event.reason} (${event.isPermanent})`);
+        } catch (error) {
+            this.logger.error('Unable to store Ban Event in DB', error);
+        }
     }
 
     async onUnbanEvent(event: EventSubChannelUnbanEvent): Promise<void> {
-        return this.banEventRepository
-            .saveUnbanEvent(event)
-            .catch((reason: any) => {
-                this.logger.error(`Unable to store Unban Event in DB >> ${reason}`);
-            })
-            .then((record: BanEvent | void) => {
-                this.logger.info(`Unban Event: ${record!.userDisplayName} - ${record!.reason}`);
-            });
+        try {
+            const record = await this.banEventRepository.saveUnbanEvent(event);
+            this.logger.info(`Unban Event: ${record.userDisplayName} - ${record.reason}`);
+        } catch (error) {
+            this.logger.error('Unable to store Unban Event in DB', error);
+        }
     }
 }
