@@ -5,7 +5,7 @@ import relativeTime from 'dayjs/plugin/relativeTime.js';
 import calendar from 'dayjs/plugin/calendar.js';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import { ICommandHandler, OnlineState } from './iCommandHandler.js';
+import { ICommandHandler, OnlineState } from './icommand-handler.js';
 import InjectionTypes from '../../dependency-management/types.js';
 import SubscriberRepository from '../repositories/subscriber.repository.js';
 import { TransientContext } from '../utilities/default-responses.js';

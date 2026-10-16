@@ -6,7 +6,7 @@ import {
     mockCommandResponseService,
     mockLogger,
 } from '../../tests/common.mocks.js';
-import { DrinkCommand } from './drinkCommand.js';
+import { DrinkCommand } from './drink.command.js';
 
 describe('Drink Command Tests', () => {
     const channel = 'TestChannel';

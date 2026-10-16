@@ -6,7 +6,7 @@ import {
     mockCommandResponseService,
     mockLogger,
 } from '../../tests/common.mocks.js';
-import { SocialsCommand } from './socialsCommand.js';
+import { SocialsCommand } from './socials.command.js';
 
 const messageFn = (
     command: string,

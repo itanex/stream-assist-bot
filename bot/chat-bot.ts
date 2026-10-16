@@ -41,7 +41,7 @@ import {
 } from './event-sub-handlers/index.js';
 import InjectionTypes from '../dependency-management/types.js';
 import { type Environment } from '../configurations/environment.js';
-import { isUserAuthenticated } from './auth/authProvider.js';
+import { isUserAuthenticated } from './auth/auth.provider.js';
 import { StreamStateService } from './services/index.js';
 import JoinGreetingHandler from './handlers/join-greeting.handler.js';
 

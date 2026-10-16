@@ -6,7 +6,7 @@ import {
     mockCommandResponseService,
     mockLogger,
 } from '../../tests/common.mocks.js';
-import { FallCommand } from './fallCommand.js';
+import { FallCommand } from './fall.command.js';
 
 describe('Fall Command Tests', () => {
     const channel = 'TestChannel';

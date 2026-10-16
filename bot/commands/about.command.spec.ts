@@ -6,7 +6,7 @@ import {
     mockCommandResponseService,
     mockLogger,
 } from '../../tests/common.mocks.js';
-import { AboutCommand } from './aboutCommand.js';
+import { AboutCommand } from './about.command.js';
 
 describe('About Command Tests', () => {
     const channel = 'TestChannel';

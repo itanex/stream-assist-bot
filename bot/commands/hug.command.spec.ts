@@ -8,7 +8,7 @@ import {
     mockCommandResponseService,
     mockLogger,
 } from '../../tests/common.mocks.js';
-import { HugCommand } from './hugCommand.js';
+import { HugCommand } from './hug.command.js';
 
 describe('Hug Command Tests', () => {
     const channel = 'TestChannel';

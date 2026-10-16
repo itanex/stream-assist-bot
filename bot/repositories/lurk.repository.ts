@@ -5,7 +5,7 @@ import InjectionTypes from '../../dependency-management/types.js';
 import { LurkingUsers } from '../../database/index.js';
 
 @injectable()
-export default class LurkRespository {
+export default class LurkRepository {
     constructor(
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) { }

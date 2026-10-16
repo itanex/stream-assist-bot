@@ -6,7 +6,7 @@ import {
     mockCommandResponseService,
     mockLogger,
 } from '../../tests/common.mocks.js';
-import { WishListCommand } from './wishListCommand.js';
+import { WishListCommand } from './wish-list.command.js';
 
 describe('Wish List Command Tests', () => {
     const channel = 'TestChannel';

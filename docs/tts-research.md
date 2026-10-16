@@ -8,7 +8,7 @@ Issue #32 was opened to track finding a more reliable replacement. This document
 
 ## Current Implementation
 
-- `bot/commands/eightBallCommand.ts` calls the Google Translate internal batch endpoint via axios
+- `bot/commands/eight-ball.command.ts` calls the Google Translate internal batch endpoint via axios
 - Responses are MD5-hashed and cached permanently as MP3 files in `local-cache/audio/8ball/`
 - The overlay server (`bot/overlay/overlay.server.ts`) serves the cached files to OBS browser sources
 - There are 20 fixed responses - each is only ever generated once, then served from cache

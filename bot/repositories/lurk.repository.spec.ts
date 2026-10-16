@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { ChatUser } from '@twurple/chat';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
-import LurkRespository from './lurk.respository.js';
+import LurkRepository from './lurk.repository.js';
 import { mockLogger } from '../../tests/common.mocks.js';
 import { LurkingUsers } from '../../database/index.js';
 
@@ -12,7 +12,7 @@ describe('Lurk Repository (postgres)', () => {
 
     const fixedDateTime = new Date();
 
-    let subject: LurkRespository;
+    let subject: LurkRepository;
 
     beforeAll(async () => {
         try {
@@ -61,7 +61,7 @@ describe('Lurk Repository (postgres)', () => {
             jest.useFakeTimers().setSystemTime(fixedDateTime);
 
             await LurkingUsers.destroy({ where: {}, force: true });
-            subject = new LurkRespository(mockLogger);
+            subject = new LurkRepository(mockLogger);
         });
 
         afterEach(() => {

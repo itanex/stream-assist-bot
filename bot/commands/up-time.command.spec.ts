@@ -14,7 +14,7 @@ import {
     mockLogger,
 } from '../../tests/common.mocks.js';
 import Broadcaster from '../utilities/broadcaster.js';
-import { UpTimeCommand } from './upTimeCommand.js';
+import { UpTimeCommand } from './up-time.command.js';
 
 dayjs.extend(relativeTime);
 

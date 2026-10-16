@@ -6,7 +6,7 @@ import {
     mockCommandResponseService,
     mockLogger,
 } from '../../tests/common.mocks.js';
-import { DivideByZeroCommand } from './DivideByZeroCommand.js';
+import { DivideByZeroCommand } from './divide-by-zero.command.js';
 
 describe('Divide By Zero Command Tests', () => {
     const channel = 'TestChannel';

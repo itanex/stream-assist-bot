@@ -7,7 +7,7 @@ import {
     mockCommandResponseService,
     mockLogger,
 } from '../../tests/common.mocks.js';
-import { CountExhaustCommand } from './countExhaustCommand.js';
+import { CountExhaustCommand } from './count-exhaust.command.js';
 import Broadcaster from '../utilities/broadcaster.js';
 
 describe('Count Exhaust Command Tests', () => {

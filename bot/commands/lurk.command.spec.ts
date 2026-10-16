@@ -12,8 +12,8 @@ import {
     UnLurkCommand,
     WhoIsLurkingCommand,
     clearLurkingUsers,
-} from './lurk.commands.js';
-import LurkRespository from '../repositories/lurk.respository.js';
+} from './lurk.command.js';
+import LurkRepository from '../repositories/lurk.repository.js';
 import { transientKeywords } from '../utilities/default-responses.js';
 
 describe('Lurk Commands Tests', () => {
@@ -33,7 +33,7 @@ describe('Lurk Commands Tests', () => {
         setUserToLurk: jest.fn(),
         setUserToUnlurk: jest.fn(),
         setAllUsersToUnlurk: jest.fn(),
-    } as jest.Mocked<LurkRespository>;
+    } as jest.Mocked<LurkRepository>;
 
     /** Build `count` lurking users, newest first (userN ... user1) */
     const lurkers = (count: number) => Array

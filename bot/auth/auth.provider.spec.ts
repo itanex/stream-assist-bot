@@ -4,7 +4,7 @@ import fs from 'fs';
 import { mockLogger } from '../../tests/common.mocks.js';
 
 type TwurpleAuthModule = typeof import('@twurple/auth');
-type AuthProviderModule = typeof import('./authProvider.js');
+type AuthProviderModule = typeof import('./auth.provider.js');
 type LoggerModule = typeof import('../../logger/logger.js');
 
 jest.unstable_mockModule('@twurple/auth', () => ({
@@ -80,7 +80,7 @@ describe('authProvider', () => {
             isUserAuthenticated,
             getAuthFailureReason,
             addUserFromTokenFile,
-        } = await import('./authProvider.js'));
+        } = await import('./auth.provider.js'));
 
         ({ default: Logger } = await import('../../logger/logger.js'));
 

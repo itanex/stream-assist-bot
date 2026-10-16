@@ -21,7 +21,7 @@ import {
     mockCommandResponseService,
     mockLogger,
 } from '../../tests/common.mocks.js';
-import { ShoutOutCommand } from './shoutOutCommand.js';
+import { ShoutOutCommand } from './shout-out.command.js';
 
 dayjs.extend(relativeTime);
 

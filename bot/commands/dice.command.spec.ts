@@ -6,7 +6,7 @@ import {
     mockCommandResponseService,
     mockLogger,
 } from '../../tests/common.mocks.js';
-import { DiceCommand, RollResult } from './diceCommand.js';
+import { DiceCommand, RollResult } from './dice.command.js';
 
 describe('Dice Command Tests', () => {
     const channel = 'TestChannel';

@@ -10,7 +10,7 @@ import {
 
 type AxiosModule = typeof import('axios');
 type WsModule = typeof import('ws');
-type EightBallCommandModule = typeof import('./eightBallCommand.js');
+type EightBallCommandModule = typeof import('./eight-ball.command.js');
 
 jest.unstable_mockModule('ws', () => ({
     WebSocket: jest.fn(),
@@ -70,7 +70,7 @@ describe('Eight Ball Command Tests', () => {
         mockWebSocket = (await import('ws'))
             .WebSocket as jest.MockedClass<WsModule['WebSocket']>;
 
-        ({ EightBallCommand } = await import('./eightBallCommand.js'));
+        ({ EightBallCommand } = await import('./eight-ball.command.js'));
     });
 
     afterEach(() => {

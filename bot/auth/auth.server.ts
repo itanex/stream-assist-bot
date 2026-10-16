@@ -13,7 +13,7 @@ import {
     isUserAuthenticated,
     removeUserTokenFile,
     writeUserTokenToFile,
-} from './authProvider.js';
+} from './auth.provider.js';
 import ChatBot, { type IChatBot } from '../chat-bot.js';
 
 export interface IAuthenticationServer {

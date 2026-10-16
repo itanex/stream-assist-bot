@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { ChatClient, ChatUser } from '@twurple/chat';
 import winston from 'winston';
-import { ICommandHandler, OnlineState } from './iCommandHandler.js';
+import { ICommandHandler, OnlineState } from './icommand-handler.js';
 import InjectionTypes from '../../dependency-management/types.js';
 import { TransientContext } from '../utilities/default-responses.js';
 import { templateResolver } from '../utilities/template-resolver.js';

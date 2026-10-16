@@ -12,8 +12,8 @@ import {
     mockCommandResponseService,
     mockLogger,
 } from '../../tests/common.mocks.js';
-import { FollowAgeCommand } from './followAgeCommand.js';
-import Timespan, { getAgeReport } from '../utilities/timeSpan.js';
+import { FollowAgeCommand } from './follow-age.command.js';
+import Timespan, { getAgeReport } from '../utilities/timespan.js';
 import { type Environment } from '../../configurations/environment.js';
 import { transientKeywords } from '../utilities/default-responses.js';
 import Broadcaster from '../utilities/broadcaster.js';

@@ -69,7 +69,7 @@ Utilities (`bot/utilities`) and infrastructure (`Logger`, `ChatClient`, `ApiClie
 ### Current exceptions
 
 * Some commands still inject a repository directly because no service exists for it yet. The list is maintained in [Command System - Direct Repository Access](command-system.md#direct-repository-access-known-exception); removal is tracked in [#158](https://github.com/itanex/stream-assist-bot/issues/158). New commands must not add to it.
-* Chat handlers and event-sub handlers currently inject repositories directly (`SubscriberRepository`, `BanEventRepository`, `ChannelEventRepository`, `LurkRespository`, `StreamEventRepository`). No layering rule has been set for these entry points yet.
+* Chat handlers and event-sub handlers currently inject repositories directly (`SubscriberRepository`, `BanEventRepository`, `ChannelEventRepository`, `LurkRepository`, `StreamEventRepository`). No layering rule has been set for these entry points yet.
 
 ---
 

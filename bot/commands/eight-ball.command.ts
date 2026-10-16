@@ -5,7 +5,7 @@ import fs from 'fs';
 import axios from 'axios';
 import md5 from 'md5';
 import { WebSocket } from 'ws';
-import { ICommandHandler, OnlineState } from './iCommandHandler.js';
+import { ICommandHandler, OnlineState } from './icommand-handler.js';
 import InjectionTypes from '../../dependency-management/types.js';
 import environment from '../../configurations/environment.js';
 import { CommandResponseService } from '../services/index.js';

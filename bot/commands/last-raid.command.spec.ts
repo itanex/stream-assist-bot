@@ -11,7 +11,7 @@ import {
 import { type Environment } from '../../configurations/environment.js';
 import { RaidEvent } from '../../database/index.js';
 import ChannelEventRepository from '../repositories/channel-event.repository.js';
-import { LastRaidCommand } from './lastRaidCommand.js';
+import { LastRaidCommand } from './last-raid.command.js';
 
 dayjs.extend(relativeTime);
 

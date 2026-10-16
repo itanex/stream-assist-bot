@@ -8,8 +8,8 @@ import {
     mockCommandResponseService,
     mockLogger,
 } from '../../tests/common.mocks.js';
-import { AccountAgeCommand } from './accountAgeCommand.js';
-import Timespan, { getAgeReport } from '../utilities/timeSpan.js';
+import { AccountAgeCommand } from './account-age.command.js';
+import Timespan, { getAgeReport } from '../utilities/timespan.js';
 import { transientKeywords } from '../utilities/default-responses.js';
 
 describe('Account Age Command Tests', () => {

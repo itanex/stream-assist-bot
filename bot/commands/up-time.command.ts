@@ -3,7 +3,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime.js';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
-import { ICommandHandler, OnlineState } from './iCommandHandler.js';
+import { ICommandHandler, OnlineState } from './icommand-handler.js';
 import InjectionTypes from '../../dependency-management/types.js';
 import Broadcaster from '../utilities/broadcaster.js';
 import { TransientContext } from '../utilities/default-responses.js';

@@ -2,11 +2,11 @@ import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
-import { ICommandHandler, OnlineState } from './iCommandHandler.js';
+import { ICommandHandler, OnlineState } from './icommand-handler.js';
 import { TransientContext } from '../utilities/default-responses.js';
 import { templateResolver } from '../utilities/template-resolver.js';
 import { CommandResponseService } from '../services/index.js';
-import LurkRespository from '../repositories/lurk.respository.js';
+import LurkRepository from '../repositories/lurk.repository.js';
 
 @injectable()
 export class LurkCommand implements ICommandHandler {
@@ -26,13 +26,13 @@ export class LurkCommand implements ICommandHandler {
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(CommandResponseService) private commandResponseService: CommandResponseService,
-        @inject(LurkRespository) private lurkRespository: LurkRespository,
+        @inject(LurkRepository) private lurkRepository: LurkRepository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        const [user, created] = await this.lurkRespository.setUserToLurk(userstate);
+        const [user, created] = await this.lurkRepository.setUserToLurk(userstate);
 
         if (created) {
             const commandText = this.commandResponseService
@@ -72,13 +72,13 @@ export class UnLurkCommand implements ICommandHandler {
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(CommandResponseService) private commandResponseService: CommandResponseService,
-        @inject(LurkRespository) private lurkRespository: LurkRespository,
+        @inject(LurkRepository) private lurkRepository: LurkRepository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
 
     async handle(channel: string, commandName: string, userstate: ChatUser, message: string, args?: any): Promise<void> {
-        const unlurkedUser = await this.lurkRespository.setUserToUnlurk(userstate);
+        const unlurkedUser = await this.lurkRepository.setUserToUnlurk(userstate);
 
         if (unlurkedUser) {
             const commandText = this.commandResponseService
@@ -119,7 +119,7 @@ export class WhoIsLurkingCommand implements ICommandHandler {
     constructor(
         @inject(ChatClient) private chatClient: ChatClient,
         @inject(CommandResponseService) private commandResponseService: CommandResponseService,
-        @inject(LurkRespository) private lurkRepository: LurkRespository,
+        @inject(LurkRepository) private lurkRepository: LurkRepository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) {
     }
@@ -171,7 +171,7 @@ export class WhoIsLurkingCommand implements ICommandHandler {
 }
 
 export async function clearLurkingUsers(
-    lurkRepository: LurkRespository,
+    lurkRepository: LurkRepository,
     logger: winston.Logger,
 ): Promise<void> {
     const [count, users] = await lurkRepository.setAllUsersToUnlurk();

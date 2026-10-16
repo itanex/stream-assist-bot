@@ -6,7 +6,7 @@ import {
     mockCommandResponseService,
     mockLogger,
 } from '../../tests/common.mocks.js';
-import ThrowCommand from './throwCommand.js';
+import ThrowCommand from './throw.command.js';
 
 describe('Throw Command Tests', () => {
     const channel = 'TestChannel';

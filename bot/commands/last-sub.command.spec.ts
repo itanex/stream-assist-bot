@@ -10,7 +10,7 @@ import {
 } from '../../tests/common.mocks.js';
 import { Subscribers, SubscriptionType } from '../../database/index.js';
 import SubscriberRepository from '../repositories/subscriber.repository.js';
-import { LastSubCommand } from './lastSubCommand.js';
+import { LastSubCommand } from './last-sub.command.js';
 
 dayjs.extend(relativeTime);
 
