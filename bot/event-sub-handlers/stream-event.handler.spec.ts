@@ -4,11 +4,11 @@ import { EventSubStreamOfflineEvent, EventSubStreamOnlineEvent } from '@twurple/
 import { mockLogger } from '../../tests/common.mocks.js';
 import StreamEventHandler from './stream-event.handler.js';
 import { LurkingUsers, StreamEventRecord } from '../../database/index.js';
-import { LurkRespository, StreamEventRepository } from '../repositories/index.js';
+import { LurkRepository, StreamEventRepository } from '../repositories/index.js';
 
 const mockLurkRepository = <unknown>{
     setAllUsersToUnlurk: jest.fn<() => Promise<[number, LurkingUsers[]]>>(),
-} as jest.Mocked<LurkRespository>;
+} as jest.Mocked<LurkRepository>;
 
 const mockStreamEventRepository = <unknown>{
     getLastStream: jest.fn<() => Promise<StreamEventRecord | null>>(),

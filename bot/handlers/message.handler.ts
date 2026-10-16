@@ -4,7 +4,7 @@ import { inject, injectable, multiInject } from 'inversify';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import { ICommandHandler } from '../commands/index.js';
-import { CommandTimeout } from '../types/CommandTimeout.js';
+import { CommandTimeout } from '../types/command-timeout.js';
 import Broadcaster from '../utilities/broadcaster.js';
 import { StreamStateService } from '../services/index.js';
 

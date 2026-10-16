@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { EventSubStreamOfflineEvent, EventSubStreamOnlineEvent } from '@twurple/eventsub-base';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
-import LurkRespository from '../repositories/lurk.respository.js';
+import LurkRepository from '../repositories/lurk.repository.js';
 import StreamEventRepository from '../repositories/stream-event.repository.js';
 import { StreamEventRecord } from '../../database/index.js';
 
@@ -12,8 +12,8 @@ export default class StreamEventHandler {
     static clearTimeoutRef: NodeJS.Timeout | null = null;
 
     constructor(
-        @inject(LurkRespository) private lurkRepository: LurkRespository,
-        @inject(StreamEventRepository) private streamEventRespository: StreamEventRepository,
+        @inject(LurkRepository) private lurkRepository: LurkRepository,
+        @inject(StreamEventRepository) private streamEventRepository: StreamEventRepository,
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) { }
 
@@ -32,7 +32,7 @@ export default class StreamEventHandler {
             StreamEventHandler.clearTimeoutRef = null;
         } else {
             // Clean up lurking users on fresh stream...
-            const lastStream = await this.streamEventRespository
+            const lastStream = await this.streamEventRepository
                 .getLastStream(event.broadcasterId);
 
             if (lastStream) {
@@ -41,7 +41,7 @@ export default class StreamEventHandler {
             }
         }
 
-        return this.streamEventRespository
+        return this.streamEventRepository
             .saveStreamStartEvent(event)
             .then(
                 (record: StreamEventRecord | null) => {
@@ -67,7 +67,7 @@ export default class StreamEventHandler {
 
         StreamEventHandler.clearTimeoutRef = setTimeout(() => this.unlurkUsers(endTime), delay);
 
-        return this.streamEventRespository
+        return this.streamEventRepository
             .saveStreamEndEvent(endTime, event)
             .then(
                 ([count, _]: [number, StreamEventRecord[]]) => {

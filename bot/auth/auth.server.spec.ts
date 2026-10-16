@@ -6,7 +6,7 @@ import { type Environment } from '../../configurations/environment.js';
 import { type IChatBot } from '../chat-bot.js';
 
 type AxiosModule = typeof import('axios');
-type AuthProviderModule = typeof import('./authProvider.js');
+type AuthProviderModule = typeof import('./auth.provider.js');
 type AuthenticationServerModule = typeof import('./auth.server.js');
 
 jest.unstable_mockModule('axios', () => ({
@@ -14,7 +14,7 @@ jest.unstable_mockModule('axios', () => ({
     default: { post: jest.fn() },
 }));
 
-jest.unstable_mockModule('./authProvider', () => ({
+jest.unstable_mockModule('./auth.provider', () => ({
     addUserFromToken: jest.fn(),
     writeUserTokenToFile: jest.fn(),
     removeUserTokenFile: jest.fn(),
@@ -74,7 +74,7 @@ describe('AuthenticationServer', () => {
             removeUserTokenFile,
             isUserAuthenticated,
             getAuthFailureReason,
-        } = await import('./authProvider.js'));
+        } = await import('./auth.provider.js'));
 
         // Retrieve the post mock after the factory has run
         mockAxios = (await import('axios'))

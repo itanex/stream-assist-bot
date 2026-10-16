@@ -217,7 +217,7 @@ Create a file in `bot/commands/`. Implement `ICommandHandler`:
 ```typescript
 import { ChatClient, ChatUser } from '@twurple/chat';
 import { inject, injectable } from 'inversify';
-import { ICommandHandler, OnlineState } from './iCommandHandler';
+import { ICommandHandler, OnlineState } from './icommand-handler';
 import InjectionTypes from '../../dependency-management/types';
 
 @injectable()
@@ -290,7 +290,7 @@ The following commands still inject a repository directly because no service exi
 
 | Repository | Commands |
 |---|---|
-| `LurkRespository` | `LurkCommand`, `UnLurkCommand`, `WhoIsLurkingCommand`, `clearLurkingUsers` |
+| `LurkRepository` | `LurkCommand`, `UnLurkCommand`, `WhoIsLurkingCommand`, `clearLurkingUsers` |
 | `DeathCountRepository` | `DeathCommand`, `DeathCountCommand`, `LastDeathCountCommmand` |
 | `ChannelEventRepository` | `LastRaidCommand` |
 | `SubscriberRepository` | `LastSubCommand` |

@@ -58,7 +58,7 @@ import {
 import Broadcaster from '../bot/utilities/broadcaster.js';
 import InjectionTypes from './types.js';
 import Database, { IDatabaseConfiguration } from '../database/database.js';
-import authProvider from '../bot/auth/authProvider.js';
+import authProvider from '../bot/auth/auth.provider.js';
 import Scheduler from '../bot/scheduler.js';
 import { SocketServer, ISocketServer } from '../bot/overlay/socket.server.js';
 import OverlayServer, { IOverlayServer } from '../bot/overlay/overlay.server.js';
@@ -70,7 +70,7 @@ import {
     CommandResponseRepository,
     DeathCountRepository,
     GreetedUserRepository,
-    LurkRespository,
+    LurkRepository,
     StreamEventRepository,
     SubscriberRepository,
 } from '../bot/repositories/index.js';
@@ -92,7 +92,7 @@ SAContainer.bind<ChannelEventRepository>(ChannelEventRepository).toSelf().inSing
 SAContainer.bind<CommandResponseRepository>(CommandResponseRepository).toSelf().inSingletonScope();
 SAContainer.bind<DeathCountRepository>(DeathCountRepository).toSelf().inSingletonScope();
 SAContainer.bind<GreetedUserRepository>(GreetedUserRepository).toSelf().inSingletonScope();
-SAContainer.bind<LurkRespository>(LurkRespository).toSelf().inSingletonScope();
+SAContainer.bind<LurkRepository>(LurkRepository).toSelf().inSingletonScope();
 SAContainer.bind<StreamEventRepository>(StreamEventRepository).toSelf().inSingletonScope();
 SAContainer.bind<SubscriberRepository>(SubscriberRepository).toSelf().inSingletonScope();
 

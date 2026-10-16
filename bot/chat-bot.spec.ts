@@ -6,10 +6,10 @@ import { StreamStateService } from './services/index.js';
 import { mockLogger } from '../tests/common.mocks.js';
 import { type Environment } from '../configurations/environment.js';
 
-type AuthProviderModule = typeof import('./auth/authProvider.js');
+type AuthProviderModule = typeof import('./auth/auth.provider.js');
 type ChatBotModule = typeof import('./chat-bot.js');
 
-jest.unstable_mockModule('./auth/authProvider', () => ({
+jest.unstable_mockModule('./auth/auth.provider', () => ({
     isUserAuthenticated: jest.fn(),
 }));
 
@@ -66,7 +66,7 @@ describe('ChatBot start() guard', () => {
 
         ({ default: ChatBot } = await import('./chat-bot.js'));
 
-        isUserAuthenticated = (await import('./auth/authProvider.js'))
+        isUserAuthenticated = (await import('./auth/auth.provider.js'))
             .isUserAuthenticated as jest.Mocked<AuthProviderModule['isUserAuthenticated']>;
 
         subject = new ChatBot(

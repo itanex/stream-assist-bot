@@ -9,7 +9,7 @@ import Scheduler from './bot/scheduler.js';
 import { SocketServer, type ISocketServer } from './bot/overlay/socket.server.js';
 import OverlayServer, { type IOverlayServer } from './bot/overlay/overlay.server.js';
 import AuthenticationServer, { type IAuthenticationServer } from './bot/auth/auth.server.js';
-import { isUserAuthenticated } from './bot/auth/authProvider.js';
+import { isUserAuthenticated } from './bot/auth/auth.provider.js';
 import { CommandResponseService } from './bot/services/index.js';
 import environment from './configurations/environment.js';
 import pkg from './package.json' with { type: 'json' };
