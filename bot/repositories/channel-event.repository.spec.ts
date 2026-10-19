@@ -9,7 +9,7 @@ import {
     EventSubChannelRedemptionAddEvent,
 } from '@twurple/eventsub-base';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
-import { mockLogger } from '../../tests/common.mocks.js';
+import { mockLogger, syncSchema } from '../../tests/index.js';
 import {
     ChannelPointRedeem,
     CheerEvent,
@@ -64,7 +64,8 @@ describe('ChannelEvent.Repository (postgres)', () => {
 
         beforeAll(async () => {
             database = new Database(databaseConfiguration, mockLogger);
-            await database.initialize();
+            await database.connect();
+            await syncSchema(database);
             subject = new ChannelEventRepository(mockLogger);
         });
 

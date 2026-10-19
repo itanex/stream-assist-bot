@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { ApiClient, HelixChatApi } from '@twurple/api';
 import { ChatRaidInfo, UserNotice } from '@twurple/chat';
-import { mockLogger } from '../../tests/common.mocks.js';
+import { mockLogger } from '../../tests/index.js';
 import environment from '../../configurations/environment.js';
 import { ICommandHandler, ShoutOutCommand } from '../commands/index.js';
 import { RaidHandler } from './raid.handler.js';

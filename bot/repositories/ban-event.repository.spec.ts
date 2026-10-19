@@ -3,7 +3,7 @@ import { jest } from '@jest/globals';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { EventSubChannelBanEvent, EventSubChannelUnbanEvent } from '@twurple/eventsub-base';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
-import { mockLogger } from '../../tests/common.mocks.js';
+import { mockLogger, syncSchema } from '../../tests/index.js';
 import { BanEvent } from '../../database/index.js';
 
 type BanEventRepositoryModule = typeof import('./ban-event.repository.js');
@@ -53,7 +53,8 @@ describe('BanEvent.Repository (postgres)', () => {
 
         beforeAll(async () => {
             database = new Database(databaseConfiguration, mockLogger);
-            await database.initialize();
+            await database.connect();
+            await syncSchema(database);
             subject = new BanEventRepository(mockLogger);
         });
 

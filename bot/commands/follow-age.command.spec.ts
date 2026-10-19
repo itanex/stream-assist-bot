@@ -11,7 +11,7 @@ import {
     mockChatClient,
     mockCommandResponseService,
     mockLogger,
-} from '../../tests/common.mocks.js';
+} from '../../tests/index.js';
 import { FollowAgeCommand } from './follow-age.command.js';
 import Timespan, { getAgeReport } from '../utilities/timespan.js';
 import { type Environment } from '../../configurations/environment.js';

@@ -6,7 +6,7 @@ import { MessageHandler } from './message.handler.js';
 import Broadcaster from '../utilities/broadcaster.js';
 import { ICommandHandler } from '../commands/index.js';
 import { StreamStateService } from '../services/index.js';
-import { mockApiClient, mockLogger } from '../../tests/common.mocks.js';
+import { mockApiClient, mockLogger } from '../../tests/index.js';
 
 const mockChatClient = <unknown>{
     say: jest.fn(),

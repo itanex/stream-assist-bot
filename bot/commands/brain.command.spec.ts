@@ -5,7 +5,7 @@ import {
     mockChatClient,
     mockCommandResponseService,
     mockLogger,
-} from '../../tests/common.mocks.js';
+} from '../../tests/index.js';
 import BrainCommand from './brain.command.js';
 import { transientKeywords } from '../utilities/default-responses.js';
 

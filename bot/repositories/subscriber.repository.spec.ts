@@ -9,7 +9,11 @@ import {
 } from '@twurple/chat';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
 import SubscriberRepository from './subscriber.repository.js';
-import { mockLogger, mockError } from '../../tests/common.mocks.js';
+import {
+    mockLogger,
+    mockError,
+    syncSchema,
+} from '../../tests/index.js';
 import { Subscribers, SubscriptionType } from '../../database/index.js';
 
 describe('Subscription Repository (postgres)', () => {
@@ -55,7 +59,8 @@ describe('Subscription Repository (postgres)', () => {
 
         beforeAll(async () => {
             database = new Database(databaseConfiguration, mockLogger);
-            await database.initialize();
+            await database.connect();
+            await syncSchema(database);
         });
 
         afterAll(async () => {

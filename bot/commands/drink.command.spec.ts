@@ -5,7 +5,7 @@ import {
     mockChatClient,
     mockCommandResponseService,
     mockLogger,
-} from '../../tests/common.mocks.js';
+} from '../../tests/index.js';
 import { DrinkCommand } from './drink.command.js';
 
 describe('Drink Command Tests', () => {

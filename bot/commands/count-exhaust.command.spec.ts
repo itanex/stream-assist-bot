@@ -6,7 +6,7 @@ import {
     mockChatClient,
     mockCommandResponseService,
     mockLogger,
-} from '../../tests/common.mocks.js';
+} from '../../tests/index.js';
 import { CountExhaustCommand } from './count-exhaust.command.js';
 import Broadcaster from '../utilities/broadcaster.js';
 

@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { HelixPrivilegedUser } from '@twurple/api';
 import Broadcaster from './broadcaster.js';
-import { mockApiClient } from '../../tests/common.mocks.js';
+import { mockApiClient } from '../../tests/index.js';
 import { type Environment } from '../../configurations/environment.js';
 
 describe('Broadcaster', () => {

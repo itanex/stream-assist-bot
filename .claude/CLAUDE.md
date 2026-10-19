@@ -34,7 +34,7 @@ dependency-management/
   inversify.config.ts           # DI container bindings
   types.ts                      # InjectionTypes symbols
 database/
-  database.ts                   # Sequelize connection + model sync
+  database.ts                   # Sequelize connection (schema comes from migrations)
   models/                       # ORM models (Subscribers, BanEvent, etc.)
   migrations/                   # Sequelize CLI migrations
 bot/
@@ -131,3 +131,8 @@ WEATHER_API_KEY / WAYPOINT_DEV_KEY_1 / WAYPOINT_DEV_KEY_2
 * Log assertions check `expect.any(String)` plus logged data, never message text
 * Full rules: [docs/architecture.md#testing](../docs/architecture.md#testing)
 * Run `npm test` before committing to catch open handles
+
+## Commit Messages
+
+* Suggest a commit message only when asked
+* When asked, follow the `gitkraken-commit-msg` skill (`.claude/skills/gitkraken-commit-msg`)

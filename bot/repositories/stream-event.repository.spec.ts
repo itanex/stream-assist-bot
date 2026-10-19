@@ -4,7 +4,11 @@ import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers
 import { EventSubStreamOnlineEvent } from '@twurple/eventsub-base';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
 import StreamEventRepository from './stream-event.repository.js';
-import { mockLogger, mockError } from '../../tests/common.mocks.js';
+import {
+    mockLogger,
+    mockError,
+    syncSchema,
+} from '../../tests/index.js';
 import { StreamEventRecord } from '../../database/index.js';
 
 describe('Stream Event Repository (postgres)', () => {
@@ -50,7 +54,8 @@ describe('Stream Event Repository (postgres)', () => {
 
         beforeAll(async () => {
             database = new Database(databaseConfiguration, mockLogger);
-            await database.initialize();
+            await database.connect();
+            await syncSchema(database);
         });
 
         afterAll(async () => {

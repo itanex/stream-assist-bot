@@ -12,7 +12,7 @@ import {
     mockChatClient,
     mockCommandResponseService,
     mockLogger,
-} from '../../tests/common.mocks.js';
+} from '../../tests/index.js';
 import Broadcaster from '../utilities/broadcaster.js';
 import { UpTimeCommand } from './up-time.command.js';
 

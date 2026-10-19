@@ -7,7 +7,7 @@ import {
     mockChatClient,
     mockCommandResponseService,
     mockLogger,
-} from '../../tests/common.mocks.js';
+} from '../../tests/index.js';
 import { Subscribers, SubscriptionType } from '../../database/index.js';
 import SubscriberRepository from '../repositories/subscriber.repository.js';
 import { LastSubCommand } from './last-sub.command.js';

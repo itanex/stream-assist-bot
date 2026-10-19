@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import request from 'supertest';
-import { mockLogger } from '../../tests/common.mocks.js';
+import { mockLogger } from '../../tests/index.js';
 import { type Environment } from '../../configurations/environment.js';
 import { type IChatBot } from '../chat-bot.js';
 

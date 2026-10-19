@@ -3,7 +3,7 @@ import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers
 import { ChatUser } from '@twurple/chat';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
 import LurkRepository from './lurk.repository.js';
-import { mockLogger } from '../../tests/common.mocks.js';
+import { mockLogger, syncSchema } from '../../tests/index.js';
 import { LurkingUsers } from '../../database/index.js';
 
 describe('Lurk Repository (postgres)', () => {
@@ -49,7 +49,8 @@ describe('Lurk Repository (postgres)', () => {
 
         beforeAll(async () => {
             database = new Database(databaseConfiguration, mockLogger);
-            await database.initialize();
+            await database.connect();
+            await syncSchema(database);
         });
 
         afterAll(async () => {

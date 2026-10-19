@@ -2,11 +2,11 @@ import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import Database, { IDatabaseConfiguration } from './database.js';
-import { mockLogger } from '../tests/common.mocks.js';
+import { mockLogger } from '../tests/index.js';
 
 // ORDER MATTERS: constructing a Database rebinds every model class
 // (static sequelize ref) to the newest instance. Any test that touches
-// models through an earlier instance (e.g. sync) must run before this
+// models through an earlier instance must run before this
 // point. Do not move this block above the model-dependent tests.
 
 describe('Database (postgres)', () => {
@@ -85,14 +85,19 @@ describe('Database (postgres)', () => {
             }, 30_000);
         });
 
-        describe('sync()', () => {
-            it('syncronizes the database', async () => {
-                // Arrange - beforeAll()
+        describe('initialize()', () => {
+            it('connects without syncing the database', async () => {
+                // Arrange
+                const syncSpy = jest.spyOn(database.db, 'sync');
+
                 // Act
-                await database.sync();
+                await database.initialize();
 
                 // Assert
-                expect(mockLogger.info).toHaveBeenCalledWith('DB Sync completed successfully');
+                expect(mockLogger.info).toHaveBeenCalledWith(expect.any(String));
+                expect(syncSpy).not.toHaveBeenCalled();
+
+                syncSpy.mockRestore();
             }, 30_000);
         });
 
@@ -141,16 +146,6 @@ describe('Database (postgres)', () => {
                 await expect(badDatabase.connect()).rejects.toThrow();
                 expect(mockLogger.info).not.toHaveBeenCalled();
                 expect(mockLogger.error).toHaveBeenCalledWith('**Unable to connect to the database**:', expect.anything());
-            }, 30_000);
-        });
-
-        describe('sync()', () => {
-            it('fails to syncronizes the database', async () => {
-                // Arrange - beforeAll()
-                // Act & Assert
-                await expect(badDatabase.sync()).rejects.toThrow();
-                expect(mockLogger.info).not.toHaveBeenCalled();
-                expect(mockLogger.error).toHaveBeenCalledWith('**DB Sync Failed**:', expect.anything());
             }, 30_000);
         });
     });

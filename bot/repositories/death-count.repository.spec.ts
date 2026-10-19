@@ -3,7 +3,11 @@ import { HelixStream } from '@twurple/api';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
 import DeathCountRepository from './death-count.repository.js';
-import { mockLogger, mockError } from '../../tests/common.mocks.js';
+import {
+    mockLogger,
+    mockError,
+    syncSchema,
+} from '../../tests/index.js';
 import { DeathCounts } from '../../database/index.js';
 
 const mockStreamData = <HelixStream>{
@@ -55,7 +59,8 @@ describe('Death Count Repository (postgres)', () => {
 
         beforeAll(async () => {
             database = new Database(databaseConfiguration, mockLogger);
-            await database.initialize();
+            await database.connect();
+            await syncSchema(database);
         });
 
         afterAll(async () => {

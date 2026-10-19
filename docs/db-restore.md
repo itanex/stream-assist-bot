@@ -80,7 +80,7 @@ Lists the restored tables, including `SequelizeMeta` (applied migrations).
 docker compose start app
 ```
 
-Check the bot log for `DB Connection has been established successfully.` and `DB Sync completed successfully`.
+Check the bot log for `DB Connection has been established successfully.`
 
 ## Troubleshooting
 
