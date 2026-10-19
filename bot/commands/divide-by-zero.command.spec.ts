@@ -5,7 +5,7 @@ import {
     mockChatClient,
     mockCommandResponseService,
     mockLogger,
-} from '../../tests/common.mocks.js';
+} from '../../tests/index.js';
 import { DivideByZeroCommand } from './divide-by-zero.command.js';
 
 describe('Divide By Zero Command Tests', () => {

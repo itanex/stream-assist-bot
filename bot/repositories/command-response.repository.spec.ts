@@ -3,7 +3,11 @@ import { jest } from '@jest/globals';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
 import CommandResponseRepository, { CommandResponse } from './command-response.repository.js';
-import { mockError, mockLogger } from '../../tests/common.mocks.js';
+import {
+    mockError,
+    mockLogger,
+    syncSchema,
+} from '../../tests/index.js';
 import { CommandResponseDbo, CommandResponseTextDbo } from '../../database/index.js';
 
 describe('CommandResponse.Repository (postgres)', () => {
@@ -113,7 +117,8 @@ describe('CommandResponse.Repository (postgres)', () => {
 
         beforeAll(async () => {
             database = new Database(databaseConfiguration, mockLogger);
-            await database.initialize();
+            await database.connect();
+            await syncSchema(database);
         });
 
         afterAll(async () => {

@@ -10,7 +10,7 @@ import {
     mockChatClient,
     mockCommandResponseService,
     mockLogger,
-} from '../../tests/common.mocks.js';
+} from '../../tests/index.js';
 import { CommandTextInsertResult } from '../services/index.js';
 
 /** Utility method for constructing command message inline with ManageCommand */

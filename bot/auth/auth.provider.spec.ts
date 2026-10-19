@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import fs from 'fs';
-import { mockLogger } from '../../tests/common.mocks.js';
+import { mockLogger } from '../../tests/index.js';
 
 type TwurpleAuthModule = typeof import('@twurple/auth');
 type AuthProviderModule = typeof import('./auth.provider.js');

@@ -7,7 +7,7 @@ import {
     mockChatClient,
     mockCommandResponseService,
     mockLogger,
-} from '../../tests/common.mocks.js';
+} from '../../tests/index.js';
 import { CuddleCommand } from './cuddle.command.js';
 import { transientKeywords } from '../utilities/default-responses.js';
 

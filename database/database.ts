@@ -101,20 +101,8 @@ export default class Database {
             });
     }
 
-    async sync(): Promise<void> {
-        await this.sequelize
-            // sync logging has no diagnostic value
-            .sync({ logging: false })
-            .then(obj => this.logger.info('DB Sync completed successfully'))
-            .catch((error: any) => {
-                this.logger.error('**DB Sync Failed**:', error);
-                throw error;
-            });
-    }
-
     async initialize(): Promise<void> {
         await this.connect();
-        await this.sync();
     }
 
     async validate(): Promise<void> {

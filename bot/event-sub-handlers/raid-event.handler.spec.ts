@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { EventSubChannelRaidEvent } from '@twurple/eventsub-base';
-import { mockError, mockLogger } from '../../tests/common.mocks.js';
+import { mockError, mockLogger } from '../../tests/index.js';
 import { RaidEvent } from '../../database/index.js';
 import ChannelEventRepository from '../repositories/channel-event.repository.js';
 import RaidEventHandler from './raid-event.handler.js';

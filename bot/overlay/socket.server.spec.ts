@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
-import { mockLogger } from '../../tests/common.mocks.js';
+import { mockLogger } from '../../tests/index.js';
 
 type WsModule = typeof import('ws');
 type SocketServerModule = typeof import('./socket.server.js');

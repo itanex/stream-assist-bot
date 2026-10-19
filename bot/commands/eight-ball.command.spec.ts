@@ -6,7 +6,7 @@ import {
     mockChatClient,
     mockCommandResponseService,
     mockLogger,
-} from '../../tests/common.mocks.js';
+} from '../../tests/index.js';
 
 type AxiosModule = typeof import('axios');
 type WsModule = typeof import('ws');

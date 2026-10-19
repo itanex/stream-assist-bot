@@ -20,7 +20,7 @@ import {
     mockChatClient,
     mockCommandResponseService,
     mockLogger,
-} from '../../tests/common.mocks.js';
+} from '../../tests/index.js';
 import { ShoutOutCommand } from './shout-out.command.js';
 
 dayjs.extend(relativeTime);

@@ -7,7 +7,7 @@ import {
     mockChatClient,
     mockCommandResponseService,
     mockLogger,
-} from '../../tests/common.mocks.js';
+} from '../../tests/index.js';
 import { AccountAgeCommand } from './account-age.command.js';
 import Timespan, { getAgeReport } from '../utilities/timespan.js';
 import { transientKeywords } from '../utilities/default-responses.js';

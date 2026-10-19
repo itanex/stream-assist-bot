@@ -5,7 +5,7 @@ import {
     mockChatClient,
     mockCommandResponseService,
     mockLogger,
-} from '../../tests/common.mocks.js';
+} from '../../tests/index.js';
 import { WishListCommand } from './wish-list.command.js';
 
 describe('Wish List Command Tests', () => {

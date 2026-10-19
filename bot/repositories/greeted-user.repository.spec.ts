@@ -4,7 +4,11 @@ import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers
 import { ChatUser } from '@twurple/chat';
 import GreetedUserRepository from './greeted-user.repository.js';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
-import { mockError, mockLogger } from '../../tests/common.mocks.js';
+import {
+    mockError,
+    mockLogger,
+    syncSchema,
+} from '../../tests/index.js';
 import { GreetUser } from '../../database/index.js';
 
 describe('GreetedUserRepository (postgres)', () => {
@@ -58,7 +62,8 @@ describe('GreetedUserRepository (postgres)', () => {
 
         beforeAll(async () => {
             database = new Database(databaseConfiguration, mockLogger);
-            await database.initialize();
+            await database.connect();
+            await syncSchema(database);
         });
 
         afterAll(async () => {

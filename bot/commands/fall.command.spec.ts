@@ -5,7 +5,7 @@ import {
     mockChatClient,
     mockCommandResponseService,
     mockLogger,
-} from '../../tests/common.mocks.js';
+} from '../../tests/index.js';
 import { FallCommand } from './fall.command.js';
 
 describe('Fall Command Tests', () => {

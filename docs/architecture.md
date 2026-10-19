@@ -14,7 +14,7 @@ The bot is a single Node.js process (TypeScript, run via ts-node, no build step)
 
 1. Resolves the `App` singleton from the Inversify container (`dependency-management/inversify.config.ts`)
 2. Configures `ChatBot` (wires chat and EventSub listeners)
-3. In parallel: initializes the `Database` (connect + model sync), starts the WebSocket server, configures the overlay and auth servers, and schedules chat events
+3. In parallel: connects the `Database`, starts the WebSocket server, configures the overlay and auth servers, and schedules chat events
 4. Initializes `CommandResponseService` (seeds and caches response text - requires the database)
 5. Starts listening on the auth and overlay servers
 6. Starts `ChatBot` if a user token exists; otherwise waits for the OAuth flow, after which the auth server starts it
@@ -89,8 +89,10 @@ Utilities (`bot/utilities`) and infrastructure (`Logger`, `ChatClient`, `ApiClie
 ## Persistence
 
 * PostgreSQL through Sequelize 6 + sequelize-typescript.
-* `Database.initialize()` connects and runs `sequelize.sync()`, which creates the schema from `database/models` at startup.
+* `Database.initialize()` only connects. The app never creates or alters schema at startup.
 * Schema is delivered by sequelize-cli migrations in `database/migrations/`. `20261013120000-baseline.js` builds every model's table from an empty database.
+* Database-backed specs build their tables from `database/models` with `syncSchema()` (`tests/database-schema.helpers.ts`), standing in for the migrations.
+* Production migrations run through `deployment/production/database.sh`, which dumps the database first; see [Production Database](production-database.md).
 
 ### Migrations
 
@@ -98,6 +100,7 @@ Utilities (`bot/utilities`) and infrastructure (`Logger`, `ChatClient`, `ApiClie
 * Every migration has a working `down`, or a `down` that throws and states the migration is irreversible.
 * The baseline is create-if-not-exists only, never alters an existing object, and is irreversible.
 * Baseline command response text is delivered by `20261014115000-baseline-seed-data.js`, a data migration that only inserts missing command/variant pairs and is irreversible; see [Command System - Database-Backed Responses](command-system.md#database-backed-responses).
+* `20261016120000-drop-raiders.js` is known future work: it will be removed or squashed into the baseline migrations ([#172](https://github.com/itanex/stream-assist-bot/issues/172)).
 
 ---
 

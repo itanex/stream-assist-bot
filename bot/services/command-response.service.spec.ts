@@ -8,7 +8,7 @@ import {
     type CommandTextRemoveResult,
     type CommandTextRestoreResult,
 } from './command-response.service.js';
-import { mockLogger } from '../../tests/common.mocks.js';
+import { mockLogger } from '../../tests/index.js';
 import { CommandResponseRepository } from '../repositories/index.js';
 import { type CommandResponse, type CommandResponseTextChanges } from '../repositories/command-response.repository.js';
 
