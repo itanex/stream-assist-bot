@@ -8,6 +8,7 @@
 * The `compose.yaml` `postgres` service up (`docker compose up -d postgres`)
 * `IMAGE_TAG` set to the app version being deployed (`migrate` and `fresh`); migrations run from that image, not the working tree
 * Run all commands from the repository root in bash
+* `DATABASE_COMPOSE_FILE=<file>` points the tool at a stand-in compose file instead of `compose.yaml`, for rehearsing the tool itself
 
 ## Choosing a Path
 

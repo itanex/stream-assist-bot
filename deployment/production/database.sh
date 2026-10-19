@@ -10,11 +10,15 @@
 # backup does not need IMAGE_TAG. migrate and fresh run migrations from the
 # IMAGE_TAG image, and leave app stopped; start it with:
 #   IMAGE_TAG=<version> docker compose up -d
+#
+# DATABASE_COMPOSE_FILE=<file> targets another compose file (a stand-in);
+# it needs postgres and app services shaped like compose.yaml's.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-COMPOSE_FILE="$REPO_ROOT/compose.yaml"
+# Override only to rehearse against a stand-in stack; defaults to the live stack
+COMPOSE_FILE="${DATABASE_COMPOSE_FILE:-$REPO_ROOT/compose.yaml}"
 BACKUP_DIR="$REPO_ROOT/backups"
 
 # Set by cmd_backup or migrate --dump; reported on failure
@@ -29,13 +33,24 @@ compose() {
     docker compose -f "$COMPOSE_FILE" "$@"
 }
 
+# The compose invocation an operator should type, for printed hints
+compose_hint() {
+    if [ -n "${DATABASE_COMPOSE_FILE:-}" ]; then
+        echo "docker compose -f $COMPOSE_FILE"
+    else
+        echo "docker compose"
+    fi
+}
+
 require_image_tag() {
     [ -n "${IMAGE_TAG:-}" ] || fail "IMAGE_TAG is not set (the app version whose migrations to run)"
     export IMAGE_TAG
 }
 
 require_postgres() {
-    [ -n "$(compose ps --status running -q postgres)" ] || fail "postgres is not running; run: docker compose up -d postgres"
+    # Surface compose's own error (e.g. interpolation) before the running check hides it
+    compose config -q || fail "$COMPOSE_FILE does not resolve; see the compose error above"
+    [ -n "$(compose ps --status running -q postgres)" ] || fail "postgres is not running; run: $(compose_hint) up -d postgres"
 }
 
 # Runs in the postgres container so the database name comes from its env,
@@ -90,11 +105,13 @@ cmd_migrate() {
     require_image_tag
     require_postgres
 
+    # Validate a supplied dump before anything is stopped
+    [ -z "$supplied" ] || require_dump "$supplied"
+
     # Nothing may write between the dump and the migration
     compose stop app
 
     if [ -n "$supplied" ]; then
-        require_dump "$supplied"
         DUMP_FILE="$supplied"
         echo "database: using supplied dump $DUMP_FILE"
     else
@@ -103,7 +120,7 @@ cmd_migrate() {
 
     run_migrations || fail "db:migrate failed; app is stopped; restore point: $DUMP_FILE"
 
-    echo "database: migrated; start the app with: IMAGE_TAG=$IMAGE_TAG docker compose up -d"
+    echo "database: migrated; start the app with: IMAGE_TAG=$IMAGE_TAG $(compose_hint) up -d"
 }
 
 cmd_fresh() {
@@ -125,7 +142,7 @@ cmd_fresh() {
 
     run_migrations || fail "db:migrate failed; app is stopped"
 
-    echo "database: ready; start the app with: IMAGE_TAG=$IMAGE_TAG docker compose up -d"
+    echo "database: ready; start the app with: IMAGE_TAG=$IMAGE_TAG $(compose_hint) up -d"
 }
 
 command="${1:-}"
