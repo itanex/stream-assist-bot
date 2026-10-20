@@ -60,3 +60,16 @@ jobs:
 
             - name: Run migrations against an empty database
               run: npm run db:migrate
+
+            # db:migrate exits 0 when it finds no migrations; compare applied to present
+            - name: Verify every migration was applied
+              shell: bash
+              run: |
+                  expected="$(find database/migrations -maxdepth 1 -name '*.js' | wc -l)"
+                  [ "$expected" -gt 0 ] || { echo "::error::no migrations found in database/migrations"; exit 1; }
+
+                  applied="$(docker exec ${{ job.services.postgres.id }} \
+                      psql -X -U migrations -d migrations -tAc 'SELECT count(*) FROM "SequelizeMeta";')"
+
+                  echo "migrations: $applied of $expected applied"
+                  [ "$applied" -eq "$expected" ] || { echo "::error::$applied of $expected migrations applied"; exit 1; }
