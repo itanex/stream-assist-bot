@@ -73,7 +73,7 @@ require_empty_database() {
 
 run_migrations() {
     # --no-deps: postgres is already up; no --service-ports, so the live ports stay free
-    compose run --rm --no-deps app node node_modules/sequelize-cli/lib/sequelize db:migrate
+    compose run --rm --no-deps app npm run db:migrate
 }
 
 cmd_backup() {

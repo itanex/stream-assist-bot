@@ -33,9 +33,13 @@ jobs:
         name: CI Gate
         uses: ./.github/workflows/ci.yml
 
+    migrations:
+        name: Migration Gate
+        uses: ./.github/workflows/migrations.yml
+
     tag_version:
         name: Tag Version
-        needs: ci
+        needs: [ci, migrations]
         uses: ./.github/workflows/tag-version.yml
         permissions:
             contents: write

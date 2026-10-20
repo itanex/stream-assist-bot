@@ -63,6 +63,7 @@
     "test-coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --no-cache --coverage=true --detectOpenHandles",
     "test-specific": "node --experimental-vm-modules node_modules/jest/bin/jest.js --no-cache --detectOpenHandles --watch ./bot/commands/eightballcommand.spec.ts",
     "test-dev": "node --experimental-vm-modules node_modules/jest/bin/jest.js --no-cache --coverage=true --detectOpenHandles --watch",
+    "db:migrate": "sequelize-cli db:migrate",
     "release": "release-it"
   },
   "keywords": [

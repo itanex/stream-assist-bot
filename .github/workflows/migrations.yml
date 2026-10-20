@@ -1,0 +1,76 @@
+name: Migrations
+
+on:
+    pull_request:
+        branches: [main]
+        paths:
+            - "database/migrations/**"
+            - ".sequelizerc"
+            - "configurations/database.config.cjs"
+            - ".github/workflows/migrations.yml"
+    workflow_dispatch:
+    workflow_call:
+
+permissions:
+    contents: read
+
+# Prefixed: under workflow_call, workflow_ref is the caller's, shared with ci.yml
+concurrency:
+    group: migrations-${{ github.workflow_ref }}
+    cancel-in-progress: true
+
+jobs:
+    migrate:
+        name: Migration Chain
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        services:
+            postgres:
+                # Matches compose.yaml so the chain is verified on the production engine
+                image: postgres:latest
+                env:
+                    POSTGRES_USER: migrations
+                    POSTGRES_PASSWORD: migrations
+                    POSTGRES_DB: migrations
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd "pg_isready -U migrations"
+                    --health-interval 5s
+                    --health-timeout 5s
+                    --health-retries 10
+        env:
+            NODE_ENV: production
+            POSTGRES_USER: migrations
+            POSTGRES_PASSWORD: migrations
+            POSTGRES_DB: migrations
+            POSTGRES_HOST: localhost
+            POSTGRES_PORT: 5432
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v7
+
+            - name: Setup Node
+              uses: actions/setup-node@v6
+              with:
+                  cache: "npm"
+
+            # NODE_ENV=production omits devDependencies; sequelize-cli is one (see #179)
+            - name: Install dependencies
+              run: npm ci --include=dev
+
+            - name: Run migrations against an empty database
+              run: npm run db:migrate
+
+            # db:migrate exits 0 when it finds no migrations; compare applied to present
+            - name: Verify every migration was applied
+              shell: bash
+              run: |
+                  expected="$(find database/migrations -maxdepth 1 -name '*.js' | wc -l)"
+                  [ "$expected" -gt 0 ] || { echo "::error::no migrations found in database/migrations"; exit 1; }
+
+                  applied="$(docker exec ${{ job.services.postgres.id }} \
+                      psql -X -U migrations -d migrations -tAc 'SELECT count(*) FROM "SequelizeMeta";')"
+
+                  echo "migrations: $applied of $expected applied"
+                  [ "$applied" -eq "$expected" ] || { echo "::error::$applied of $expected migrations applied"; exit 1; }
