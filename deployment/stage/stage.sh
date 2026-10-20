@@ -129,11 +129,13 @@ cmd_migrate() {
     # .sequelizerc resolves paths from the working directory
     cd "$REPO_ROOT"
 
-    # --env-file does not override inherited variables; strip them so only
-    # .env.stage supplies connection values
+    # dotenv does not override inherited variables; strip them so only
+    # .env.stage supplies connection values. --env-file is not allowed in
+    # NODE_OPTIONS; the path is repo-relative so Windows node can open it
     env -u POSTGRES_USER -u POSTGRES_PASSWORD -u POSTGRES_HOST -u POSTGRES_PORT \
         POSTGRES_DB="$db" \
-        NODE_OPTIONS="--env-file=$ENV_FILE" npm run db:migrate
+        NODE_OPTIONS="-r dotenv/config" DOTENV_CONFIG_PATH="${ENV_FILE#"$REPO_ROOT"/}" \
+        npm run db:migrate
 }
 
 cmd_psql() {
