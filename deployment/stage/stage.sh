@@ -133,7 +133,7 @@ cmd_migrate() {
     # .env.stage supplies connection values
     env -u POSTGRES_USER -u POSTGRES_PASSWORD -u POSTGRES_HOST -u POSTGRES_PORT \
         POSTGRES_DB="$db" \
-        node --env-file="$ENV_FILE" node_modules/sequelize-cli/lib/sequelize db:migrate
+        NODE_OPTIONS="--env-file=$ENV_FILE" npm run db:migrate
 }
 
 cmd_psql() {
