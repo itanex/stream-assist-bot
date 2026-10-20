@@ -55,8 +55,9 @@ jobs:
               with:
                   cache: "npm"
 
+            # NODE_ENV=production omits devDependencies; sequelize-cli is one (see #179)
             - name: Install dependencies
-              run: npm ci
+              run: npm ci --include=dev
 
             - name: Run migrations against an empty database
               run: npm run db:migrate
