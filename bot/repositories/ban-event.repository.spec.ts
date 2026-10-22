@@ -4,7 +4,7 @@ import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers
 import { EventSubChannelBanEvent, EventSubChannelUnbanEvent } from '@twurple/eventsub-base';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
 import { mockLogger, syncSchema } from '../../tests/index.js';
-import { BanEvent } from '../../database/index.js';
+import { BanEventDbo } from '../../database/index.js';
 
 type BanEventRepositoryModule = typeof import('./ban-event.repository.js');
 
@@ -64,7 +64,7 @@ describe('BanEvent.Repository (postgres)', () => {
 
         beforeEach(async () => {
             jest.resetAllMocks();
-            await BanEvent.destroy({ where: {}, force: true });
+            await BanEventDbo.destroy({ where: {}, force: true });
         });
 
         describe('saveBanEvent()', () => {
@@ -88,7 +88,7 @@ describe('BanEvent.Repository (postgres)', () => {
 
                 // Act
                 const result = await subject.saveBanEvent(event);
-                const row = await BanEvent.findOne({
+                const row = await BanEventDbo.findOne({
                     where: {
                         broadcasterId: event.broadcasterId,
                         userId: event.userId,
@@ -119,7 +119,7 @@ describe('BanEvent.Repository (postgres)', () => {
 
                 // Act
                 const result = await subject.saveUnbanEvent(event);
-                const row = await BanEvent.findOne({
+                const row = await BanEventDbo.findOne({
                     where: {
                         broadcasterId: event.broadcasterId,
                         userId: event.userId,

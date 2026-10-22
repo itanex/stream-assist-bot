@@ -5,31 +5,27 @@ import duration from 'dayjs/plugin/duration.js';
 dayjs.extend(duration);
 
 @Table({
-    tableName: 'lurkingUsers',
+    tableName: 'lurking_user',
     paranoid: true,
 })
-export default class LurkingUsers extends Model {
+export default class LurkingUserDbo extends Model {
     @Column({
         type: DataType.STRING(40),
-        field: 'displayName',
     })
     displayName!: string;
 
     @Column({
         type: DataType.STRING(20),
-        field: 'userId',
     })
     userId!: string;
 
     @Column({
         type: DataType.DATE,
-        field: 'startTime',
     })
     startTime!: Date;
 
     @Column({
         type: DataType.DATE,
-        field: 'endTime',
         allowNull: true,
     })
     endTime!: Date;

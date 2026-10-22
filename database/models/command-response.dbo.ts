@@ -1,10 +1,10 @@
 import { Column, DataType, Table, Model, HasMany } from 'sequelize-typescript';
 import CommandResponseTextDbo from './command-response-text.dbo.js';
 
-const COMMAND_VARIANT_UNIQUE_INDEX = 'commandName-variant';
+const COMMAND_VARIANT_UNIQUE_INDEX = 'command_response_command_name_variant_key';
 
 @Table({
-    tableName: 'CommandResponse',
+    tableName: 'command_response',
     paranoid: true,
 })
 export default class CommandResponseDbo extends Model {

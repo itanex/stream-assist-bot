@@ -9,7 +9,7 @@ import {
     mockError,
     syncSchema,
 } from '../../tests/index.js';
-import { StreamEventRecord } from '../../database/index.js';
+import { StreamEventRecordDbo } from '../../database/index.js';
 
 describe('Stream Event Repository (postgres)', () => {
     let container: StartedPostgreSqlContainer;
@@ -66,7 +66,7 @@ describe('Stream Event Repository (postgres)', () => {
             jest.resetAllMocks();
             jest.useFakeTimers().setSystemTime(fixedDateTime);
 
-            await StreamEventRecord.destroy({ where: {}, force: true });
+            await StreamEventRecordDbo.destroy({ where: {}, force: true });
             subject = new StreamEventRepository(mockLogger);
         });
 
@@ -87,7 +87,7 @@ describe('Stream Event Repository (postgres)', () => {
                     broadcasterDisplayName: 'test-broadcaster-displayname',
                 };
 
-                const record = await StreamEventRecord
+                const record = await StreamEventRecordDbo
                     .create({
                         streamId: id,
                         type: event.type,
@@ -138,7 +138,7 @@ describe('Stream Event Repository (postgres)', () => {
             it('logs error when record is not saved', async () => {
                 // Arrange
                 const subscription = {} as EventSubStreamOnlineEvent;
-                const spy = jest.spyOn(StreamEventRecord, 'create')
+                const spy = jest.spyOn(StreamEventRecordDbo, 'create')
                     .mockImplementation(() => { throw mockError; });
 
                 // Act

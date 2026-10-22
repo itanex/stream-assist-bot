@@ -11,10 +11,10 @@ import {
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
 import { mockLogger, syncSchema } from '../../tests/index.js';
 import {
-    ChannelPointRedeem,
-    CheerEvent,
-    FollowEvent,
-    RaidEvent,
+    ChannelPointRedeemDbo,
+    CheerEventDbo,
+    FollowEventDbo,
+    RaidEventDbo,
 } from '../../database/index.js';
 
 type ChannelEventRepositoryModule = typeof import('./channel-event.repository.js');
@@ -75,8 +75,8 @@ describe('ChannelEvent.Repository (postgres)', () => {
 
         beforeEach(async () => {
             jest.resetAllMocks();
-            await CheerEvent.destroy({ where: {}, force: true });
-            await ChannelPointRedeem.destroy({ where: {}, force: true });
+            await CheerEventDbo.destroy({ where: {}, force: true });
+            await ChannelPointRedeemDbo.destroy({ where: {}, force: true });
         });
 
         describe('CheerEvent()', () => {
@@ -96,7 +96,7 @@ describe('ChannelEvent.Repository (postgres)', () => {
 
                 // Act
                 const result = await subject.saveCheerEvent(event);
-                const row = await CheerEvent
+                const row = await CheerEventDbo
                     .findOne({
                         where: {
                             broadcasterId: event.broadcasterId,
@@ -133,7 +133,7 @@ describe('ChannelEvent.Repository (postgres)', () => {
 
                 // Act
                 const result = await subject.saveChannelPointRedeemEvent({ ...event, ...eventId } as EventSubChannelRedemptionAddEvent);
-                const row = await ChannelPointRedeem
+                const row = await ChannelPointRedeemDbo
                     .findOne({
                         where: {
                             broadcasterId: event.broadcasterId,
@@ -164,7 +164,7 @@ describe('ChannelEvent.Repository (postgres)', () => {
 
                 // Act
                 const result = await subject.saveFollowEvent(event);
-                const row = await FollowEvent
+                const row = await FollowEventDbo
                     .findOne({
                         where: {
                             broadcasterId: event.broadcasterId,
@@ -192,7 +192,7 @@ describe('ChannelEvent.Repository (postgres)', () => {
 
                 // Act
                 const result = await subject.addUserAsMod(event);
-                const row = await FollowEvent
+                const row = await FollowEventDbo
                     .findOne({
                         where: {
                             broadcasterId: event.broadcasterId,
@@ -219,7 +219,7 @@ describe('ChannelEvent.Repository (postgres)', () => {
 
                 // Act
                 const [count, result] = await subject.removeUserAsMod(event);
-                const row = await FollowEvent
+                const row = await FollowEventDbo
                     .findOne({
                         where: {
                             broadcasterId: event.broadcasterId,
@@ -252,7 +252,7 @@ describe('ChannelEvent.Repository (postgres)', () => {
             });
 
             beforeEach(async () => {
-                await RaidEvent.destroy({ where: {}, force: true });
+                await RaidEventDbo.destroy({ where: {}, force: true });
             });
 
             it('saved raid event record is persisted in database', async () => {
@@ -269,7 +269,7 @@ describe('ChannelEvent.Repository (postgres)', () => {
 
                 // Act
                 const result = await subject.saveRaidEvent(event);
-                const row = await RaidEvent
+                const row = await RaidEventDbo
                     .findOne({
                         where: {
                             raidingBroadcasterId: event.raidingBroadcasterId,
@@ -304,7 +304,7 @@ describe('ChannelEvent.Repository (postgres)', () => {
             });
             it('returns the newest incoming raid when an outgoing raid is newer', async () => {
                 // Arrange
-                await RaidEvent.bulkCreate([
+                await RaidEventDbo.bulkCreate([
                     buildRaid('incoming', new Date(2020, 0, 1), 'olderRaider'),
                     buildRaid('incoming', new Date(2020, 0, 2), 'newerRaider'),
                     buildRaid('outgoing', new Date(2020, 0, 3), 'raidedChannel'),
@@ -319,7 +319,7 @@ describe('ChannelEvent.Repository (postgres)', () => {
             });
             it('returns null when there are no incoming raids', async () => {
                 // Arrange
-                await RaidEvent.create(buildRaid('outgoing', new Date(2020, 0, 1), 'raidedChannel'));
+                await RaidEventDbo.create(buildRaid('outgoing', new Date(2020, 0, 1), 'raidedChannel'));
 
                 // Act
                 const result = await subject.getLastRaidEvent(broadcasterId);

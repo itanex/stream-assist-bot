@@ -4,10 +4,10 @@ import { Column, DataType, Model, Table } from 'sequelize-typescript';
     // consider placing this in a schema to
     // cover all Event Sub data
     // schema: 'EventSubData',
-    tableName: 'StreamEventRecord',
+    tableName: 'stream_event_record',
     paranoid: true,
 })
-export default class StreamEventRecord extends Model {
+export default class StreamEventRecordDbo extends Model {
     /**
      * The ID of the stream going live.
      */

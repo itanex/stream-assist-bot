@@ -3,7 +3,7 @@ import { Op } from 'sequelize';
 import { EventSubStreamOfflineEvent, EventSubStreamOnlineEvent } from '@twurple/eventsub-base';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
-import { StreamEventRecord } from '../../database/index.js';
+import { StreamEventRecordDbo } from '../../database/index.js';
 
 @injectable()
 export default class StreamEventRepository {
@@ -16,8 +16,8 @@ export default class StreamEventRepository {
      * @param broadcasterId the broadcaster to get the stream record of
      * @returns the found stream record
      */
-    async getLastStream(broadcasterId: string): Promise<StreamEventRecord | null> {
-        return StreamEventRecord
+    async getLastStream(broadcasterId: string): Promise<StreamEventRecordDbo | null> {
+        return StreamEventRecordDbo
             .findOne({
                 where: {
                     broadcasterId,
@@ -32,9 +32,9 @@ export default class StreamEventRepository {
      * @param event the start stream event
      * @returns the start stream event db record
      */
-    async saveStreamStartEvent(event: EventSubStreamOnlineEvent): Promise<StreamEventRecord | null> {
+    async saveStreamStartEvent(event: EventSubStreamOnlineEvent): Promise<StreamEventRecordDbo | null> {
         try {
-            return StreamEventRecord
+            return StreamEventRecordDbo
                 .create({
                     streamId: event.id,
                     type: event.type,
@@ -60,8 +60,8 @@ export default class StreamEventRepository {
      * @param event the end stream event
      * @returns the end stream event db record
      */
-    async saveStreamEndEvent(endDate: Date, event: EventSubStreamOfflineEvent): Promise<[number, StreamEventRecord[]]> {
-        return StreamEventRecord
+    async saveStreamEndEvent(endDate: Date, event: EventSubStreamOfflineEvent): Promise<[number, StreamEventRecordDbo[]]> {
+        return StreamEventRecordDbo
             .update(
                 { endDate },
                 {

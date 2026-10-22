@@ -9,11 +9,11 @@ import {
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import {
-    ChannelPointRedeem,
-    CheerEvent,
-    FollowEvent,
-    ModeratorEvent,
-    RaidEvent,
+    ChannelPointRedeemDbo,
+    CheerEventDbo,
+    FollowEventDbo,
+    ModeratorEventDbo,
+    RaidEventDbo,
 } from '../../database/index.js';
 
 @injectable()
@@ -27,8 +27,8 @@ export default class ChannelEventRepository {
      * @param event The event record to save information from into the database
      * @returns The stored event record
      */
-    async saveCheerEvent(event: EventSubChannelCheerEvent): Promise<CheerEvent> {
-        const record: Partial<CheerEvent> = {
+    async saveCheerEvent(event: EventSubChannelCheerEvent): Promise<CheerEventDbo> {
+        const record: Partial<CheerEventDbo> = {
             bits: event.bits,
             isAnonymous: event.isAnonymous,
             message: event.message,
@@ -40,7 +40,7 @@ export default class ChannelEventRepository {
             userDisplayName: event.userDisplayName!,
         };
 
-        return CheerEvent
+        return CheerEventDbo
             .create(record);
     }
 
@@ -49,8 +49,8 @@ export default class ChannelEventRepository {
      * @param event The event record to save information from into the database
      * @returns The stored event record
      */
-    async saveChannelPointRedeemEvent(event: EventSubChannelRedemptionAddEvent): Promise<ChannelPointRedeem> {
-        const record: Partial<ChannelPointRedeem> = {
+    async saveChannelPointRedeemEvent(event: EventSubChannelRedemptionAddEvent): Promise<ChannelPointRedeemDbo> {
+        const record: Partial<ChannelPointRedeemDbo> = {
             eventId: event.id,
             broadcasterId: event.broadcasterId,
             broadcasterName: event.broadcasterName,
@@ -67,7 +67,7 @@ export default class ChannelEventRepository {
             redemptionDate: event.redemptionDate,
         };
 
-        return ChannelPointRedeem
+        return ChannelPointRedeemDbo
             .create(record);
     }
 
@@ -76,8 +76,8 @@ export default class ChannelEventRepository {
      * @param event Follow Event
      * @returns Follow Event Record
      */
-    async saveFollowEvent(event: EventSubChannelFollowEvent): Promise<FollowEvent> {
-        const record: Partial<FollowEvent> = {
+    async saveFollowEvent(event: EventSubChannelFollowEvent): Promise<FollowEventDbo> {
+        const record: Partial<FollowEventDbo> = {
             followDate: event.followDate,
             broadcasterId: event.broadcasterId,
             broadcasterName: event.broadcasterName,
@@ -87,7 +87,7 @@ export default class ChannelEventRepository {
             userDisplayName: event.userDisplayName,
         };
 
-        return FollowEvent
+        return FollowEventDbo
             .create(record);
     }
 
@@ -96,8 +96,8 @@ export default class ChannelEventRepository {
      * @param event Moderator Event
      * @returns Moderator Event Record
      */
-    async addUserAsMod(event: EventSubChannelModeratorEvent): Promise<ModeratorEvent> {
-        const record: Partial<ModeratorEvent> = {
+    async addUserAsMod(event: EventSubChannelModeratorEvent): Promise<ModeratorEventDbo> {
+        const record: Partial<ModeratorEventDbo> = {
             addDate: new Date(),
             removeDate: null!,
             broadcasterId: event.broadcasterId,
@@ -108,7 +108,7 @@ export default class ChannelEventRepository {
             userDisplayName: event.userDisplayName,
         };
 
-        return ModeratorEvent
+        return ModeratorEventDbo
             .create(record);
     }
 
@@ -117,8 +117,8 @@ export default class ChannelEventRepository {
      * @param event Moderator Event
      * @returns Moderator Event Record
      */
-    async removeUserAsMod(event: EventSubChannelModeratorEvent): Promise<[number, ModeratorEvent[]]> {
-        return ModeratorEvent
+    async removeUserAsMod(event: EventSubChannelModeratorEvent): Promise<[number, ModeratorEventDbo[]]> {
+        return ModeratorEventDbo
             .update(
                 { removeDate: new Date() },
                 {
@@ -137,8 +137,8 @@ export default class ChannelEventRepository {
      * @param event Raid Event
      * @returns Raid Event Record
      */
-    async saveRaidEvent(event: EventSubChannelRaidEvent): Promise<RaidEvent> {
-        const record: Partial<RaidEvent> = {
+    async saveRaidEvent(event: EventSubChannelRaidEvent): Promise<RaidEventDbo> {
+        const record: Partial<RaidEventDbo> = {
             raidDate: new Date(),
             raidingBroadcasterId: event.raidingBroadcasterId,
             raidingBroadcasterName: event.raidingBroadcasterName,
@@ -149,7 +149,7 @@ export default class ChannelEventRepository {
             viewers: event.viewers,
         };
 
-        return RaidEvent
+        return RaidEventDbo
             .create(record);
     }
 
@@ -158,8 +158,8 @@ export default class ChannelEventRepository {
      * @param raidedBroadcasterId ID of the broadcaster that was raided
      * @returns the raid event record of the last incoming raid
      */
-    async getLastRaidEvent(raidedBroadcasterId: string): Promise<RaidEvent | null> {
-        return RaidEvent
+    async getLastRaidEvent(raidedBroadcasterId: string): Promise<RaidEventDbo | null> {
+        return RaidEventDbo
             .findOne({
                 where: { raidedBroadcasterId },
                 order: [['raidDate', 'DESC']],

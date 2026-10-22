@@ -4,10 +4,10 @@ import { Model, Table, Column, DataType } from 'sequelize-typescript';
     // consider placing this in a schema to
     // cover all Event Sub data
     // schema: 'EventSubData',
-    tableName: 'CheerEvent',
+    tableName: 'cheer_event',
     paranoid: true,
 })
-export default class CheerEvent extends Model {
+export default class CheerEventDbo extends Model {
     /** The amount of bits cheered */
     @Column({
         type: DataType.INTEGER,

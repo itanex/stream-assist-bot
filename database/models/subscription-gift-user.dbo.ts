@@ -1,23 +1,21 @@
 import { Model, Column, DataType, HasMany, Table } from 'sequelize-typescript';
-import Subscribers from './subscribers.dbo.js';
+import SubscriberDbo from './subscriber.dbo.js';
 
 @Table({
-    tableName: 'subscriptionGiftUsers',
+    tableName: 'subscription_gift_user',
     paranoid: true,
 })
-export default class SubscriptionGiftUsers extends Model {
+export default class SubscriptionGiftUserDbo extends Model {
     @Column({
         type: DataType.STRING(40),
-        field: 'gifter',
     })
     gifter!: string;
 
     @Column({
         type: DataType.INTEGER,
-        field: 'giftCount',
     })
     giftCount!: number;
 
-    @HasMany(() => Subscribers)
-    subscribers!: Subscribers[];
+    @HasMany(() => SubscriberDbo)
+    subscribers!: SubscriberDbo[];
 }

@@ -4,10 +4,10 @@ import { Column, DataType, Model, Table } from 'sequelize-typescript';
     // consider placing this in a schema to
     // cover all Event Sub data
     // schema: 'EventSubData',
-    tableName: 'FollowEvent',
+    tableName: 'follow_event',
     paranoid: true,
 })
-export default class FollowEvent extends Model {
+export default class FollowEventDbo extends Model {
     /**
      * The date when the user followed.
      */

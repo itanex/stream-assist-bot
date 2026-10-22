@@ -1,33 +1,15 @@
-import BanEvent from './models/ban-event.dbo.js';
-import ChannelPointRedeem from './models/channel-point-redeem.dbo.js';
-import CheerEvent from './models/cheer-event.dbo.js';
-import CommandResponseDbo from './models/command-response.dbo.js';
-import DeathCounts from './models/death-count-record.dbo.js';
-import FollowEvent from './models/follow-event.dbo.js';
-import GreetUser from './models/greet-user.dbo.js';
-import LurkingUsers from './models/lurking-user.dbo.js';
-import ModeratorEvent from './models/moderator-event.dbo.js';
-import RaidEvent from './models/raid-event.dbo.js';
-import StreamEventRecord from './models/stream-event-record.dbo.js';
-import Subscribers from './models/subscribers.dbo.js';
-import SubscriptionType from './models/subscription-type.js';
-import SubscriptionGiftUsers from './models/subscription-gift-users.dbo.js';
-import CommandResponseTextDbo from './models/command-response-text.dbo.js';
-
-export {
-    BanEvent,
-    ChannelPointRedeem,
-    CheerEvent,
-    CommandResponseDbo,
-    CommandResponseTextDbo,
-    DeathCounts,
-    GreetUser,
-    FollowEvent,
-    LurkingUsers,
-    ModeratorEvent,
-    RaidEvent,
-    StreamEventRecord,
-    SubscriptionType,
-    SubscriptionGiftUsers,
-    Subscribers,
-};
+export { default as BanEventDbo } from './models/ban-event.dbo.js';
+export { default as ChannelPointRedeemDbo } from './models/channel-point-redeem.dbo.js';
+export { default as CheerEventDbo } from './models/cheer-event.dbo.js';
+export { default as CommandResponseDbo } from './models/command-response.dbo.js';
+export { default as CommandResponseTextDbo } from './models/command-response-text.dbo.js';
+export { default as DeathCountDbo } from './models/death-count.dbo.js';
+export { default as FollowEventDbo } from './models/follow-event.dbo.js';
+export { default as GreetedUserDbo } from './models/greeted-user.dbo.js';
+export { default as LurkingUserDbo } from './models/lurking-user.dbo.js';
+export { default as ModeratorEventDbo } from './models/moderator-event.dbo.js';
+export { default as RaidEventDbo } from './models/raid-event.dbo.js';
+export { default as StreamEventRecordDbo } from './models/stream-event-record.dbo.js';
+export { default as SubscriberDbo } from './models/subscriber.dbo.js';
+export { default as SubscriptionGiftUserDbo } from './models/subscription-gift-user.dbo.js';
+export { default as SubscriptionType } from './models/subscription-type.js';

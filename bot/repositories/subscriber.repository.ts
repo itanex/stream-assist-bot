@@ -7,7 +7,11 @@ import {
     ChatSubInfo,
 } from '@twurple/chat';
 import InjectionTypes from '../../dependency-management/types.js';
-import { Subscribers, SubscriptionGiftUsers, SubscriptionType } from '../../database/index.js';
+import {
+    SubscriberDbo,
+    SubscriptionGiftUserDbo,
+    SubscriptionType,
+} from '../../database/index.js';
 
 @injectable()
 export default class SubscriberRepository {
@@ -15,9 +19,9 @@ export default class SubscriberRepository {
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) { }
 
-    async createSubscriptionRecord(subInfo: ChatSubInfo): Promise<Subscribers | null> {
+    async createSubscriptionRecord(subInfo: ChatSubInfo): Promise<SubscriberDbo | null> {
         try {
-            return Subscribers
+            return SubscriberDbo
                 .create({
                     subscriber: subInfo.displayName,
                     type: subInfo.isPrime ? SubscriptionType.PrimeSub : SubscriptionType.NewSub,
@@ -39,9 +43,9 @@ export default class SubscriberRepository {
         return null;
     }
 
-    async createSubscriptionExtendedRecord(subInfo: ChatSubExtendInfo, isPrime: boolean): Promise<Subscribers | null> {
+    async createSubscriptionExtendedRecord(subInfo: ChatSubExtendInfo, isPrime: boolean): Promise<SubscriberDbo | null> {
         try {
-            return Subscribers
+            return SubscriberDbo
                 .create({
                     subscriber: subInfo.displayName,
                     type: SubscriptionType.ReSub,
@@ -63,9 +67,9 @@ export default class SubscriberRepository {
         return null;
     }
 
-    async createSubscriptionResubRecord(subInfo: ChatSubInfo): Promise<Subscribers | null> {
+    async createSubscriptionResubRecord(subInfo: ChatSubInfo): Promise<SubscriberDbo | null> {
         try {
-            return Subscribers
+            return SubscriberDbo
                 .create({
                     subscriber: subInfo.displayName,
                     type: SubscriptionType.ReSub,
@@ -87,9 +91,9 @@ export default class SubscriberRepository {
         return null;
     }
 
-    async createSubscriptionCommunityRecord(subInfo: ChatCommunitySubInfo): Promise<Subscribers | null> {
+    async createSubscriptionCommunityRecord(subInfo: ChatCommunitySubInfo): Promise<SubscriberDbo | null> {
         try {
-            return Subscribers
+            return SubscriberDbo
                 .create({
                     subscriber: null,
                     type: SubscriptionType.CommunitySub,
@@ -106,7 +110,7 @@ export default class SubscriberRepository {
                 }, {
                     isNewRecord: true,
                     validate: true,
-                    include: [SubscriptionGiftUsers],
+                    include: [SubscriptionGiftUserDbo],
                 });
         } catch (error: any) {
             this.logger.error(`Error saving subscription to database`, error);
@@ -115,9 +119,9 @@ export default class SubscriberRepository {
         return null;
     }
 
-    async createSubscriptionGiftRecord(subInfo: ChatSubGiftInfo): Promise<Subscribers | null> {
+    async createSubscriptionGiftRecord(subInfo: ChatSubGiftInfo): Promise<SubscriberDbo | null> {
         try {
-            return Subscribers
+            return SubscriberDbo
                 .create({
                     subscriber: subInfo.displayName,
                     type: SubscriptionType.GiftSub,
@@ -134,7 +138,7 @@ export default class SubscriberRepository {
                 }, {
                     isNewRecord: true,
                     validate: true,
-                    include: [SubscriptionGiftUsers],
+                    include: [SubscriptionGiftUserDbo],
                 });
         } catch (error: any) {
             this.logger.error(`Error saving subscription to database`, error);
@@ -147,11 +151,11 @@ export default class SubscriberRepository {
      * Get the last subscriber in the database
      * @returns The record of the last Subscriber
      */
-    async getLastSubscriber(): Promise<Subscribers | null> {
-        return Subscribers
+    async getLastSubscriber(): Promise<SubscriberDbo | null> {
+        return SubscriberDbo
             .findOne({
                 order: [['createdAt', 'DESC']],
-                include: [SubscriptionGiftUsers],
+                include: [SubscriptionGiftUserDbo],
             });
     }
 }

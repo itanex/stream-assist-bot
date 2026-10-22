@@ -94,13 +94,21 @@ Utilities (`bot/utilities`) and infrastructure (`Logger`, `ChatClient`, `ApiClie
 * Database-backed specs build their tables from `database/models` with `syncSchema()` (`tests/database-schema.helpers.ts`), standing in for the migrations.
 * Production migrations run through `deployment/production/database.sh`, which dumps the database first; see [Production Database](production-database.md).
 
+### Naming
+
+* Tables, columns, and dependent objects are lowercase snake_case, singular (`death_count`, `broadcaster_id`). `SequelizeMeta`, owned by sequelize-cli, is the exception.
+* Dependent objects use the Postgres default names: `<table>_pkey`, `<table>_id_seq`, `<table>_<column>_fkey`, `<table>_<columns>_key` for unique constraints, `<table>_<columns>_idx` for indexes.
+* Model classes are singular, end in `Dbo`, and match their table without the suffix (`DeathCountDbo` -> `death_count`), with an explicit `tableName`. The suffix keeps them distinct from the types repositories return.
+* Model attributes are camelCase. `underscored: true` (set once in `database/database.ts`) maps them to snake_case columns; models do not set `field:`.
+* Index `fields`, raw SQL, and data migrations bypass the attribute mapping and use column names.
+
 ### Migrations
 
 * One migration per schema change.
 * Every migration has a working `down`, or a `down` that throws and states the migration is irreversible.
 * The baseline is create-if-not-exists only, never alters an existing object, and is irreversible.
 * Baseline command response text is delivered by `20261014115000-baseline-seed-data.js`, a data migration that only inserts missing command/variant pairs and is irreversible; see [Command System - Database-Backed Responses](command-system.md#database-backed-responses).
-* `20261016120000-drop-raiders.js` is known future work: it will be removed or squashed into the baseline migrations ([#172](https://github.com/itanex/stream-assist-bot/issues/172)).
+* `20261016120000-drop-raiders.js` and `20261022120000-snake-case-schema.js` are known future work: they will be removed or squashed into the baseline migrations ([#172](https://github.com/itanex/stream-assist-bot/issues/172)).
 
 ---
 

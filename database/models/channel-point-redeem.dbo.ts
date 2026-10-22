@@ -4,10 +4,10 @@ import { Model, Table, Column, DataType } from 'sequelize-typescript';
     // consider placing this in a schema to
     // cover all Event Sub data
     // schema: 'EventSubData',
-    tableName: 'ChannelPointRedeem',
+    tableName: 'channel_point_redeem',
     paranoid: true,
 })
-export default class ChannelPointRedeem extends Model {
+export default class ChannelPointRedeemDbo extends Model {
     /**
      * The ID of the redemption.
      */

@@ -2,16 +2,16 @@ import { col, fn } from 'sequelize';
 import { Table, Model, ForeignKey, Column, DataType, BelongsTo } from 'sequelize-typescript';
 import CommandResponseDbo from './command-response.dbo.js';
 
-const COMMAND_TEXT_UNIQUE_INDEX = 'commandResponseId-text';
+const COMMAND_TEXT_UNIQUE_INDEX = 'command_response_text_command_response_id_text_idx';
 
 @Table({
-    tableName: 'CommandResponseText',
+    tableName: 'command_response_text',
     paranoid: true,
     indexes: [{
         name: COMMAND_TEXT_UNIQUE_INDEX,
         unique: true,
         fields: [
-            'commandResponseId',
+            'command_response_id',
             fn('lower', col('text')),
         ],
     }],

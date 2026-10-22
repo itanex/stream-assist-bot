@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { ChatUser } from '@twurple/chat';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
-import { LurkingUsers } from '../../database/index.js';
+import { LurkingUserDbo } from '../../database/index.js';
 
 @injectable()
 export default class LurkRepository {
@@ -10,16 +10,16 @@ export default class LurkRepository {
         @inject(InjectionTypes.Logger) private logger: winston.Logger,
     ) { }
 
-    async getAllLurkingUsers(): Promise<LurkingUsers[]> {
-        return LurkingUsers
+    async getAllLurkingUsers(): Promise<LurkingUserDbo[]> {
+        return LurkingUserDbo
             .findAll({
                 where: { endTime: null },
                 order: [['createdAt', 'DESC']],
             });
     }
 
-    setUserToLurk(user: ChatUser): Promise<[LurkingUsers, boolean]> {
-        return LurkingUsers
+    setUserToLurk(user: ChatUser): Promise<[LurkingUserDbo, boolean]> {
+        return LurkingUserDbo
             .findOrCreate({
                 where: {
                     userId: user.userId,
@@ -34,8 +34,8 @@ export default class LurkRepository {
             });
     }
 
-    async setUserToUnlurk(user: ChatUser): Promise<LurkingUsers | null> {
-        const [count, records] = await LurkingUsers
+    async setUserToUnlurk(user: ChatUser): Promise<LurkingUserDbo | null> {
+        const [count, records] = await LurkingUserDbo
             .update(
                 { endTime: new Date() },
                 {
@@ -55,8 +55,8 @@ export default class LurkRepository {
         return null;
     }
 
-    setAllUsersToUnlurk(endDate?: Date): Promise<[number, LurkingUsers[]]> {
-        return LurkingUsers
+    setAllUsersToUnlurk(endDate?: Date): Promise<[number, LurkingUserDbo[]]> {
+        return LurkingUserDbo
             .update(
                 { endTime: endDate ?? new Date() },
                 {

@@ -35,7 +35,7 @@ dependency-management/
   types.ts                      # InjectionTypes symbols
 database/
   database.ts                   # Sequelize connection (schema comes from migrations)
-  models/                       # ORM models (Subscribers, BanEvent, etc.)
+  models/                       # ORM models (SubscriberDbo, BanEventDbo, etc.)
   migrations/                   # Sequelize CLI migrations
 bot/
   chat-bot.ts                   # ChatBot orchestrator - wires all listeners

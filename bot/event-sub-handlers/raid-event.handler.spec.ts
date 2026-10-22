@@ -2,12 +2,12 @@ import 'reflect-metadata';
 import { jest } from '@jest/globals';
 import { EventSubChannelRaidEvent } from '@twurple/eventsub-base';
 import { mockError, mockLogger } from '../../tests/index.js';
-import { RaidEvent } from '../../database/index.js';
+import { RaidEventDbo } from '../../database/index.js';
 import ChannelEventRepository from '../repositories/channel-event.repository.js';
 import RaidEventHandler from './raid-event.handler.js';
 
 const mockChannelEventRepository = <unknown>{
-    saveRaidEvent: jest.fn<(event: EventSubChannelRaidEvent) => Promise<RaidEvent>>(),
+    saveRaidEvent: jest.fn<(event: EventSubChannelRaidEvent) => Promise<RaidEventDbo>>(),
 } as jest.Mocked<ChannelEventRepository>;
 
 describe('Raid Event Handler Tests', () => {
@@ -34,7 +34,7 @@ describe('Raid Event Handler Tests', () => {
         // Arrange
         mockChannelEventRepository
             .saveRaidEvent
-            .mockResolvedValue(<unknown>{} as RaidEvent);
+            .mockResolvedValue(<unknown>{} as RaidEventDbo);
 
         // Act
         await subject.raid(event);

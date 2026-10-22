@@ -1,67 +1,59 @@
 import { Model, Table, Column, DataType, ForeignKey, BelongsTo } from 'sequelize-typescript';
-import SubscriptionGiftUsers from './subscription-gift-users.dbo.js';
+import SubscriptionGiftUserDbo from './subscription-gift-user.dbo.js';
 import SubscriptionType from './subscription-type.js';
 
 @Table({
-    tableName: 'subscribers',
+    tableName: 'subscriber',
     paranoid: true,
 })
-export default class Subscribers extends Model {
+export default class SubscriberDbo extends Model {
     @Column({
         type: DataType.STRING(40),
-        field: 'subscriber',
     })
     subscriber!: string;
 
     @Column({
         type: DataType.STRING(20),
-        field: 'type',
     })
     type!: SubscriptionType;
 
     @Column({
         type: DataType.INTEGER,
-        field: 'streak',
     })
     streak!: number;
 
     @Column({
         type: DataType.INTEGER,
-        field: 'months',
     })
     months!: number;
 
     @Column({
         type: DataType.BOOLEAN,
-        field: 'isPrime',
     })
     isPrime!: boolean;
 
     @Column({
         type: DataType.STRING(40),
-        field: 'plan',
     })
     plan!: string;
 
     @Column({
         type: DataType.STRING(40),
-        field: 'planName',
     })
     planName!: string;
 
     @Column({
         type: DataType.DATE,
-        field: 'time',
     })
     time?: string;
 
-    @ForeignKey(() => SubscriptionGiftUsers)
+    @ForeignKey(() => SubscriptionGiftUserDbo)
     @Column({
         allowNull: true,
         type: DataType.INTEGER,
     })
     giftUserId!: number;
 
-    @BelongsTo(() => SubscriptionGiftUsers)
-    gift!: SubscriptionGiftUsers;
+    @BelongsTo(() => SubscriptionGiftUserDbo)
+    gift!: SubscriptionGiftUserDbo;
 }
