@@ -4,7 +4,7 @@ import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
 import LurkRepository from '../repositories/lurk.repository.js';
 import StreamEventRepository from '../repositories/stream-event.repository.js';
-import { StreamEventRecord } from '../../database/index.js';
+import { StreamEventRecordDbo } from '../../database/index.js';
 
 @injectable()
 export default class StreamEventHandler {
@@ -44,7 +44,7 @@ export default class StreamEventHandler {
         return this.streamEventRepository
             .saveStreamStartEvent(event)
             .then(
-                (record: StreamEventRecord | null) => {
+                (record: StreamEventRecordDbo | null) => {
                     this.logger.info(`Start of stream (E-${event.id}::R-${record?.streamId})`);
                 },
                 (reason: any) => {
@@ -70,7 +70,7 @@ export default class StreamEventHandler {
         return this.streamEventRepository
             .saveStreamEndEvent(endTime, event)
             .then(
-                ([count, _]: [number, StreamEventRecord[]]) => {
+                ([count, _]: [number, StreamEventRecordDbo[]]) => {
                     this.logger.info(`End of stream record in DB: Count ${count}`);
                 },
                 (reason: any) => {
@@ -80,7 +80,7 @@ export default class StreamEventHandler {
     }
 
     /**
-     * Unlurk all users by calling {@link LurkingUser.setAllUsersToUnlurk}
+     * Unlurk all users by calling {@link LurkingUserDbo.setAllUsersToUnlurk}
      * @returns The resulting promise
      */
     private async unlurkUsers(endTime: Date) {

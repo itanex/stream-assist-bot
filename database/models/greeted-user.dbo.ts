@@ -4,7 +4,7 @@ import { Column, DataType, Model, Table } from 'sequelize-typescript';
     tableName: 'greeted_user',
     paranoid: true,
 })
-export default class GreetedUser extends Model {
+export default class GreetedUserDbo extends Model {
     @Column({
         type: DataType.STRING(40),
         allowNull: false,

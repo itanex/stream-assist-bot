@@ -4,7 +4,7 @@ import { Column, DataType, Model, Table } from 'sequelize-typescript';
     tableName: 'death_count',
     paranoid: true,
 })
-export default class DeathCount extends Model {
+export default class DeathCountDbo extends Model {
     @Column({
         type: DataType.INTEGER,
     })

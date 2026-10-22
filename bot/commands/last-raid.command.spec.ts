@@ -9,14 +9,14 @@ import {
     mockLogger,
 } from '../../tests/index.js';
 import { type Environment } from '../../configurations/environment.js';
-import { RaidEvent } from '../../database/index.js';
+import { RaidEventDbo } from '../../database/index.js';
 import ChannelEventRepository from '../repositories/channel-event.repository.js';
 import { LastRaidCommand } from './last-raid.command.js';
 
 dayjs.extend(relativeTime);
 
 const mockChannelEventRepository = <unknown>{
-    getLastRaidEvent: jest.fn<(raidedBroadcasterId: string) => Promise<RaidEvent | null>>(),
+    getLastRaidEvent: jest.fn<(raidedBroadcasterId: string) => Promise<RaidEventDbo | null>>(),
 } as jest.Mocked<ChannelEventRepository>;
 
 describe('Last Raid Command Tests', () => {
@@ -72,11 +72,11 @@ describe('Last Raid Command Tests', () => {
         `(`with viewer count of $viewers says '$prefix ...'`, async ({ viewers, prefix }: { viewers: number, prefix: string }) => {
             // Arrange
             const subject = createSubject(responses);
-            const mockRaidEvent: RaidEvent = <unknown>{
+            const mockRaidEvent: RaidEventDbo = <unknown>{
                 raidDate: raidTime,
                 viewers,
                 raidingBroadcasterDisplayName: 'TestRaidUser',
-            } as RaidEvent;
+            } as RaidEventDbo;
 
             mockChannelEventRepository
                 .getLastRaidEvent
@@ -128,7 +128,7 @@ describe('Last Raid Command Tests', () => {
 
         mockChannelEventRepository
             .getLastRaidEvent
-            .mockResolvedValue(<unknown>{ raidDate: raidTime, viewers: 30, raidingBroadcasterDisplayName: 'TestRaidUser' } as RaidEvent);
+            .mockResolvedValue(<unknown>{ raidDate: raidTime, viewers: 30, raidingBroadcasterDisplayName: 'TestRaidUser' } as RaidEventDbo);
 
         // Act
         await subject.handle(channel, command, user, message, []);

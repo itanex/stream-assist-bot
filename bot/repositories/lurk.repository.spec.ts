@@ -4,7 +4,7 @@ import { ChatUser } from '@twurple/chat';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
 import LurkRepository from './lurk.repository.js';
 import { mockLogger, syncSchema } from '../../tests/index.js';
-import { LurkingUser } from '../../database/index.js';
+import { LurkingUserDbo } from '../../database/index.js';
 
 describe('Lurk Repository (postgres)', () => {
     let container: StartedPostgreSqlContainer;
@@ -61,7 +61,7 @@ describe('Lurk Repository (postgres)', () => {
             jest.resetAllMocks();
             jest.useFakeTimers().setSystemTime(fixedDateTime);
 
-            await LurkingUser.destroy({ where: {}, force: true });
+            await LurkingUserDbo.destroy({ where: {}, force: true });
             subject = new LurkRepository(mockLogger);
         });
 

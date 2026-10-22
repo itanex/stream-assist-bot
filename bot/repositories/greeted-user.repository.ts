@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { ChatUser } from '@twurple/chat';
 import winston, { stream } from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
-import { GreetedUser } from '../../database/index.js';
+import { GreetedUserDbo } from '../../database/index.js';
 
 @injectable()
 export default class GreetedUserRepository {
@@ -17,7 +17,7 @@ export default class GreetedUserRepository {
      * @returns existance of record
      */
     async hasUser(user: ChatUser, streamId: string): Promise<boolean> {
-        const record = await GreetedUser
+        const record = await GreetedUserDbo
             .findOne({
                 where: {
                     streamId,
@@ -33,9 +33,9 @@ export default class GreetedUserRepository {
      * @param user to save into database
      * @param streamId stream id coorilation key
      */
-    async saveUser(user: ChatUser, streamId: string): Promise<GreetedUser | null> {
+    async saveUser(user: ChatUser, streamId: string): Promise<GreetedUserDbo | null> {
         try {
-            return GreetedUser
+            return GreetedUserDbo
                 .create({
                     displayName: user.displayName,
                     userId: user.userId,

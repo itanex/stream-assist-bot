@@ -3,17 +3,17 @@ import { jest } from '@jest/globals';
 import { EventSubStreamOfflineEvent, EventSubStreamOnlineEvent } from '@twurple/eventsub-base';
 import { mockLogger } from '../../tests/index.js';
 import StreamEventHandler from './stream-event.handler.js';
-import { LurkingUser, StreamEventRecord } from '../../database/index.js';
+import { LurkingUserDbo, StreamEventRecordDbo } from '../../database/index.js';
 import { LurkRepository, StreamEventRepository } from '../repositories/index.js';
 
 const mockLurkRepository = <unknown>{
-    setAllUsersToUnlurk: jest.fn<() => Promise<[number, LurkingUser[]]>>(),
+    setAllUsersToUnlurk: jest.fn<() => Promise<[number, LurkingUserDbo[]]>>(),
 } as jest.Mocked<LurkRepository>;
 
 const mockStreamEventRepository = <unknown>{
-    getLastStream: jest.fn<() => Promise<StreamEventRecord | null>>(),
-    saveStreamStartEvent: jest.fn<() => Promise<StreamEventRecord | null>>(),
-    saveStreamEndEvent: jest.fn<() => Promise<[number, StreamEventRecord[]]>>(),
+    getLastStream: jest.fn<() => Promise<StreamEventRecordDbo | null>>(),
+    saveStreamStartEvent: jest.fn<() => Promise<StreamEventRecordDbo | null>>(),
+    saveStreamEndEvent: jest.fn<() => Promise<[number, StreamEventRecordDbo[]]>>(),
 } as jest.Mocked<StreamEventRepository>;
 
 describe('Stream Event Handler Tests', () => {
@@ -38,7 +38,7 @@ describe('Stream Event Handler Tests', () => {
             const record = <unknown>{
                 endDate: new Date(),
                 streamId: '1234',
-            } as StreamEventRecord;
+            } as StreamEventRecordDbo;
 
             const event = <unknown>{
                 broadcasterId: '1234',
@@ -90,7 +90,7 @@ describe('Stream Event Handler Tests', () => {
             const records = [<unknown>{
                 endDate: new Date(),
                 streamId: '1234',
-            } as StreamEventRecord];
+            } as StreamEventRecordDbo];
 
             const event = <unknown>{
                 broadcasterId: '1234',
@@ -98,7 +98,7 @@ describe('Stream Event Handler Tests', () => {
 
             mockStreamEventRepository
                 .saveStreamEndEvent
-                .mockResolvedValue([1, records as StreamEventRecord[]]);
+                .mockResolvedValue([1, records as StreamEventRecordDbo[]]);
 
             StreamEventHandler.clearTimeoutRef = null;
 

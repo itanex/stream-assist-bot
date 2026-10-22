@@ -7,7 +7,7 @@ import { Column, DataType, Model, Table } from 'sequelize-typescript';
     tableName: 'follow_event',
     paranoid: true,
 })
-export default class FollowEvent extends Model {
+export default class FollowEventDbo extends Model {
     /**
      * The date when the user followed.
      */

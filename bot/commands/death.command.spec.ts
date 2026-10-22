@@ -8,7 +8,7 @@ import {
     mockCommandResponseService,
     mockLogger,
 } from '../../tests/index.js';
-import { DeathCount } from '../../database/index.js';
+import { DeathCountDbo } from '../../database/index.js';
 import {
     DeathCommand,
     DeathCountCommand,
@@ -38,28 +38,28 @@ describe('Death Commands Tests', () => {
         streamId: 'TestStreamId',
     } as HelixStream;
 
-    const createdRecord: DeathCount = <unknown>{
+    const createdRecord: DeathCountDbo = <unknown>{
         deathCount: 1,
         streamId: streamData.id,
         gameId: streamData.gameId,
         game: streamData.gameName,
-    } as DeathCount;
+    } as DeathCountDbo;
 
-    const existingRecord1: DeathCount = <unknown>{
+    const existingRecord1: DeathCountDbo = <unknown>{
         ...createdRecord,
         deathCount: 2,
-    } as DeathCount;
+    } as DeathCountDbo;
 
-    const existingRecord2: DeathCount = <unknown>{
+    const existingRecord2: DeathCountDbo = <unknown>{
         ...createdRecord,
         deathCount: 10,
-    } as DeathCount;
+    } as DeathCountDbo;
 
-    const anotherRecord: DeathCount = <unknown>{
+    const anotherRecord: DeathCountDbo = <unknown>{
         ...createdRecord,
         deathCount: 5,
         game: `${streamData.gameName} 2`,
-    } as DeathCount;
+    } as DeathCountDbo;
 
     /** Serve getCommandResponse from the given entries (commandName -> variant -> texts) */
     const createService = (entries: Record<string, Record<string, string[]>>) => {
@@ -208,7 +208,7 @@ describe('Death Commands Tests', () => {
                 label              | record              | expected
                 ${'single deaths'} | ${createdRecord}    | ${'single: 1'}
                 ${'plural deaths'} | ${existingRecord1}  | ${'plural: 2'}
-            `(`record: $label`, async ({ record, expected }: { label: string, record: DeathCount, expected: string }) => {
+            `(`record: $label`, async ({ record, expected }: { label: string, record: DeathCountDbo, expected: string }) => {
             // Arrange
             const subject = createSubject(responses);
 
@@ -266,7 +266,7 @@ describe('Death Commands Tests', () => {
             label                  | records
             ${'single record'}     | ${[createdRecord]}
             ${'multiple records'}  | ${[createdRecord, anotherRecord]}
-        `(`report all death counts for: $label`, async ({ records }: { label: string; records: DeathCount[] }) => {
+        `(`report all death counts for: $label`, async ({ records }: { label: string; records: DeathCountDbo[] }) => {
             // Arrange
             const subject = createSubject(responses);
 

@@ -7,7 +7,7 @@ import { Column, DataType, Model, Table } from 'sequelize-typescript';
     tableName: 'moderator_event',
     paranoid: true,
 })
-export default class ModeratorEvent extends Model {
+export default class ModeratorEventDbo extends Model {
     @Column({
         type: DataType.DATE,
     })

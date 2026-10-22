@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { EventSubChannelBanEvent, EventSubChannelUnbanEvent } from '@twurple/eventsub-base';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
-import { BanEvent } from '../../database/index.js';
+import { BanEventDbo } from '../../database/index.js';
 
 @injectable()
 export default class BanEventRepository {
@@ -17,8 +17,8 @@ export default class BanEventRepository {
      * @param event The Ban Event received from the Event Sub
      * @returns The recorded Ban Event database record
      */
-    async saveBanEvent(event: EventSubChannelBanEvent): Promise<BanEvent> {
-        const record: Partial<BanEvent> = {
+    async saveBanEvent(event: EventSubChannelBanEvent): Promise<BanEventDbo> {
+        const record: Partial<BanEventDbo> = {
             reason: event.reason,
             startDate: event.startDate,
             endDate: event.endDate!,
@@ -34,7 +34,7 @@ export default class BanEventRepository {
             userDisplayName: event.userDisplayName,
         };
 
-        return BanEvent
+        return BanEventDbo
             .create(record);
     }
 
@@ -43,8 +43,8 @@ export default class BanEventRepository {
      * @param event The Unban Event received from the Event Sub
      * @returns The recorded Unban Event database record
      */
-    async saveUnbanEvent(event: EventSubChannelUnbanEvent): Promise<BanEvent> {
-        const record: Partial<BanEvent> = {
+    async saveUnbanEvent(event: EventSubChannelUnbanEvent): Promise<BanEventDbo> {
+        const record: Partial<BanEventDbo> = {
             reason: BanEventRepository.UnbanReason,
             startDate: null!,
             endDate: new Date(),
@@ -60,7 +60,7 @@ export default class BanEventRepository {
             userDisplayName: event.userDisplayName,
         };
 
-        return BanEvent
+        return BanEventDbo
             .create(record);
     }
 }

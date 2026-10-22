@@ -7,7 +7,7 @@ import { Column, DataType, Model, Table } from 'sequelize-typescript';
     tableName: 'raid_event',
     paranoid: true,
 })
-export default class RaidEvent extends Model {
+export default class RaidEventDbo extends Model {
     /**
      * The date when the raid occured.
      */

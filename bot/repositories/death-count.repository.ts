@@ -3,7 +3,7 @@ import { QueryTypes } from 'sequelize';
 import { HelixStream } from '@twurple/api';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
-import { DeathCount } from '../../database/index.js';
+import { DeathCountDbo } from '../../database/index.js';
 
 @injectable()
 export default class DeathCountRepository {
@@ -16,9 +16,9 @@ export default class DeathCountRepository {
      * @param stream The current stream
      * @returns The death count record for the stream, and if it was created
      */
-    async recordNewDeath(stream: HelixStream): Promise<DeathCount | null> {
+    async recordNewDeath(stream: HelixStream): Promise<DeathCountDbo | null> {
         try {
-            const [instance, created] = await DeathCount
+            const [instance, created] = await DeathCountDbo
                 .findOrCreate({
                     where: {
                         streamId: stream.id,
@@ -50,8 +50,8 @@ export default class DeathCountRepository {
      * @param stream The current stream
      * @returns The death count record for the stream, null when not found
      */
-    async getCurrentStreamDeathCount(stream: HelixStream): Promise<DeathCount | null> {
-        return DeathCount
+    async getCurrentStreamDeathCount(stream: HelixStream): Promise<DeathCountDbo | null> {
+        return DeathCountDbo
             .findOne({
                 where: {
                     streamId: stream.id,
@@ -65,7 +65,7 @@ export default class DeathCountRepository {
      * @param streamId The id of the current stream
      * @returns Array of death count records for the previous stream
      */
-    async getLastStreamDeathCount(streamId: string): Promise<DeathCount[]> {
+    async getLastStreamDeathCount(streamId: string): Promise<DeathCountDbo[]> {
         const lastStreamDeaths: string = `
             SELECT *
             FROM public.death_count
@@ -81,11 +81,11 @@ export default class DeathCountRepository {
             order by created_at Asc
         `;
 
-        return DeathCount
+        return DeathCountDbo
             .sequelize!
-            .query<DeathCount>(lastStreamDeaths, {
+            .query<DeathCountDbo>(lastStreamDeaths, {
                 type: QueryTypes.SELECT,
-                model: DeathCount,
+                model: DeathCountDbo,
                 mapToModel: true,
                 raw: true,
                 bind: {

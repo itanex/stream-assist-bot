@@ -1,12 +1,12 @@
 import { Model, Table, Column, DataType, ForeignKey, BelongsTo } from 'sequelize-typescript';
-import SubscriptionGiftUser from './subscription-gift-user.dbo.js';
+import SubscriptionGiftUserDbo from './subscription-gift-user.dbo.js';
 import SubscriptionType from './subscription-type.js';
 
 @Table({
     tableName: 'subscriber',
     paranoid: true,
 })
-export default class Subscriber extends Model {
+export default class SubscriberDbo extends Model {
     @Column({
         type: DataType.STRING(40),
     })
@@ -47,13 +47,13 @@ export default class Subscriber extends Model {
     })
     time?: string;
 
-    @ForeignKey(() => SubscriptionGiftUser)
+    @ForeignKey(() => SubscriptionGiftUserDbo)
     @Column({
         allowNull: true,
         type: DataType.INTEGER,
     })
     giftUserId!: number;
 
-    @BelongsTo(() => SubscriptionGiftUser)
-    gift!: SubscriptionGiftUser;
+    @BelongsTo(() => SubscriptionGiftUserDbo)
+    gift!: SubscriptionGiftUserDbo;
 }

@@ -8,14 +8,14 @@ import {
     mockCommandResponseService,
     mockLogger,
 } from '../../tests/index.js';
-import { Subscriber, SubscriptionType } from '../../database/index.js';
+import { SubscriberDbo, SubscriptionType } from '../../database/index.js';
 import SubscriberRepository from '../repositories/subscriber.repository.js';
 import { LastSubCommand } from './last-sub.command.js';
 
 dayjs.extend(relativeTime);
 
 const mockSubscriberRepository = <unknown>{
-    getLastSubscriber: jest.fn<() => Promise<Subscriber | null>>(),
+    getLastSubscriber: jest.fn<() => Promise<SubscriberDbo | null>>(),
 } as jest.Mocked<SubscriberRepository>;
 
 describe('Last Sub Command Tests', () => {
@@ -44,7 +44,7 @@ describe('Last Sub Command Tests', () => {
             gifter: 'TestSubscriptionGifter',
             giftCount: 30,
         },
-    } as Subscriber;
+    } as SubscriberDbo;
 
     /** Serve getCommandResponse from the given entries (commandName -> variant -> texts) */
     const createService = (entries: Record<string, Record<string, string[]>>) => {

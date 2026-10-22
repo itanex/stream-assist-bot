@@ -8,7 +8,7 @@ dayjs.extend(duration);
     tableName: 'lurking_user',
     paranoid: true,
 })
-export default class LurkingUser extends Model {
+export default class LurkingUserDbo extends Model {
     @Column({
         type: DataType.STRING(40),
     })

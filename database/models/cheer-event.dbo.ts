@@ -7,7 +7,7 @@ import { Model, Table, Column, DataType } from 'sequelize-typescript';
     tableName: 'cheer_event',
     paranoid: true,
 })
-export default class CheerEvent extends Model {
+export default class CheerEventDbo extends Model {
     /** The amount of bits cheered */
     @Column({
         type: DataType.INTEGER,

@@ -6,7 +6,7 @@ import {
     mockCommandResponseService,
     mockLogger,
 } from '../../tests/index.js';
-import { LurkingUser } from '../../database/index.js';
+import { LurkingUserDbo } from '../../database/index.js';
 import {
     LurkCommand,
     UnLurkCommand,
@@ -37,7 +37,7 @@ describe('Lurk Commands Tests', () => {
 
     /** Build `count` lurking users, newest first (userN ... user1) */
     const lurkers = (count: number) => Array
-        .from({ length: count }, (_, i) => <LurkingUser>{ displayName: `user${count - i}` });
+        .from({ length: count }, (_, i) => <LurkingUserDbo>{ displayName: `user${count - i}` });
 
     /** Serve getCommandResponse from the given entries (commandName -> variant -> texts) */
     const createService = (entries: Record<string, Record<string, string[]>>) => {
@@ -67,7 +67,7 @@ describe('Lurk Commands Tests', () => {
             mockLurkRepository
                 .setUserToLurk
                 .mockResolvedValue([
-                    <LurkingUser>{
+                    <LurkingUserDbo>{
                         displayName: user.displayName,
                     },
                     true,
@@ -91,7 +91,7 @@ describe('Lurk Commands Tests', () => {
             mockLurkRepository
                 .setUserToLurk
                 .mockResolvedValue([
-                    <LurkingUser>{
+                    <LurkingUserDbo>{
                         displayName: user.displayName,
                     },
                     true,
@@ -113,7 +113,7 @@ describe('Lurk Commands Tests', () => {
             mockLurkRepository
                 .setUserToLurk
                 .mockResolvedValue([
-                    <LurkingUser>{
+                    <LurkingUserDbo>{
                         displayName: user.displayName,
                     },
                     false,
@@ -145,7 +145,7 @@ describe('Lurk Commands Tests', () => {
             duration: jest.fn().mockReturnValue({
                 humanize: jest.fn().mockReturnValue(humanize),
             }),
-        } as jest.Mocked<LurkingUser>;
+        } as jest.Mocked<LurkingUserDbo>;
 
         it(`should say something in chat when unlurked`, async () => {
             // Arrange

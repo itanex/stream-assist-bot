@@ -98,7 +98,7 @@ Utilities (`bot/utilities`) and infrastructure (`Logger`, `ChatClient`, `ApiClie
 
 * Tables, columns, and dependent objects are lowercase snake_case, singular (`death_count`, `broadcaster_id`). `SequelizeMeta`, owned by sequelize-cli, is the exception.
 * Dependent objects use the Postgres default names: `<table>_pkey`, `<table>_id_seq`, `<table>_<column>_fkey`, `<table>_<columns>_key` for unique constraints, `<table>_<columns>_idx` for indexes.
-* Model classes are singular and match their table (`DeathCount` -> `death_count`), with an explicit `tableName`. `CommandResponseDbo` / `CommandResponseTextDbo` keep the `Dbo` suffix to stay distinct from the repository's `CommandResponse` / `CommandResponseText` types.
+* Model classes are singular, end in `Dbo`, and match their table without the suffix (`DeathCountDbo` -> `death_count`), with an explicit `tableName`. The suffix keeps them distinct from the types repositories return.
 * Model attributes are camelCase. `underscored: true` (set once in `database/database.ts`) maps them to snake_case columns; models do not set `field:`.
 * Index `fields`, raw SQL, and data migrations bypass the attribute mapping and use column names.
 
