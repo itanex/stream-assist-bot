@@ -14,7 +14,7 @@ import {
     mockError,
     syncSchema,
 } from '../../tests/index.js';
-import { Subscribers, SubscriptionType } from '../../database/index.js';
+import { Subscriber, SubscriptionType } from '../../database/index.js';
 
 describe('Subscription Repository (postgres)', () => {
     let container: StartedPostgreSqlContainer;
@@ -71,7 +71,7 @@ describe('Subscription Repository (postgres)', () => {
             jest.resetAllMocks();
             jest.useFakeTimers().setSystemTime(fixedDateTime);
 
-            await Subscribers.destroy({ where: {}, force: true });
+            await Subscriber.destroy({ where: {}, force: true });
             subject = new SubscriberRepository(mockLogger);
         });
 
@@ -114,7 +114,7 @@ describe('Subscription Repository (postgres)', () => {
             it('logs error when record is not saved', async () => {
                 // Arrange
                 const subscription = {} as ChatSubInfo;
-                const spy = jest.spyOn(Subscribers, 'create')
+                const spy = jest.spyOn(Subscriber, 'create')
                     .mockImplementation(() => { throw mockError; });
 
                 // Act
@@ -164,7 +164,7 @@ describe('Subscription Repository (postgres)', () => {
                 // Arrange
                 const subscription = {} as ChatSubExtendInfo;
                 const isPrime = false;
-                const spy = jest.spyOn(Subscribers, 'create')
+                const spy = jest.spyOn(Subscriber, 'create')
                     .mockImplementation(() => { throw mockError; });
 
                 // Act
@@ -212,7 +212,7 @@ describe('Subscription Repository (postgres)', () => {
             it('logs error when record is not saved', async () => {
                 // Arrange
                 const subscription = {} as ChatSubInfo;
-                const spy = jest.spyOn(Subscribers, 'create')
+                const spy = jest.spyOn(Subscriber, 'create')
                     .mockImplementation(() => { throw mockError; });
 
                 // Act
@@ -256,7 +256,7 @@ describe('Subscription Repository (postgres)', () => {
             it('logs error when record is not saved', async () => {
                 // Arrange
                 const subscription = {} as ChatCommunitySubInfo;
-                const spy = jest.spyOn(Subscribers, 'create')
+                const spy = jest.spyOn(Subscriber, 'create')
                     .mockImplementation(() => { throw mockError; });
 
                 // Act
@@ -310,7 +310,7 @@ describe('Subscription Repository (postgres)', () => {
             it('logs error when record is not saved', async () => {
                 // Arrange
                 const subscription = {} as ChatSubGiftInfo;
-                const spy = jest.spyOn(Subscribers, 'create')
+                const spy = jest.spyOn(Subscriber, 'create')
                     .mockImplementation(() => { throw mockError; });
 
                 // Act

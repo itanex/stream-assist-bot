@@ -3,7 +3,7 @@ import { QueryTypes } from 'sequelize';
 import { HelixStream } from '@twurple/api';
 import winston from 'winston';
 import InjectionTypes from '../../dependency-management/types.js';
-import { DeathCounts } from '../../database/index.js';
+import { DeathCount } from '../../database/index.js';
 
 @injectable()
 export default class DeathCountRepository {
@@ -16,9 +16,9 @@ export default class DeathCountRepository {
      * @param stream The current stream
      * @returns The death count record for the stream, and if it was created
      */
-    async recordNewDeath(stream: HelixStream): Promise<DeathCounts | null> {
+    async recordNewDeath(stream: HelixStream): Promise<DeathCount | null> {
         try {
-            const [instance, created] = await DeathCounts
+            const [instance, created] = await DeathCount
                 .findOrCreate({
                     where: {
                         streamId: stream.id,
@@ -50,8 +50,8 @@ export default class DeathCountRepository {
      * @param stream The current stream
      * @returns The death count record for the stream, null when not found
      */
-    async getCurrentStreamDeathCount(stream: HelixStream): Promise<DeathCounts | null> {
-        return DeathCounts
+    async getCurrentStreamDeathCount(stream: HelixStream): Promise<DeathCount | null> {
+        return DeathCount
             .findOne({
                 where: {
                     streamId: stream.id,
@@ -65,26 +65,29 @@ export default class DeathCountRepository {
      * @param streamId The id of the current stream
      * @returns Array of death count records for the previous stream
      */
-    async getLastStreamDeathCount(streamId: string): Promise<DeathCounts[]> {
+    async getLastStreamDeathCount(streamId: string): Promise<DeathCount[]> {
         const lastStreamDeaths: string = `
             SELECT *
-            FROM public."DeathCounts"
-            WHERE "streamId" in (
-                SELECT DISTINCT "streamId"
-                FROM public."DeathCounts"
-                WHERE "createdAt" = (
-                    SELECT max("createdAt")
-                    FROM public."DeathCounts"
-                    WHERE "streamId" <> $streamId
+            FROM public.death_count
+            WHERE stream_id in (
+                SELECT DISTINCT stream_id
+                FROM public.death_count
+                WHERE created_at = (
+                    SELECT max(created_at)
+                    FROM public.death_count
+                    WHERE stream_id <> $streamId
                 )
             )
-            order by "createdAt" Asc
+            order by created_at Asc
         `;
 
-        return DeathCounts
+        return DeathCount
             .sequelize!
-            .query<DeathCounts>(lastStreamDeaths, {
+            .query<DeathCount>(lastStreamDeaths, {
                 type: QueryTypes.SELECT,
+                model: DeathCount,
+                mapToModel: true,
+                raw: true,
                 bind: {
                     streamId,
                 },

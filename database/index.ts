@@ -2,16 +2,16 @@ import BanEvent from './models/ban-event.dbo.js';
 import ChannelPointRedeem from './models/channel-point-redeem.dbo.js';
 import CheerEvent from './models/cheer-event.dbo.js';
 import CommandResponseDbo from './models/command-response.dbo.js';
-import DeathCounts from './models/death-count-record.dbo.js';
+import DeathCount from './models/death-count.dbo.js';
 import FollowEvent from './models/follow-event.dbo.js';
-import GreetUser from './models/greet-user.dbo.js';
-import LurkingUsers from './models/lurking-user.dbo.js';
+import GreetedUser from './models/greeted-user.dbo.js';
+import LurkingUser from './models/lurking-user.dbo.js';
 import ModeratorEvent from './models/moderator-event.dbo.js';
 import RaidEvent from './models/raid-event.dbo.js';
 import StreamEventRecord from './models/stream-event-record.dbo.js';
-import Subscribers from './models/subscribers.dbo.js';
+import Subscriber from './models/subscriber.dbo.js';
 import SubscriptionType from './models/subscription-type.js';
-import SubscriptionGiftUsers from './models/subscription-gift-users.dbo.js';
+import SubscriptionGiftUser from './models/subscription-gift-user.dbo.js';
 import CommandResponseTextDbo from './models/command-response-text.dbo.js';
 
 export {
@@ -20,14 +20,14 @@ export {
     CheerEvent,
     CommandResponseDbo,
     CommandResponseTextDbo,
-    DeathCounts,
-    GreetUser,
+    DeathCount,
+    GreetedUser,
     FollowEvent,
-    LurkingUsers,
+    LurkingUser,
     ModeratorEvent,
     RaidEvent,
     StreamEventRecord,
     SubscriptionType,
-    SubscriptionGiftUsers,
-    Subscribers,
+    SubscriptionGiftUser,
+    Subscriber,
 };

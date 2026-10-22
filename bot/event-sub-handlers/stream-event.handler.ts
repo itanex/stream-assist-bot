@@ -80,7 +80,7 @@ export default class StreamEventHandler {
     }
 
     /**
-     * Unlurk all users by calling {@link LurkingUsers.setAllUsersToUnlurk}
+     * Unlurk all users by calling {@link LurkingUser.setAllUsersToUnlurk}
      * @returns The resulting promise
      */
     private async unlurkUsers(endTime: Date) {

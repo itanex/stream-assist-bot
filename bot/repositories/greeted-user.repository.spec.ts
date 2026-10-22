@@ -9,7 +9,7 @@ import {
     mockLogger,
     syncSchema,
 } from '../../tests/index.js';
-import { GreetUser } from '../../database/index.js';
+import { GreetedUser } from '../../database/index.js';
 
 describe('GreetedUserRepository (postgres)', () => {
     let container: StartedPostgreSqlContainer;
@@ -74,7 +74,7 @@ describe('GreetedUserRepository (postgres)', () => {
             jest.resetAllMocks();
             jest.useFakeTimers().setSystemTime(fixedDateTime);
 
-            await GreetUser.destroy({ where: {}, force: true });
+            await GreetedUser.destroy({ where: {}, force: true });
             subject = new GreetedUserRepository(mockLogger);
         });
 
@@ -132,7 +132,7 @@ describe('GreetedUserRepository (postgres)', () => {
             });
             it('logs error when record is not saved', async () => {
                 // Arrange
-                const spy = jest.spyOn(GreetUser, 'create')
+                const spy = jest.spyOn(GreetedUser, 'create')
                     .mockImplementation(() => { throw mockError; });
 
                 // Act

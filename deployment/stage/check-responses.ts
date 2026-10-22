@@ -50,19 +50,19 @@ async function main(): Promise<void> {
     });
 
     try {
-        const rows = await sequelize.query<{ commandName: string, variant: string, text: string | null }>(
-            `SELECT r."commandName", r."variant", t."text"
-             FROM "CommandResponse" r
-             LEFT JOIN "CommandResponseText" t
-                 ON t."commandResponseId" = r."id" AND t."deletedAt" IS NULL
-             WHERE r."deletedAt" IS NULL`,
+        const rows = await sequelize.query<{ command_name: string, variant: string, text: string | null }>(
+            `SELECT r.command_name, r.variant, t.text
+             FROM command_response r
+             LEFT JOIN command_response_text t
+                 ON t.command_response_id = r.id AND t.deleted_at IS NULL
+             WHERE r.deleted_at IS NULL`,
             { type: QueryTypes.SELECT },
         );
 
         const actual = new Map<string, Set<string>>();
 
         rows.forEach(x => {
-            const key = `${x.commandName}.${x.variant}`;
+            const key = `${x.command_name}.${x.variant}`;
             const texts = actual.get(key) ?? new Set<string>();
 
             if (x.text !== null) {

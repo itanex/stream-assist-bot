@@ -8,7 +8,7 @@ import {
     mockError,
     syncSchema,
 } from '../../tests/index.js';
-import { DeathCounts } from '../../database/index.js';
+import { DeathCount } from '../../database/index.js';
 
 const mockStreamData = <HelixStream>{
     id: 'TestStreamId',
@@ -71,7 +71,7 @@ describe('Death Count Repository (postgres)', () => {
             jest.resetAllMocks();
             jest.useFakeTimers().setSystemTime(fixedDateTime);
 
-            await DeathCounts.destroy({ where: {}, force: true });
+            await DeathCount.destroy({ where: {}, force: true });
             subject = new DeathCountRepository(mockLogger);
         });
 
@@ -96,14 +96,14 @@ describe('Death Count Repository (postgres)', () => {
 
             it('returns existing death record for stream', async () => {
                 // Arrange
-                const event: DeathCounts = <unknown>{
+                const event: DeathCount = <unknown>{
                     deathCount: 25,
                     streamId: mockStreamData.id,
                     gameId: mockStreamData.gameId,
                     game: mockStreamData.gameName,
-                } as DeathCounts;
+                } as DeathCount;
 
-                const record = await DeathCounts
+                const record = await DeathCount
                     .create({
                         ...event,
                     }, { isNewRecord: true });
@@ -121,7 +121,7 @@ describe('Death Count Repository (postgres)', () => {
             it('logs error when record is not saved', async () => {
                 // Arrange
                 const streamData = {} as HelixStream;
-                const spy = jest.spyOn(DeathCounts, 'findOrCreate')
+                const spy = jest.spyOn(DeathCount, 'findOrCreate')
                     .mockImplementation(() => { throw mockError; });
 
                 // Act
@@ -153,7 +153,7 @@ describe('Death Count Repository (postgres)', () => {
                     game: mockStreamData.gameName,
                 };
 
-                const record = await DeathCounts
+                const record = await DeathCount
                     .create({
                         ...event,
                     }, { isNewRecord: true });
@@ -183,12 +183,12 @@ describe('Death Count Repository (postgres)', () => {
                     game: `${mockStreamData.gameName}-2`,
                 };
 
-                const record1 = await DeathCounts
+                const record1 = await DeathCount
                     .create({
                         ...event1,
                     }, { isNewRecord: true });
 
-                const record2 = await DeathCounts
+                const record2 = await DeathCount
                     .create({
                         ...event2,
                     }, { isNewRecord: true });

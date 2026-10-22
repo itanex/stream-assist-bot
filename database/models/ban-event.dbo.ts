@@ -4,7 +4,7 @@ import { Column, DataType, Model, Table } from 'sequelize-typescript';
     // consider placing this in a schema to
     // cover all Event Sub data
     // schema: 'EventSubData',
-    tableName: 'BanEvent',
+    tableName: 'ban_event',
     paranoid: true,
 })
 export default class BanEvent extends Model {
