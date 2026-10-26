@@ -1,4 +1,4 @@
-import syncSchema from './database-schema.helpers.js';
+import syncSchema from './test-database.helpers.js';
 
 export * from './common.mocks.js';
 
