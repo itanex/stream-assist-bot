@@ -13,5 +13,5 @@
   "jest.outputConfig": {
     "clearOnRun": "terminal"
   },
-  "jest.jestCommandLine": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+  "jest.jestCommandLine": "node --experimental-vm-modules --disable-warning=ExperimentalWarning node_modules/jest/bin/jest.js",
 }
