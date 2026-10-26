@@ -1,17 +1,16 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
-import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
 import CommandResponseRepository, { CommandResponse } from './command-response.repository.js';
 import {
     mockError,
     mockLogger,
-    syncSchema,
+    createTestDatabase,
+    dropTestDatabase,
 } from '../../tests/index.js';
 import { CommandResponseDbo, CommandResponseTextDbo } from '../../database/index.js';
 
 describe('CommandResponse.Repository (postgres)', () => {
-    let container: StartedPostgreSqlContainer;
     let databaseConfiguration: IDatabaseConfiguration;
 
     /** Command Response seed records */
@@ -74,38 +73,11 @@ describe('CommandResponse.Repository (postgres)', () => {
     );
 
     beforeAll(async () => {
-        try {
-            container = await new PostgreSqlContainer('postgres:latest')
-                .withExposedPorts({
-                    container: 5432,
-                    host: 33000,
-                })
-                .start();
-        } catch (error: any) {
-            const message = error instanceof Error ? error.message : String(error);
-
-            if (message.includes('401') || message.includes('authentication required')) {
-                throw new Error([
-                    'Docker registry authentication failed while pulling the postgres image.',
-                    'Local Docker Hub credentials are stale: run `docker login`, then rerun.',
-                    `Original error: ${message}`,
-                ].join(' '));
-            }
-
-            throw error;
-        }
-
-        databaseConfiguration = {
-            database: container.getDatabase(),
-            host: container.getHost(),
-            username: container.getUsername(),
-            password: container.getPassword(),
-            port: container.getPort(),
-        };
-    }, 120_000);
+        databaseConfiguration = await createTestDatabase();
+    });
 
     afterAll(async () => {
-        await container.stop();
+        await dropTestDatabase(databaseConfiguration);
     });
 
     beforeEach(async () => {
@@ -118,7 +90,6 @@ describe('CommandResponse.Repository (postgres)', () => {
         beforeAll(async () => {
             database = new Database(databaseConfiguration, mockLogger);
             await database.connect();
-            await syncSchema(database);
         });
 
         afterAll(async () => {

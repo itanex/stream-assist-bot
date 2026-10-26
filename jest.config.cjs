@@ -5,6 +5,8 @@ module.exports = {
     verbose: true,
     extensionsToTreatAsEsm: ['.ts'],
     setupFilesAfterEnv: ['<rootDir>/tests/jest.setup.ts'],
+    globalSetup: '<rootDir>/tests/test-database.setup.ts',
+    globalTeardown: '<rootDir>/tests/test-database.teardown.ts',
     coverageProvider: 'v8',
     moduleNameMapper: {
         '^(\\.{1,2}/.*)\\.js$': '$1',

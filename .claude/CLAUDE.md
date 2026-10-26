@@ -127,7 +127,7 @@ WEATHER_API_KEY / WAYPOINT_DEV_KEY_1 / WAYPOINT_DEV_KEY_2
 * Test files live alongside source or in a `__tests__/` folder
 * Use `ts-jest` for TypeScript support - no separate compile step
 * Unit tests first: construct subjects directly with mocks from `tests/common.mocks.ts`; never build an Inversify container in a spec
-* Only database-backed code (repositories, `Database`) is tested against PostgreSQL, via a per-spec `@testcontainers/postgresql` container
+* Only database-backed code (repositories, `Database`) is tested against PostgreSQL, via one `@testcontainers/postgresql` container per run and a database per spec (`createTestDatabase()` / `dropTestDatabase()`)
 * Log assertions check `expect.any(String)` plus logged data, never message text
 * Full rules: [docs/architecture.md#testing](../docs/architecture.md#testing)
 * Run `npm test` before committing to catch open handles
