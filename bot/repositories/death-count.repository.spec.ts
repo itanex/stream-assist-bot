@@ -1,12 +1,12 @@
 import { expect, jest } from '@jest/globals';
 import { HelixStream } from '@twurple/api';
-import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import Database, { IDatabaseConfiguration } from '../../database/database.js';
 import DeathCountRepository from './death-count.repository.js';
 import {
     mockLogger,
     mockError,
-    syncSchema,
+    createTestDatabase,
+    dropTestDatabase,
 } from '../../tests/index.js';
 import { DeathCountDbo } from '../../database/index.js';
 
@@ -17,7 +17,6 @@ const mockStreamData = <HelixStream>{
 };
 
 describe('Death Count Repository (postgres)', () => {
-    let container: StartedPostgreSqlContainer;
     let databaseConfiguration: IDatabaseConfiguration;
 
     const fixedDateTime = new Date();
@@ -25,33 +24,11 @@ describe('Death Count Repository (postgres)', () => {
     let subject: DeathCountRepository;
 
     beforeAll(async () => {
-        try {
-            container = await new PostgreSqlContainer('postgres:latest').start();
-        } catch (error: any) {
-            const message = error instanceof Error ? error.message : String(error);
-
-            if (message.includes('401') || message.includes('authentication required')) {
-                throw new Error([
-                    'Docker registry authentication failed while pulling the postgres image.',
-                    'Local Docker Hub credentials are stale: run `docker login`, then rerun.',
-                    `Original error: ${message}`,
-                ].join(' '));
-            }
-
-            throw error;
-        }
-
-        databaseConfiguration = {
-            database: container.getDatabase(),
-            host: container.getHost(),
-            username: container.getUsername(),
-            password: container.getPassword(),
-            port: container.getPort(),
-        };
-    }, 120_000);
+        databaseConfiguration = await createTestDatabase();
+    });
 
     afterAll(async () => {
-        await container.stop();
+        await dropTestDatabase(databaseConfiguration);
     });
 
     describe('Valid Database Object', () => {
@@ -60,7 +37,6 @@ describe('Death Count Repository (postgres)', () => {
         beforeAll(async () => {
             database = new Database(databaseConfiguration, mockLogger);
             await database.connect();
-            await syncSchema(database);
         });
 
         afterAll(async () => {

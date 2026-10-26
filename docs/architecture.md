@@ -91,7 +91,7 @@ Utilities (`bot/utilities`) and infrastructure (`Logger`, `ChatClient`, `ApiClie
 * PostgreSQL through Sequelize 6 + sequelize-typescript.
 * `Database.initialize()` only connects. The app never creates or alters schema at startup.
 * Schema is delivered by sequelize-cli migrations in `database/migrations/`. `20261013120000-baseline.js` builds every model's table from an empty database.
-* Database-backed specs build their tables from `database/models` with `syncSchema()` (`tests/database-schema.helpers.ts`), standing in for the migrations.
+* Database-backed specs get their tables from `database/models` with `syncSchema()` (`tests/test-database.helpers.ts`), standing in for the migrations. The first `createTestDatabase()` call in a test run builds a template database with it; every spec database is cloned from the template.
 * Production migrations run through `deployment/production/database.sh`, which dumps the database first; see [Production Database](production-database.md).
 
 ### Naming
@@ -134,7 +134,8 @@ Jest + ts-jest (ESM). `tests/jest.setup.ts` makes every test require at least on
 ### Database-backed tests
 
 * Only code that genuinely needs a database - repositories and `Database` itself - is tested against PostgreSQL.
-* Those specs start a disposable `@testcontainers/postgresql` container per spec, so tests can never touch a local or live database. Docker must be running.
+* Jest `globalSetup` (`tests/test-database.setup.ts`) starts one disposable `@testcontainers/postgresql` container (`postgres:17.2`) per test run, so tests can never touch a local or live database. Docker must be running.
+* Each spec gets its own database: `createTestDatabase()` in the outer `beforeAll`, `dropTestDatabase()` in the outer `afterAll` (`tests/index.ts`).
 * Clean up rows between tests (`Model.destroy({ where: {}, force: true })`).
 
 ### Log assertions
@@ -146,7 +147,7 @@ Jest + ts-jest (ESM). `tests/jest.setup.ts` makes every test require at least on
 VS Code snippets in `.vscode/jest.test.code-snippets`:
 
 * `bot-command-test` - command unit test
-* `bot-repository-test` - repository test against a postgres testcontainer
+* `bot-repository-test` - repository test against its own test database
 
 ---
 
