@@ -27,7 +27,7 @@ jobs:
         services:
             postgres:
                 # Matches compose.yaml so the chain is verified on the production engine
-                image: postgres:latest
+                image: postgres:17.2
                 env:
                     POSTGRES_USER: migrations
                     POSTGRES_PASSWORD: migrations

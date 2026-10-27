@@ -3,7 +3,8 @@
 # Postgres is restored from a production dump, used to rehearse migrations
 # before they reach production.
 #
-# Usage: STAGE_PG_IMAGE=postgres:<major> deployment/stage/stage.sh <command> [args]
+# Usage: [STAGE_PG_IMAGE=postgres:<tag>] deployment/stage/stage.sh <command> [args]
+#   STAGE_PG_IMAGE  optional; overrides the pinned image to rehearse an upgrade
 #   up <dump>       start the stack, create databases, restore <dump>
 #   reset <dump>    drop and recreate databases, restore <dump> again
 #   migrate [db]    run sequelize-cli db:migrate against stage (default: live copy)
@@ -81,7 +82,6 @@ restore() {
 
 cmd_up() {
     require_dump "${1:-}"
-    [ -n "${STAGE_PG_IMAGE:-}" ] || fail "STAGE_PG_IMAGE is not set (e.g. postgres:17; match or exceed production's major)"
     container_exists && fail "container '$CONTAINER' already exists; use reset or down"
 
     compose up -d --wait
@@ -166,8 +166,7 @@ run_stage_script() {
 cmd_down() {
     require_container
 
-    # down only interpolates the file; the image value is not used
-    STAGE_PG_IMAGE="${STAGE_PG_IMAGE:-unused}" compose down -v
+    compose down -v
 
     # a container started outside compose (pre-compose stage.sh) is not removed by down
     if container_exists; then

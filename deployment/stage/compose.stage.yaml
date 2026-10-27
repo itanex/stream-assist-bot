@@ -3,7 +3,7 @@
 name: stream-assist-bot-stage
 services:
   postgres:
-    image: ${STAGE_PG_IMAGE:?set STAGE_PG_IMAGE to production's postgres major, e.g. postgres:17}
+    image: ${STAGE_PG_IMAGE:-postgres:17.2}
     container_name: sab-stage
     user: postgres
     environment:

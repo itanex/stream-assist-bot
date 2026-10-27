@@ -62,6 +62,7 @@
     "test": "node --experimental-vm-modules --disable-warning=ExperimentalWarning node_modules/jest/bin/jest.js",
     "test-coverage": "node --experimental-vm-modules --disable-warning=ExperimentalWarning node_modules/jest/bin/jest.js --coverage=true",
     "db:migrate": "sequelize-cli db:migrate",
+    "db:version-index": "git --no-pager grep -n -o --heading --break -E \"postgres:[A-Za-z0-9._-]+\"",
     "release": "release-it"
   },
   "keywords": [

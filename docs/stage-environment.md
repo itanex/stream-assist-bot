@@ -18,21 +18,21 @@ Each step is detailed in the sections below.
 docker compose exec -T postgres pg_dump -U postgres -Fc stream-assist-bot > local-cache/stream-assist-bot.dump
 
 # 2. Start stage: restores the dump, creates an empty fresh database
-STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh up local-cache/stream-assist-bot.dump
+bash deployment/stage/stage.sh up local-cache/stream-assist-bot.dump
 
 # 3. Run the migrations against the fresh database and the restored copy
-STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh migrate stream-assist-bot-stage-fresh
-STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh migrate
+bash deployment/stage/stage.sh migrate stream-assist-bot-stage-fresh
+bash deployment/stage/stage.sh migrate
 
 # 4. Verify the baseline seed data in both databases
-STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh check-responses stream-assist-bot-stage-fresh
-STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh check-responses
+bash deployment/stage/stage.sh check-responses stream-assist-bot-stage-fresh
+bash deployment/stage/stage.sh check-responses
 
 # 5. Exercise startup validation in production logging mode
-STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh check-validation stream-assist-bot-stage-fresh
+bash deployment/stage/stage.sh check-validation stream-assist-bot-stage-fresh
 
 # 6. Tear down stage, remove the dump, confirm no stage container remains
-STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh down
+bash deployment/stage/stage.sh down
 rm local-cache/stream-assist-bot.dump
 docker ps -a --filter name=sab-stage
 ```
@@ -53,10 +53,10 @@ docker compose exec -T postgres pg_dump -U postgres -Fc stream-assist-bot > loca
 ## 2. Start Stage
 
 ```bash
-STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh up local-cache/stream-assist-bot.dump
+bash deployment/stage/stage.sh up local-cache/stream-assist-bot.dump
 ```
 
-`STAGE_PG_IMAGE` must match or exceed production's Postgres major version. On success:
+Stage runs the pinned `postgres:17.2` image. To rehearse a Postgres upgrade, set `STAGE_PG_IMAGE` to the candidate image (e.g. `STAGE_PG_IMAGE=postgres:<tag> bash deployment/stage/stage.sh up <dump>`). On success:
 
 ```
 stage: up on localhost:6433 (stream-assist-bot-stage restored, stream-assist-bot-stage-fresh empty)
@@ -65,8 +65,8 @@ stage: up on localhost:6433 (stream-assist-bot-stage restored, stream-assist-bot
 ## 3. Run the Migrations
 
 ```bash
-STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh migrate stream-assist-bot-stage-fresh
-STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh migrate
+bash deployment/stage/stage.sh migrate stream-assist-bot-stage-fresh
+bash deployment/stage/stage.sh migrate
 ```
 
 * Fresh database: every migration runs, building the schema and inserting the baseline seed data
@@ -75,8 +75,8 @@ STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh migrate
 ## 4. Verify the Seed Data
 
 ```bash
-STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh check-responses stream-assist-bot-stage-fresh
-STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh check-responses
+bash deployment/stage/stage.sh check-responses stream-assist-bot-stage-fresh
+bash deployment/stage/stage.sh check-responses
 ```
 
 Checks every command/variant pair in the baseline seed migration against the database, without loading bot code. The last line is the verdict, and the exit code matches it (0 on `PASS`, 1 on `FAIL`):
@@ -93,7 +93,7 @@ Checks every command/variant pair in the baseline seed migration against the dat
 ## 5. Exercise Startup Validation
 
 ```bash
-STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh check-validation stream-assist-bot-stage-fresh
+bash deployment/stage/stage.sh check-validation stream-assist-bot-stage-fresh
 ```
 
 Runs `CommandResponseService.initialize()` against the database with `NODE_ENV=production`, so output passes through the production console filter. It builds `Database`, `CommandResponseRepository` and `CommandResponseService` directly; no DI container and no Twitch clients are loaded. It validates every command in the baseline seed migration plus `stage-check-missing`, a name with no entries, then logs an untagged warning and an error.
@@ -114,7 +114,7 @@ The bot logger also writes to `./logs`, so a run leaves stage entries in the loc
 ## 6. Tear Down
 
 ```bash
-STAGE_PG_IMAGE=postgres:17.2 bash deployment/stage/stage.sh down
+bash deployment/stage/stage.sh down
 rm local-cache/stream-assist-bot.dump
 docker ps -a --filter name=sab-stage
 ```
