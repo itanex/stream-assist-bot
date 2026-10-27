@@ -23,7 +23,7 @@ services:
       - D:/DataWorkspaces/stream-assist-bot/logs:/app/logs
       - D:/DataWorkspaces/stream-assist-bot/cache/:/app/local-cache/
   postgres:
-    image: postgres:latest
+    image: postgres:17.2
     restart: always
     user: postgres
     volumes:
