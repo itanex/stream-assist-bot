@@ -65,7 +65,7 @@ Given the narrow scope above (protocol/subscription/lifecycle validation, not bu
 * Message parsing - a triggered event of a known type is delivered as a correctly-typed event object, confirming `@twurple/eventsub-ws` parsed the raw payload correctly (not a claim about which handler received it - see Layer under test above)
 * Reconnect handling - `twitch event websocket reconnect` triggers reconnect without dropping subscriptions
 * Malformed/duplicate events - a repeated or bad `event-id` doesn't crash the listener or double-invoke a handler
-* Teardown - closing the session stops the listener cleanly (relevant since this project already runs Jest with `--detectOpenHandles`)
+* Teardown - closing the session stops the listener cleanly (verify with `npm test -- --detectOpenHandles`)
 
 ### Template
 
@@ -91,7 +91,7 @@ describe('EventSub WS protocol integration (mock server)', () => {
 
     afterAll(async () => {
         listener.stop();
-        // assert no lingering handles - project runs Jest with --detectOpenHandles
+        // no lingering handles - check with `npm test -- --detectOpenHandles`
     });
 
     it('registers expected subscriptions on connect', async () => {

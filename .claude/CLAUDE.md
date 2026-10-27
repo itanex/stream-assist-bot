@@ -17,9 +17,8 @@ A TypeScript Twitch chat bot with EventSub integration, PostgreSQL persistence, 
 ```bash
 npm start              # Run app (production)
 npm run dev            # Run app (development)
-npm test               # Jest (no cache, detect open handles)
+npm test               # Jest (parallel workers)
 npm run test-coverage  # Jest with coverage report
-npm run test-dev       # Jest watch mode with coverage
 docker compose up      # Start app + PostgreSQL
 ```
 
@@ -130,7 +129,7 @@ WEATHER_API_KEY / WAYPOINT_DEV_KEY_1 / WAYPOINT_DEV_KEY_2
 * Only database-backed code (repositories, `Database`) is tested against PostgreSQL, via one `@testcontainers/postgresql` container per run and a database per spec (`createTestDatabase()` / `dropTestDatabase()`)
 * Log assertions check `expect.any(String)` plus logged data, never message text
 * Full rules: [docs/architecture.md#testing](../docs/architecture.md#testing)
-* Run `npm test` before committing to catch open handles
+* Run `npm test` before committing; to find open handles, run `npm test -- --detectOpenHandles` (runs serially)
 
 ## Commit Messages
 

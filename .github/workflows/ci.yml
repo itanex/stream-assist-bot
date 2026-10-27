@@ -37,10 +37,15 @@ jobs:
             - name: Run Type Check (ESM)
               run: npm run type-check
 
+            - name: Run unit tests w/o coverage
+              if: github.event_name == 'pull_request'
+              run: npm run test -- --reporters=summary
+
             - name: Run unit tests with coverage
+              if: github.event_name != 'pull_request'
               shell: bash
               run: |
-                  npm run test-coverage | tee coverage-output.txt
+                  npm run test-coverage -- --reporters=summary | tee coverage-output.txt
                   {
                       echo '## Test Coverage'
                       echo '```text'
